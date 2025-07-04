@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36202.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoCGMViewerApp", "DemoCGMViewerApp\DemoCGMViewerApp.csproj", "{289D9117-75E4-41ED-8238-1CFACEEC4C8E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CGMAnalyzer.API", "CGMAnalyzer.API\CGMAnalyzer.API.csproj", "{FB5D0DAF-748A-4C31-9366-0C2444ABCA9E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{289D9117-75E4-41ED-8238-1CFACEEC4C8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{289D9117-75E4-41ED-8238-1CFACEEC4C8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{289D9117-75E4-41ED-8238-1CFACEEC4C8E}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{289D9117-75E4-41ED-8238-1CFACEEC4C8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{289D9117-75E4-41ED-8238-1CFACEEC4C8E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{289D9117-75E4-41ED-8238-1CFACEEC4C8E}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{FB5D0DAF-748A-4C31-9366-0C2444ABCA9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB5D0DAF-748A-4C31-9366-0C2444ABCA9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB5D0DAF-748A-4C31-9366-0C2444ABCA9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB5D0DAF-748A-4C31-9366-0C2444ABCA9E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7C90087E-89A1-44CE-B949-9B718FF427D1}
+	EndGlobalSection
+EndGlobal
