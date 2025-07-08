@@ -1,0 +1,67 @@
+﻿<Window x:Class="CGMViewerWPF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:vm="clr-namespace:CGMViewerWPF.ViewModels"
+        Title="CGM Viewer" Height="800" Width="1300">
+
+    <Window.DataContext>
+        <vm:MainViewModel />
+    </Window.DataContext>
+
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <!-- Column left : CGM files list + progress bar (futur) -->
+            <ColumnDefinition Width="300"/>
+            <!-- Column center : parameter box(futur) + report errors -->
+            <ColumnDefinition Width="450"/>
+            <!-- Column right : image + show layers (futur) -->
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="300"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Column left -->
+        <ListBox ItemsSource="{Binding ImportedFiles}"
+                 SelectedItem="{Binding SelectedFile, Mode=TwoWay}"
+                 DisplayMemberPath="FileName"
+                 Grid.Column="0" Grid.Row="0" 
+                 Margin ="0,0,10,60" Grid.RowSpan="4"/>
+
+        <!-- Column center -->
+        <Button Content="Importer fichiers CGM"
+                Command="{Binding ImportFilesCommand}"
+                Grid.Column="1"/>
+
+        <Label Content="Erreurs fichiers" 
+               Grid.Column="1" 
+               FontWeight="Bold" Grid.Row="3" Margin="0,0,0,412" />
+
+        <ListBox x:Name="ErrorList" 
+                 Grid.Column="1"
+                 Grid.Row="3" Margin="0,32,0,0" />
+
+        <!-- Column right -->
+        <!--<Image Source="{Binding ImageSource}"
+               Grid.Column="2"
+               Margin ="10,0,10,196"
+               Stretch="Uniform" Grid.RowSpan="4" />-->
+        <StackPanel Orientation="Vertical"
+                     Grid.Column="2">
+            <ItemsControl ItemsSource="{Binding Layers}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <!--<CheckBox Content="{Binding}" IsChecked="True" 
+                                  Checked="LayerCheckbox_Checked" 
+                                  Unchecked="LayerCheckbox_Unchecked"/>-->
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+
+
+    </Grid>
+</Window>

@@ -1,3 +1,4 @@
+using CGMAnalyzer.API.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,17 +10,21 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-// Forcer l'API à écouter sur le port HTTP 5000
+builder.Services.AddScoped<ICgmConverter, CgmConverter>();
+builder.Services.AddScoped<ICGMLayerDetector, CGMLayerDetector>();
 builder.WebHost.UseUrls("https://localhost:7176");
 
+// ? pour que WebRootPath fonctionne :
+builder.WebHost.UseWebRoot("wwwroot");
 var app = builder.Build();
 
 // Activer Swagger uniquement en développement
 if (app.Environment.IsDevelopment())
 {
+    app.UseStaticFiles();
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseDeveloperExceptionPage();
 }
 
 // Middleware HTTP
