@@ -2,9 +2,10 @@
 using CGMAnalyzerCore.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System.Collections.ObjectModel;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -57,25 +58,37 @@ namespace CGMViewerWPF.ViewModels
                         var response = await _httpClient.PostAsync("/api/cgm/import", content);
                         if (response.IsSuccessStatusCode)
                         {
-                            var result = await response.Content.ReadFromJsonAsync<CGMResult>();
-                            var bmpUrl = new Uri(_httpClient.BaseAddress, result.BmpPath).ToString();
-
-                            LoadImage(bmpUrl);
-                            // ImageSource = new BitmapImage(new Uri(bmpUrl));
-                            Errors = result.Errors;
-                            ImportedFiles.Add(new ImportedFile
+                            var results = await response.Content.ReadFromJsonAsync<List<CGMResult>>();
+                            
+                            foreach(var result in results)
                             {
-                                FilePath = Path.GetFileName(filePath),
-                                FileName = Path.GetFileName(result.BmpPath),
-                                BmpPath = result.BmpPath
-                            });
+                                var bmpUrl = new Uri(_httpClient.BaseAddress, result.BmpPath).ToString();
+                                LoadImage(bmpUrl);
+                                // ImageSource = new BitmapImage(new Uri(bmpUrl));
 
-                            // management layers = add 5 layers
-                            Layers.Clear();
-                            foreach (var layer in result.Layers)
-                            {
-                                Layers.Add(layer); 
+                                var imported = new ImportedFile
+                                {
+                                    FileName = Path.GetFileName(result.BmpPath),
+                                    BmpPath = result.BmpPath,
+                                    Layers = result.Layers
+                                };
+                                // debug
+                                Debug.WriteLine($"CGM Layers : {result.Layers}");
+
+                                Errors = result.Errors;
+                                ImportedFiles.Add(imported);    
+
+                                // management layers = add 5 layers
+                                Layers.Clear();
+                                foreach (var layer in result.Layers)
+                                {
+                                    Layers.Add(layer); 
+                                }
+                                
                             }
+                           
+
+                            
                         }
                     }
                     catch (Exception ex)

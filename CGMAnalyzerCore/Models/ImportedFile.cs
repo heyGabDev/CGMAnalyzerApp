@@ -10,7 +10,7 @@ namespace CGMAnalyzerCore.Models
     {
         public string FileName { get; set; }
         public string BmpPath { get; set; } // ex: /images/image.bmp
-        public string FilePath { get; set; }
+        public List<string> Layers { get; set; } = new();
         public override string ToString() => FileName; // Ce qui sera affiché dans la ListBox
     }
 }
