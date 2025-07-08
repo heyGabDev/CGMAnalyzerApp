@@ -11,6 +11,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<ICgmConverter, CgmConverter>();
+builder.Services.AddScoped<ICGMLayerDetector, CGMLayerDetector>();
 builder.WebHost.UseUrls("https://localhost:7176");
 
 // ? pour que WebRootPath fonctionne :

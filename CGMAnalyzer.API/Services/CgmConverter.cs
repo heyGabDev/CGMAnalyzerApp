@@ -1,5 +1,4 @@
-﻿using CGMAnalyzer.API.Modeles;
-using System.Drawing;
+﻿using System.Drawing;
 
 namespace CGMAnalyzer.API.Services
 {
