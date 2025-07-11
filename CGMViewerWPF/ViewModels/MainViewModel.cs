@@ -35,6 +35,8 @@ namespace CGMViewerWPF.ViewModels
         [ObservableProperty]
         private ObservableCollection<string> layers = new();
 
+        [ObservableProperty]
+        private ObservableCollection<LayerCheckbox> selectedFileLayers = new();
 
         [RelayCommand]
         public async Task ImportFilesAsync()
@@ -84,11 +86,7 @@ namespace CGMViewerWPF.ViewModels
                                 {
                                     Layers.Add(layer); 
                                 }
-                                
-                            }
-                           
-
-                            
+                            }                                                  
                         }
                     }
                     catch (Exception ex)
@@ -126,6 +124,12 @@ namespace CGMViewerWPF.ViewModels
             {
                 var url = new Uri(_httpClient.BaseAddress, value.BmpPath).ToString();
                 ImageSource = new BitmapImage(new Uri(url));
+
+                SelectedFileLayers.Clear();
+                foreach (var layer in value.Layers)
+                {
+                    SelectedFileLayers.Add(new LayerCheckbox { Name = layer, IsChecked = true });
+                }
             }
         }
 

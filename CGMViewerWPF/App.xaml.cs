@@ -2,7 +2,7 @@
 using System.Data;
 using System.Windows;
 
-namespace CGMViewerWPF
+namespace CGMViewerWPF.Views
 {
     /// <summary>
     /// Interaction logic for App.xaml
