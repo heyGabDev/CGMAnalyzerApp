@@ -3,7 +3,7 @@ using System.Drawing;
 
 namespace CGMAnalyzer.API.Services
 {
-    public class CgmImageService
+    public class CgmImageService: ICgmImageService
     {
         private readonly ICgmConverter _converter;
         private readonly IWebHostEnvironment _env;

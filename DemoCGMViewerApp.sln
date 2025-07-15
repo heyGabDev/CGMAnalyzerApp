@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CGMViewerWPF", "CGMViewerWP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CGMAnalyzerCore", "CGMAnalyzerCore\CGMAnalyzerCore.csproj", "{B7498535-1CFD-4A3E-845E-566550FA8D0C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CGMAnalyzer.Tests", "CGMAnalyzer.Tests\CGMAnalyzer.Tests.csproj", "{AE549CF7-3635-4A13-AACA-E3311F01C5CD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{B7498535-1CFD-4A3E-845E-566550FA8D0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B7498535-1CFD-4A3E-845E-566550FA8D0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B7498535-1CFD-4A3E-845E-566550FA8D0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE549CF7-3635-4A13-AACA-E3311F01C5CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE549CF7-3635-4A13-AACA-E3311F01C5CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE549CF7-3635-4A13-AACA-E3311F01C5CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE549CF7-3635-4A13-AACA-E3311F01C5CD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

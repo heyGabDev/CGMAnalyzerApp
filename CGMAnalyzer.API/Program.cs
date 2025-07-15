@@ -14,7 +14,7 @@ builder.Services.AddSwaggerGen();
 
 // CGM Management
 builder.Services.AddScoped<ICgmConverter, CgmConverter>();
-builder.Services.AddScoped<CgmImageService>();
+builder.Services.AddScoped<ICgmImageService,CgmImageService>();
 
 builder.Services.AddScoped<ICGMLayerDetector, CGMLayerDetector>();
 builder.WebHost.UseUrls("https://localhost:7176");

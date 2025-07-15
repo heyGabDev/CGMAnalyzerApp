@@ -10,11 +10,16 @@ namespace CGMAnalyzer.API.Controllers;
 [Route("api/cgm")]
 public class CGMController : ControllerBase
 {
+    private readonly ICgmImageService _imageService;
+
+    public CGMController(ICgmImageService imageService)
+    {
+        _imageService = imageService;
+    }
+
+
     [HttpPost("import")]
-    public async Task<IActionResult> ImportCgmFile(
-        List<IFormFile> files, 
-        [FromServices] CgmImageService cgmImageService, 
-        [FromServices] ICGMLayerDetector cgmLayerDetector)
+    public async Task<IActionResult> ImportCgmFile(List<IFormFile> files)
     {
         try
         {
@@ -26,12 +31,12 @@ public class CGMController : ControllerBase
             foreach (var file in files)
             {
                 // management layers - temp save
-                var tempPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-                using (var stream = new FileStream(tempPath, FileMode.Create))
-                    await file.CopyToAsync(stream);
+                //var tempPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                //using (var stream = new FileStream(tempPath, FileMode.Create))
+                //    await file.CopyToAsync(stream);
 
                 // BMP conversion
-                var bmpPath = await cgmImageService.GenerateAndSaveBmpAsync(file);
+                var bmpPath = await _imageService.GenerateAndSaveBmpAsync(file);
                 var result = new CGMResult
                 {
                     FileName = file.FileName,
@@ -39,7 +44,7 @@ public class CGMController : ControllerBase
                     Errors = new List<string> { $"Pas d'erreur" },
                 };
                 results.Add(result);
-                System.IO.File.Delete(tempPath);
+                //System.IO.File.Delete(tempPath);
             }
             return Ok(results);
 
