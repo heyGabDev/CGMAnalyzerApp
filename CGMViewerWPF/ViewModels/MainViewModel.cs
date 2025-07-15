@@ -132,6 +132,5 @@ namespace CGMViewerWPF.ViewModels
                 }
             }
         }
-
     }
 }

@@ -2,6 +2,7 @@
 using CGMAnalyzerCore.Modeles;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.IO;
 
 namespace CGMAnalyzer.API.Controllers;
 
@@ -12,7 +13,7 @@ public class CGMController : ControllerBase
     [HttpPost("import")]
     public async Task<IActionResult> ImportCgmFile(
         List<IFormFile> files, 
-        [FromServices] ICgmConverter cgmConverter, 
+        [FromServices] CgmImageService cgmImageService, 
         [FromServices] ICGMLayerDetector cgmLayerDetector)
     {
         try
@@ -29,23 +30,18 @@ public class CGMController : ControllerBase
                 using (var stream = new FileStream(tempPath, FileMode.Create))
                     await file.CopyToAsync(stream);
 
-                // analyze layers
-                var layerOffsets = cgmLayerDetector.DetectLayers(tempPath);
-                var layerNames = layerOffsets.Select((_, i) => $"Layer {i + 1}").ToList();
-
                 // BMP conversion
-                var bmpPath = await cgmConverter.ConvertToBmpAsync(file);
+                var bmpPath = await cgmImageService.GenerateAndSaveBmpAsync(file);
                 var result = new CGMResult
                 {
                     FileName = file.FileName,
                     BmpPath = bmpPath,
                     Errors = new List<string> { $"Pas d'erreur" },
-                    Layers = layerNames,
                 };
                 results.Add(result);
                 System.IO.File.Delete(tempPath);
             }
-            return Ok(results); // Pour test (un fichier à la fois)
+            return Ok(results);
 
         }
         catch (Exception err)
@@ -54,7 +50,5 @@ public class CGMController : ControllerBase
             Debug.WriteLine($"Import error : {err.Message}");
             return StatusCode(500, $"Servor error : {err.Message}");
         }
-
-        
     }
 }
