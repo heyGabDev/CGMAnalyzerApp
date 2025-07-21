@@ -1,5 +1,5 @@
 ﻿using CGMAnalyzer.API.Controllers;
-using CGMAnalyzer.API.Services;
+using CGMAnalyzer.API.Services.Interfaces;
 using CGMAnalyzerCore.Modeles;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

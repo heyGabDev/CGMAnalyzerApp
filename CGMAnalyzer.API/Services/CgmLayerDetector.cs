@@ -1,4 +1,6 @@
-﻿namespace CGMAnalyzer.API.Services
+﻿using CGMAnalyzer.API.Services.Interfaces;
+
+namespace CGMAnalyzer.API.Services
 {
     public class CGMLayerDetector : ICGMLayerDetector
     {

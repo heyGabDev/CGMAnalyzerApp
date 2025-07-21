@@ -1,5 +1,5 @@
 ﻿using CGMAnalyzer.API.Services;
-using CGMAnalyzerCore.Convert;
+using CGMAnalyzerCore.Converter.Interface;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Moq;

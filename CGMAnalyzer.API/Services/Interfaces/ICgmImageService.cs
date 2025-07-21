@@ -1,4 +1,4 @@
-﻿namespace CGMAnalyzer.API.Services
+﻿namespace CGMAnalyzer.API.Services.Interfaces
 {
     public interface ICgmImageService
     {

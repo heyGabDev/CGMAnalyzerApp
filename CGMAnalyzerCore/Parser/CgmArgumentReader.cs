@@ -1,0 +1,190 @@
+﻿using CGMAnalyzerCore.Commands;
+using CGMAnalyzerCore.Commands.GraphicCommands;
+using CGMAnalyzerCore.Commands.GraphicCommands.Control;
+using CGMAnalyzerCore.Context;
+using CGMAnalyzerCore.Geometry;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using static CGMAnalyzerCore.Geometry.Point2D;
+
+namespace CGMAnalyzerCore.Parser
+{
+    public class CgmArgumentReader 
+    {
+        private readonly CgmCommand _command;
+
+        public CgmArgumentReader(CgmCommand command)
+        {
+            _command = command ?? throw new ArgumentNullException(nameof(command));
+        }
+
+        public int NextArg()
+        {
+            return _command.NextArg();
+        }
+
+        public void SkipBits()
+        {
+            _command.SkipBits();    
+        }
+
+        public int MakeUInt8()
+        {
+            int value = NextArg(); // call cgmCommand
+            return value & 0xFF;
+        }
+
+        public float MakeFloatCoord()
+        {
+            return NextArg();
+        }
+
+        public string MakeString(int length)
+        {
+            var bytes = new byte[length];
+            for (int i = 0; i < length; i++)
+            {
+                bytes[i] = (byte)(NextArg() & 0xFF);
+            }
+            return Encoding.UTF8.GetString(bytes);
+        }
+
+        public byte MakeByte()
+        {
+
+            return (byte)(NextArg() & 0xFF);
+        }
+
+
+        public short MakeSignedInt16()
+        {
+
+            return unchecked((short)(NextArg() & 0xFFFF));
+        }
+
+        public int MakeSignedInt24()
+        {
+            int b1 = NextArg() & 0xFF;
+            int b2 = NextArg() & 0xFF;
+            int b3 = NextArg() & 0xFF;
+            int value = (b1 << 16) | (b2 << 8) | b3;
+            if ((value & 0x800000) != 0)
+                value |= unchecked((int)0xFF000000); // sign extend
+            return value;
+        }
+
+        public int MakeSignedInt32()
+        {
+            int high = NextArg();
+            int low = NextArg();
+            return (high << 16) | low;
+        }
+
+        public int MakeInt()
+        {
+            return NextArg();
+        }
+
+        public Point2D.Double MakePoint(int ec, int eid)
+        {
+            return new Point2D.Double(MakeVdc(ec, eid), MakeVdc(ec, eid));
+        }
+
+        public static double MakeVdc(int ec, int eid)
+        {
+            if (VDCTypeCommand.CurrentVDCType == VDCTypeEnum.Real)
+            {
+                var precision = CgmContext.VdcRealPrecision;
+                switch (precision)
+                {
+                    case VDCRealPrecisionEnum.FixedPoint32:
+                    //VDCRealPrecision.Type.FixedPoint32Bit:
+                        return MakeFixedPoint32();
+                    case VDCRealPrecisionEnum.FixedPoint64:
+                        return MakeFixedPoint64();
+                    case VDCRealPrecisionEnum.FloatingPoint32:
+                        //return MakeFloatingPoint32();
+                    case VDCRealPrecisionEnum.FloatingPoint64:
+                        //return MakeFloatingPoint64();
+                    default:
+                        UnsupportedCommand.Unsupported(ec, eid,$"unsupported precision {precision}");
+                        return MakeFixedPoint32();
+                }
+            }
+
+            // Assume integer if not real
+            int intPrecision = CgmContext.VdcIntegerPrecision;
+            switch (intPrecision)
+            {
+                case 16:
+                    //return MakeSignedInt16();
+                case 24:
+                    //return MakeSignedInt24();
+                case 32:
+                    //return MakeSignedInt32();
+                default:
+                    UnsupportedCommand.Unsupported(ec, eid, $"unsupported precision {intPrecision}");
+                    return MakeFixedPoint32(); // To delete just testing
+                    //return MakeSignedInt16();
+            }
+        }
+
+        public int SizeOfPoint()
+        {
+            return 2 * VDCTypeCommand.SizeOfVdc();
+        }
+
+        public static double MakeFixedPoint32()
+        {
+            double wholePart = 1; //makeSignedInt16();
+            double fractionPart = 1;//makeUInt16();
+
+            return wholePart + (fractionPart / (2 << 15));
+        }
+
+        public static double MakeFixedPoint64()
+        {
+            double wholePart = 2; //makeSignedInt32();
+            double fractionPart = 2; //makeUInt32();
+
+            return wholePart + (fractionPart / (2 << 31));
+        }
+
+        public double MakeFloatingPoint32()
+        {
+            SkipBits();
+            int bits = 0;
+            for (int i = 0; i < 4; i++)
+            {
+                bits = (bits << 8) | MakeChar();
+            }
+            return BitConverter.Int32BitsToSingle(bits);
+        }
+
+        public double MakeFloatingPoint64()
+        {
+            SkipBits();
+            long bits = 0;
+            for (int i = 0; i < 8; i++)
+            {
+                bits = (bits << 8) | MakeChar();
+            }
+            return BitConverter.Int64BitsToDouble(bits);
+        }
+
+        public char MakeChar()
+        {
+            _command.SkipBits();
+
+            if (_command.CurrentArg >= _command.Args.Length)
+                throw new IndexOutOfRangeException("Attempted to read beyond the end of the argument list.");
+
+            return (char)(_command.Args[_command.CurrentArg++]);
+        }
+
+    }
+}

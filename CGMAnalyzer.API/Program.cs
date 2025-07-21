@@ -1,5 +1,7 @@
 using CGMAnalyzer.API.Services;
+using CGMAnalyzer.API.Services.Interfaces;
 using CGMAnalyzerCore.Convert;
+using CGMAnalyzerCore.Converter.Interface;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;

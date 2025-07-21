@@ -1,4 +1,7 @@
-﻿using System.Drawing;
+﻿using CGMAnalyzerCore.Converter.Interface;
+using CGMAnalyzerCore.Parser;
+using CGMAnalyzerCore.Render;
+using System.Drawing;
 using System.Drawing.Imaging;   
 using System.IO;
 
@@ -7,18 +10,31 @@ namespace CGMAnalyzerCore.Convert
 {
     public class CgmConverter : ICgmConverter
     {
-        public async Task<byte[]> ConvertToBmpBytesAsync(Stream cgmStream, string label = "CGM")
+        public async Task<byte[]> ConvertToBmpBytesAsync(Stream stream, string filename)
         {
-            // Simule le rendu à partir du CGM (à remplacer par ton vrai parseur)
-            using var bmp = new Bitmap(200, 100);
-            using var graphics = Graphics.FromImage(bmp);
-            graphics.Clear(Color.LightGray);
-            graphics.DrawString(label, new Font("Arial", 14), Brushes.Black, new PointF(10, 40));
+            var parser = new CgmParser();
+            parser.Load(stream, filename);
+
+            var renderer = new CgmRenderer(parser.Commands);
+            using var bmp = renderer.Render();
 
             using var ms = new MemoryStream();
-            bmp.Save(ms, ImageFormat.Bmp);
+            bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
             return ms.ToArray();
         }
+
+        //public async Task<byte[]> ConvertToBmpBytesAsync(Stream cgmStream, string label = "CGM")
+        //{
+        //    // Simule le rendu à partir du CGM (à remplacer par ton vrai parseur)
+        //    using var bmp = new Bitmap(200, 100);
+        //    using var graphics = Graphics.FromImage(bmp);
+        //    graphics.Clear(Color.LightGray);
+        //    graphics.DrawString(label, new Font("Arial", 14), Brushes.Black, new PointF(10, 40));
+
+        //    using var ms = new MemoryStream();
+        //    bmp.Save(ms, ImageFormat.Bmp);
+        //    return ms.ToArray();
+        //}
 
         //public async Task<string> ConvertToBmpAsync(IFormFile file)
         //{

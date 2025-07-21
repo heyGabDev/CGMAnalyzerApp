@@ -1,4 +1,5 @@
-﻿using CGMAnalyzerCore.Convert;
+﻿using CGMAnalyzer.API.Services.Interfaces;
+using CGMAnalyzerCore.Converter.Interface;
 using System.Drawing;
 
 namespace CGMAnalyzer.API.Services
@@ -18,17 +19,27 @@ namespace CGMAnalyzer.API.Services
         {
             var fileName = Path.GetFileNameWithoutExtension(file.FileName);
             var bmpFileName = fileName + ".bmp";
-            var outputPath = Path.Combine(_env.WebRootPath, "images");
+            var imagePath = Path.Combine(_env.WebRootPath, "images", bmpFileName);
 
-            Directory.CreateDirectory(outputPath);
-
-            var bmpPath = Path.Combine(outputPath, bmpFileName);
             using var stream = file.OpenReadStream();
-            var bmpBytes = await _converter.ConvertToBmpBytesAsync(stream, fileName);
+            var bmpBytes = await _converter.ConvertToBmpBytesAsync(stream, file.FileName);
 
-            await File.WriteAllBytesAsync(bmpPath, bmpBytes);
+            await File.WriteAllBytesAsync(imagePath, bmpBytes);
+            return "/images/" + bmpFileName;
 
-            return "/images/" + bmpFileName; // relative path
+            //var fileName = Path.GetFileNameWithoutExtension(file.FileName);
+            //var bmpFileName = fileName + ".bmp";
+            //var outputPath = Path.Combine(_env.WebRootPath, "images");
+
+            //Directory.CreateDirectory(outputPath);
+
+            //var bmpPath = Path.Combine(outputPath, bmpFileName);
+            //using var stream = file.OpenReadStream();
+            //var bmpBytes = await _converter.ConvertToBmpBytesAsync(stream, fileName);
+
+            //await File.WriteAllBytesAsync(bmpPath, bmpBytes);
+
+            //return "/images/" + bmpFileName; // relative path
         }
 
         //public async Task<string> ConvertToBmpAsync(IFormFile file)

@@ -1,4 +1,5 @@
-﻿using CGMAnalyzer.API.Services;
+﻿using CGMAnalyzer.API.Services.Interfaces;
+using CGMAnalyzerCore.Exporter;
 using CGMAnalyzerCore.Modeles;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -56,4 +57,19 @@ public class CGMController : ControllerBase
             return StatusCode(500, $"Servor error : {err.Message}");
         }
     }
+
+    [HttpPost("export")]
+    public IActionResult ExportCgm([FromBody] byte[] buffer, [FromServices] CgmExportService exportService)
+    {
+        try
+        {
+            string path = exportService.ExportCgmFile(buffer, "Export", "generated.cgm");
+            return Ok(new { FilePath = path });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
 }
