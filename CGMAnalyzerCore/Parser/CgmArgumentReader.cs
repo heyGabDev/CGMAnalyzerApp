@@ -53,12 +53,6 @@ namespace CGMAnalyzerCore.Parser
             return Encoding.UTF8.GetString(bytes);
         }
 
-        public byte MakeByte()
-        {
-
-            return (byte)(NextArg() & 0xFF);
-        }
-
 
         public short MakeSignedInt16()
         {
@@ -86,7 +80,20 @@ namespace CGMAnalyzerCore.Parser
 
         public int MakeInt()
         {
-            return NextArg();
+            int precision = CgmContext.IntegerPrecision;
+            return MakeInt(precision);
+        }
+
+        public int MakeInt(int precision)
+        {
+            return precision switch
+            {
+                8 => (sbyte)NextArg(),
+                16 => (short)((NextArg() << 8) | NextArg()),
+                24 => (NextArg() << 16) | (NextArg() << 8) | NextArg(),
+                32 => (NextArg() << 24) | (NextArg() << 16) | (NextArg() << 8) | NextArg(),
+                _ => throw new NotSupportedException($"Unsupported integer precision: {precision}")
+            };
         }
 
         public Point2D.Double MakePoint(int ec, int eid)
@@ -185,6 +192,75 @@ namespace CGMAnalyzerCore.Parser
 
             return (char)(_command.Args[_command.CurrentArg++]);
         }
+
+        public string MakeString(BinaryReader reader)
+        {
+            int length = GetStringCount(reader);
+            byte[] bytes = new byte[length];
+
+            for (int i = 0; i < length; i++)
+            {
+                bytes[i] = MakeByte(reader);
+            }
+
+            try
+            {
+                return System.Text.Encoding.GetEncoding("ISO-8859-1").GetString(bytes);
+            }
+            catch
+            {
+                return System.Text.Encoding.Default.GetString(bytes);
+            }
+        }
+
+        public int GetStringCount(BinaryReader reader)
+        {
+            int length = MakeUInt8(reader);
+            if (length == 255)
+            {
+                length = MakeUInt16(reader);
+                if ((length & (1 << 16)) != 0)
+                {
+                    length = (length << 16) | MakeUInt16(reader);
+                }
+            }
+            return length;
+        }
+
+        public byte MakeByte(BinaryReader reader)
+        {
+            SkipBits();
+            return reader.ReadByte();
+        }
+
+        public int MakeUInt8(BinaryReader reader)
+        {
+            SkipBits(); // Appelle ta méthode existante
+            return reader.ReadByte(); // Byte = 8 bits non signé
+        }
+
+        public int MakeUInt16(BinaryReader reader)
+        {
+            SkipBits(); // Appelle ta méthode existante
+
+            // On vérifie s’il reste 2 octets à lire
+            if (reader.BaseStream.Length - reader.BaseStream.Position >= 2)
+            {
+                byte high = reader.ReadByte();
+                byte low = reader.ReadByte();
+                return (high << 8) | low;
+            }
+
+            // Si seulement 1 octet reste
+            if (reader.BaseStream.Length - reader.BaseStream.Position >= 1)
+            {
+                // Optionnel : log de fallback
+                return reader.ReadByte();
+            }
+
+            throw new EndOfStreamException("Unexpected end of stream when trying to read UInt16.");
+        }
+
 
     }
 }

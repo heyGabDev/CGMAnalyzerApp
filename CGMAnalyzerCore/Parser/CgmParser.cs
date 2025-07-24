@@ -42,7 +42,7 @@ namespace CGMAnalyzerCore.Parser
             Read(reader);
         }
 
-        private void Read(BinaryReader reader)
+        public void Read(BinaryReader reader)
         {
             Reset();
             Commands = new List<BaseCgmCommand>(INITIAL_NUM_COMMANDS);
@@ -90,6 +90,14 @@ namespace CGMAnalyzerCore.Parser
         {
             Commands.Clear();
             CurrentLayerId = 0;
+        }
+
+        public void AddCommandListener(ICommandListener listener)
+        {
+            if (listener == null)
+                throw new ArgumentNullException(nameof(listener));
+
+            _commandListeners.Add(listener);
         }
     }
 }

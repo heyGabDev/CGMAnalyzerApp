@@ -19,14 +19,17 @@ namespace CGMAnalyzer.API.Services
         {
             var fileName = Path.GetFileNameWithoutExtension(file.FileName);
             var bmpFileName = fileName + ".bmp";
-            var imagePath = Path.Combine(_env.WebRootPath, "images", bmpFileName);
+
+            var fullPath = Path.Combine(_env.WebRootPath, "images", bmpFileName);
+            var bmpPath = "/images/" + bmpFileName; // relative path
 
             using var stream = file.OpenReadStream();
             var bmpBytes = await _converter.ConvertToBmpBytesAsync(stream, file.FileName);
 
-            await File.WriteAllBytesAsync(imagePath, bmpBytes);
-            return "/images/" + bmpFileName;
+            await File.WriteAllBytesAsync(fullPath, bmpBytes);
 
+            return bmpPath;
+        }
             //var fileName = Path.GetFileNameWithoutExtension(file.FileName);
             //var bmpFileName = fileName + ".bmp";
             //var outputPath = Path.Combine(_env.WebRootPath, "images");
@@ -40,7 +43,7 @@ namespace CGMAnalyzer.API.Services
             //await File.WriteAllBytesAsync(bmpPath, bmpBytes);
 
             //return "/images/" + bmpFileName; // relative path
-        }
+        
 
         //public async Task<string> ConvertToBmpAsync(IFormFile file)
         //{

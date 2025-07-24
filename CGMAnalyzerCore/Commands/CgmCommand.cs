@@ -1,4 +1,7 @@
-﻿using CGMAnalyzerCore.Commands.GraphicCommands;
+﻿using CGMAnalyzerCore.Commands.Delimiter;
+using CGMAnalyzerCore.Commands.GraphicCommands;
+using CGMAnalyzerCore.Commands.GraphicCommands.Control;
+using CGMAnalyzerCore.Commands.Metafile;
 using CGMAnalyzerCore.Context;
 using CGMAnalyzerCore.Converter.Enum;
 using CGMAnalyzerCore.Geometry;
@@ -7,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -26,11 +30,6 @@ namespace CGMAnalyzerCore.Commands
 
         public int LayerId;
         public bool ErrorCommand;
-
-        public object Clone()
-        {
-            return MemberwiseClone();
-        }
 
         /// <summary>
         /// 
@@ -218,11 +217,11 @@ namespace CGMAnalyzerCore.Commands
             switch ((ElementClassEnum)ec)
             {
                 // Class: 0
-                //case ElementClassInt.DelimiterElements:
-                //    return ReadDelimiterElements(reader, ec, eid, l);
-                //// Class: 1
-                //case ElementClassInt.MetafileDescriptorElements:
-                //    return ReadMetafileDescriptorElements(reader, ec, eid, l);
+                case ElementClassEnum.DelimiterElements:
+                    return ReadDelimiterElements(reader, ec, eid, l);
+                // Class: 1
+                case ElementClassEnum.MetafileDescriptorElements:
+                    return ReadMetaFileDescriptorElements(reader, ec, eid, l);
                 //// Class: 2
                 //case ElementClassInt.PictureDescriptorElements:
                 //    return ReadPictureDescriptorElements(reader, ec, eid, l);
@@ -258,7 +257,91 @@ namespace CGMAnalyzerCore.Commands
             }
         }
 
-        // TODO: Implémenter les méthodes ReadXXXElements(...)
+        // Class : 0
+        private static BaseCgmCommand ReadDelimiterElements(BinaryReader reader, int ec, int eid, int l)
+        {
+            var element = (DelimiterElement)eid;
+            var command = new CgmCommand(ec, eid, l, reader);
+            var argumentReader = new CgmArgumentReader(command);
+
+            return element switch
+            {
+                // 0, 0
+                //DelimiterElement.NoOp => new NoOpCommand(ec, eid, l, reader),
+                // 0, 1
+                DelimiterElement.BeginMetafile => new BeginMetafileCommand(ec, eid, l, reader),
+                // 0, 2
+                DelimiterElement.EndMetafile => new EndMetafileCommand(ec, eid, l, reader),
+                // 0, 3
+                DelimiterElement.BeginPicture => new BeginPictureCommand(ec, eid, l, reader, argumentReader),
+                //DelimiterElement.BeginPictureBody => new BeginPictureBodyCommand(ec, eid, l, reader),
+                //DelimiterElement.EndPicture => new EndPictureCommand(ec, eid, l, reader),
+                
+                // non supportés explicitement
+                DelimiterElement.BeginSegment or
+                DelimiterElement.EndSegment or
+                DelimiterElement.BeginFigure or
+                // 0, 9
+                DelimiterElement.EndFigure or
+                // 0, 13
+                DelimiterElement.BeginProtectionRegion or
+                DelimiterElement.EndProtectionRegion or
+                DelimiterElement.BeginCompoundLine or
+                // 0, 16
+                DelimiterElement.EndCompoundLine or
+                DelimiterElement.BeginCompoundTextPath or
+                DelimiterElement.EndCompoundTextPath => UnsupportedCommand.Unsupported(ec, eid, l, reader), //HandleUnsupported(ec, eid, l, reader),
+
+                // 0, 19
+                //DelimiterElement.BeginTileArray => new BeginTileArrayCommand(ec, eid, l, reader),
+                //DelimiterElement.EndTileArray => new EndTileArrayCommand(ec, eid, l, reader),
+                //DelimiterElement.BeginApplicationStructure => new BeginApplicationStructureCommand(ec, eid, l, reader),
+                //DelimiterElement.BeginApplicationStructureBody => new BeginApplicationStructureBodyCommand(ec, eid, l, reader),
+                //DelimiterElement.EndApplicationStructure => new EndApplicationStructureCommand(ec, eid, l, reader),
+
+                _ => UnsupportedCommand.Unsupported(ec, eid, l, reader) //a modifier avec mss ci-dessous
+                //throw new NotSupportedException($"Unsupported DelimiterElement: {element} (eid={eid})")
+            };
+        }
+
+        // Class: 1
+        private static BaseCgmCommand ReadMetaFileDescriptorElements(BinaryReader reader, int ec, int eid, int l)
+        {
+            var element = (MetafileDescriptorElement)eid;
+            var command = new CgmCommand(ec, eid, l, reader);
+            var argumentReader = new CgmArgumentReader(command);
+
+            return element switch
+            {
+                MetafileDescriptorElement.MetafileVersion => new MetafileVersionCommand(ec, eid, l, argumentReader),
+                //MetafileDescriptorElement.MetafileDescription => new MetafileDescriptionCommand(ec, eid, l, reader),
+                //MetafileDescriptorElement.VdcType => new VDCTypeCommand(ec, eid, l, reader),
+                //MetafileDescriptorElement.IntegerPrecision => new IntegerPrecisionCommand(ec, eid, l, reader),
+                //MetafileDescriptorElement.RealPrecision => new RealPrecisionCommand(ec, eid, l, reader),
+                //MetafileDescriptorElement.IndexPrecision => new IndexPrecisionCommand(ec, eid, l, reader),
+                //MetafileDescriptorElement.ColourPrecision => new ColourPrecisionCommand(ec, eid, l, reader),
+                //MetafileDescriptorElement.ColourIndexPrecision => new ColourIndexPrecisionCommand(ec, eid, l, reader),
+                //MetafileDescriptorElement.MaximumColourIndex => new MaximumColourIndexCommand(ec, eid, l, reader),
+                //MetafileDescriptorElement.ColourValueExtent => new ColourValueExtentCommand(ec, eid, l, reader),
+                //MetafileDescriptorElement.MetafileElementList => new MetafileElementListCommand(ec, eid, l, reader),
+                //MetafileDescriptorElement.MetafileDefaultsReplacement => new MetafileDefaultsReplacementCommand(ec, eid, l, reader),
+                //MetafileDescriptorElement.FontList => new FontListCommand(ec, eid, l, reader),
+                //MetafileDescriptorElement.CharacterSetList => new CharacterSetListCommand(ec, eid, l, reader),
+                //MetafileDescriptorElement.CharacterCodingAnnouncer => new CharacterCodingAnnouncerCommand(ec, eid, l, reader),
+                //MetafileDescriptorElement.NamePrecision => new NamePrecisionCommand(ec, eid, l, reader),
+                //MetafileDescriptorElement.MaximumVdcExtent => new MaximumVdcExtentCommand(ec, eid, l, reader),
+
+                //MetafileDescriptorElement.SegmentPriorityExtent or
+                //MetafileDescriptorElement.ColourCalibration or
+                //MetafileDescriptorElement.FontProperties or
+                //MetafileDescriptorElement.GlyphMapping or
+                //MetafileDescriptorElement.SymbolLibraryList or
+                //MetafileDescriptorElement.PictureDirectory =>
+                //    UnsupportedCommand.Unsupported(ec, eid, l, reader), // 📌 utilise ta méthode centralisée
+
+                _ => UnsupportedCommand.Unsupported(ec, eid, l, reader)
+            };
+        }
 
         // Class: 4
         private static BaseCgmCommand ReadGraphicalPrimitiveElements(BinaryReader reader, int ec, int eid, int l)
@@ -269,7 +352,9 @@ namespace CGMAnalyzerCore.Commands
 
             return element switch
             {
+                // 1
                 GraphicalPrimitiveElement.Polyline => new PolylineCommand(ec, eid, l, reader),
+                // 2
                 GraphicalPrimitiveElement.DisjointPolyline => new DisjointPolylineCommand(ec, eid, command, argumentReader),
                 //GraphicalPrimitiveElement.PolyMarker => new PolyMarkerCommand(ec, eid, l, reader),
                 //GraphicalPrimitiveElement.Text => new TextCommand(ec, eid, l, reader),
@@ -316,6 +401,11 @@ namespace CGMAnalyzerCore.Commands
         public override void ReadArguments(BinaryReader reader)
         {
             throw new NotImplementedException();
+        }
+
+        public object Clone()
+        {
+            return MemberwiseClone();
         }
     }
 }

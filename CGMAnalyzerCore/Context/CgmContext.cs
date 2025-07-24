@@ -23,6 +23,7 @@ namespace CGMAnalyzerCore.Context
 
         // ---- Layer
         public static int CurrentLayerId { get; set; } = 0;
+        public static int IntegerPrecision { get; internal set; }
 
         public static void Reset()
         {
