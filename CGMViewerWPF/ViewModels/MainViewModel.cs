@@ -91,9 +91,6 @@ namespace CGMViewerWPF.ViewModels
                                 // debug
                                 //Debug.WriteLine($"CGM Layers : {result.Layers}");
 
-                                Errors = result.Errors;
-                                ImportedFiles.Add(imported);    
-
                                 // management layers = add 5 layers
                                 //Layers.Clear();
                                 //foreach (var layer in result.Layers)
@@ -133,63 +130,100 @@ namespace CGMViewerWPF.ViewModels
 
         partial void OnSelectedFileChanged(ImportedFile value)
         {
-            if (value == null)
-                return;
-
-            if (!File.Exists(value.FullPath))
+            if (value == null || !File.Exists(value.FullPath))
             {
-                Debug.WriteLine($"[ERREUR] Image introuvable à {value.FullPath}");
+                Debug.WriteLine($"[ERREUR] Fichier introuvable : {value?.FullPath}");
                 return;
             }
 
-            // test display preview
-            var parser = new CgmParser();
+            try
+            {
+                var stream = File.OpenRead(value.FullPath);
+                var reader = new BinaryReader(stream);
 
-            var stream = File.OpenRead(value.FullPath);
-            var reader = new BinaryReader(stream);
-            parser.Read(reader);
+                var parser = new CgmParser();
+                parser.Read(reader);
 
-            ShowCgmPreviewImage(parser);
+                // Aperçu CGM généré à partir du parser
+                CgmPreviewImage = ShowCgmPreviewImage(parser);
 
-            //try
-            //{
-            //    // 1. Lire le CGM brut
-            //    var stream = File.OpenRead(value.FullPath);
-            //    var reader = new BinaryReader(stream);
-
-            //    // 2. Parser avec CgmDisplay
-            //    var display = new CgmDisplay();
-            //    display.Read(reader);
-            //    var commands = display.Commands;
-
-            //    // 3. Rendu bitmap
-            //    var renderer = new CgmRenderer(commands);
-            //    var bmp = renderer.Render();
-
-            //    // 4. Export .bmp
-            //    var outputDir = Path.Combine(Path.GetDirectoryName(value.FileName)!, "output");
-            //    Directory.CreateDirectory(outputDir);
-
-            //    var bmpFileName = Path.GetFileNameWithoutExtension(value.FileName) + ".bmp";
-            //    var bmpPath = Path.Combine(outputDir, bmpFileName);
-
-            //    bmp.Save(bmpPath);
-            //    value.BmpPath = bmpPath;
-            //    //file.Layers = ExtractLayers(commands); // méthode perso à écrire
-
-            //    // On peut aussi extraire les layers ici si ton format les supporte
-            //    value.Layers = commands
-            //        .Where(cmd => cmd.ElementClass == 5) // par exemple
-            //        .Select(cmd => cmd.ToString())       // ou cmd.LayerName ?
-            //        .ToList();
-            //}
-            //catch (Exception ex)
-            //{
-            //    // Gestion d'erreur simple
-            //    Console.WriteLine("Erreur de rendu : " + ex.Message);
-            //}
-
+                // Mise à jour des couches
+                SelectedFileLayers.Clear();
+                foreach (var layer in value.Layers)
+                {
+                    SelectedFileLayers.Add(new LayerCheckbox
+                    {
+                        Name = layer,
+                        IsChecked = true
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du traitement du fichier CGM : {ex.Message}");
+            }
         }
+
+
+        //partial void OnSelectedFileChanged(ImportedFile value)
+        //{
+        //    if (value == null)
+        //        return;
+
+        //    if (!File.Exists(value.FullPath))
+        //    {
+        //        Debug.WriteLine($"[ERREUR] Image introuvable à {value.FullPath}");
+        //        return;
+        //    }
+
+        //    // test display preview
+        //    var parser = new CgmParser();
+
+        //    var stream = File.OpenRead(value.FullPath);
+        //    var reader = new BinaryReader(stream);
+        //    parser.Read(reader);
+
+        //    ShowCgmPreviewImage(parser);
+
+        //    //try
+        //    //{
+        //    //    // 1. Lire le CGM brut
+        //    //    var stream = File.OpenRead(value.FullPath);
+        //    //    var reader = new BinaryReader(stream);
+
+        //    //    // 2. Parser avec CgmDisplay
+        //    //    var display = new CgmDisplay();
+        //    //    display.Read(reader);
+        //    //    var commands = display.Commands;
+
+        //    //    // 3. Rendu bitmap
+        //    //    var renderer = new CgmRenderer(commands);
+        //    //    var bmp = renderer.Render();
+
+        //    //    // 4. Export .bmp
+        //    //    var outputDir = Path.Combine(Path.GetDirectoryName(value.FileName)!, "output");
+        //    //    Directory.CreateDirectory(outputDir);
+
+        //    //    var bmpFileName = Path.GetFileNameWithoutExtension(value.FileName) + ".bmp";
+        //    //    var bmpPath = Path.Combine(outputDir, bmpFileName);
+
+        //    //    bmp.Save(bmpPath);
+        //    //    value.BmpPath = bmpPath;
+        //    //    //file.Layers = ExtractLayers(commands); // méthode perso à écrire
+
+        //    //    // On peut aussi extraire les layers ici si ton format les supporte
+        //    //    value.Layers = commands
+        //    //        .Where(cmd => cmd.ElementClass == 5) // par exemple
+        //    //        .Select(cmd => cmd.ToString())       // ou cmd.LayerName ?
+        //    //        .ToList();
+        //    //}
+        //    //catch (Exception ex)
+        //    //{
+        //    //    // Gestion d'erreur simple
+        //    //    Console.WriteLine("Erreur de rendu : " + ex.Message);
+        //    //}
+
+        //}
 
         private ImageSource BitmapToImageSource(Bitmap bitmap)
         {
@@ -221,7 +255,8 @@ namespace CGMViewerWPF.ViewModels
             bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
             bitmapImage.EndInit();
 
-            return CgmPreviewImage = bitmapImage;
+            CgmPreviewImage = bitmapImage;
+            return CgmPreviewImage;
 
             //var renderer = new CgmRenderer(parser.Commands);
             //using var bitmap = renderer.Render();

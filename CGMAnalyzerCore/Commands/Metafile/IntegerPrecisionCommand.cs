@@ -12,10 +12,10 @@ namespace CGMAnalyzerCore.Commands.Metafile
     {
         public int Precision { get; }
 
-        public IntegerPrecisionCommand(int ec, int eid, int length, CgmArgumentReader reader)
+        public IntegerPrecisionCommand(int ec, int eid, int length, CgmArgumentReader argReader)
             : base(ec, eid, length)
         {
-            Precision = reader.NextArg();
+            Precision = argReader.NextArg();
             CgmContext.IntegerPrecision = Precision;
         }
 

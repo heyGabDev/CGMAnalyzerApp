@@ -1,6 +1,7 @@
 ﻿<Window x:Class="CGMViewerWPF.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:vm="clr-namespace:CGMViewerWPF.ViewModels"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+        xmlns:vm="clr-namespace:CGMViewerWPF.ViewModels"
         Title="CGM Viewer" Height="800" Width="1300">
 
     <Window.DataContext>
@@ -85,7 +86,7 @@
             <Border Grid.Row="0" BorderBrush="Gray" 
                     BorderThickness="1" Margin="0,0,0,10">
                 <!--<Image Source="{Binding ImageSource}" Stretch="Uniform"/>-->
-                <Image Source="{Binding CgmPreviewImage}" Stretch="Uniform"/>
+                <Image Source="{Binding CgmPreviewImage}" Stretch="Uniform" Height="300"/>
             </Border>
 
             <!-- Couches en bas (1/3) -->

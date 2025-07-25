@@ -14,6 +14,11 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             ReadArguments(reader);
         }
 
+        public override void Draw(Graphics g, Pen pen)
+        {
+            g.DrawLine(pen, Start, End);
+        }
+
         public override void ReadArguments(BinaryReader reader)
         {
             // Hypothèse : coordonnées en Int16
@@ -24,11 +29,6 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
 
             Start = new Point(x1, y1);
             End = new Point(x2, y2);
-        }
-
-        public override void Draw(Graphics g, Pen pen)
-        {
-            g.DrawLine(pen, Start, End);
         }
 
         public override string ToString()

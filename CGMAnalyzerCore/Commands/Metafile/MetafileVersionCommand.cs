@@ -19,20 +19,20 @@ namespace CGMAnalyzerCore.Commands.Metafile
     {
         public int Version { get; private set; }
 
-        public MetafileVersionCommand(int ec, int eid, int length, CgmArgumentReader reader)
+        public MetafileVersionCommand(int ec, int eid, int length, CgmArgumentReader argReader)
                     : base(ec, eid, length)
         {
-            Version = reader.MakeInt();
-        }
-
-        public override void ReadArguments(BinaryReader reader)
-        {
-            throw new NotImplementedException();
+            Version = argReader.MakeInt();
         }
 
         public override void Draw(Graphics g, Pen pen)
         {
             // Aucune action graphique pour ce type de commande
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            throw new NotImplementedException();
         }
 
         public override string ToString()

@@ -52,10 +52,7 @@ namespace CGMAnalyzerCore.Commands
             }
         }
 
-        public override void Draw(Graphics g, Pen pen)
-        {
-            // Par défaut : rien à dessiner
-        }
+        public override void Draw(Graphics g, Pen pen){}
 
         public virtual string ToStringDetail()
         {
@@ -214,7 +211,9 @@ namespace CGMAnalyzerCore.Commands
 
         private static BaseCgmCommand ReadCommand(BinaryReader reader, int ec, int eid, int l)
         {
-            switch ((ElementClassEnum)ec)
+            var element = (ElementClassEnum)ec;
+
+            switch (element)
             {
                 // Class: 0
                 case ElementClassEnum.DelimiterElements:
@@ -274,9 +273,10 @@ namespace CGMAnalyzerCore.Commands
                 DelimiterElement.EndMetafile => new EndMetafileCommand(ec, eid, l, reader),
                 // 0, 3
                 DelimiterElement.BeginPicture => new BeginPictureCommand(ec, eid, l, reader, argumentReader),
-                //DelimiterElement.BeginPictureBody => new BeginPictureBodyCommand(ec, eid, l, reader),
+                // 0, 4
+                DelimiterElement.BeginPictureBody => new BeginPictureBodyCommand(ec, eid, l, reader),
                 //DelimiterElement.EndPicture => new EndPictureCommand(ec, eid, l, reader),
-                
+
                 // non supportés explicitement
                 DelimiterElement.BeginSegment or
                 DelimiterElement.EndSegment or
@@ -313,32 +313,57 @@ namespace CGMAnalyzerCore.Commands
 
             return element switch
             {
+                // 1
                 MetafileDescriptorElement.MetafileVersion => new MetafileVersionCommand(ec, eid, l, argumentReader),
-                //MetafileDescriptorElement.MetafileDescription => new MetafileDescriptionCommand(ec, eid, l, reader),
-                //MetafileDescriptorElement.VdcType => new VDCTypeCommand(ec, eid, l, reader),
-                //MetafileDescriptorElement.IntegerPrecision => new IntegerPrecisionCommand(ec, eid, l, reader),
-                //MetafileDescriptorElement.RealPrecision => new RealPrecisionCommand(ec, eid, l, reader),
+                // 2
+                MetafileDescriptorElement.MetafileDescription => new MetafileDescriptionCommand(ec, eid, l, argumentReader),
+                // 3
+                MetafileDescriptorElement.VdcType => new VDCTypeCommand(ec, eid, l, reader),
+                // 4
+                MetafileDescriptorElement.IntegerPrecision => new IntegerPrecisionCommand(ec, eid, l, argumentReader),
+                // 5
+                MetafileDescriptorElement.RealPrecision => new RealPrecisionCommand(ec, eid, l, argumentReader),
+                // 6
                 //MetafileDescriptorElement.IndexPrecision => new IndexPrecisionCommand(ec, eid, l, reader),
+                // 7
                 //MetafileDescriptorElement.ColourPrecision => new ColourPrecisionCommand(ec, eid, l, reader),
+                // 8
                 //MetafileDescriptorElement.ColourIndexPrecision => new ColourIndexPrecisionCommand(ec, eid, l, reader),
+                // 9
                 //MetafileDescriptorElement.MaximumColourIndex => new MaximumColourIndexCommand(ec, eid, l, reader),
+                // 10
                 //MetafileDescriptorElement.ColourValueExtent => new ColourValueExtentCommand(ec, eid, l, reader),
+                // 11
                 //MetafileDescriptorElement.MetafileElementList => new MetafileElementListCommand(ec, eid, l, reader),
+                // 12
                 //MetafileDescriptorElement.MetafileDefaultsReplacement => new MetafileDefaultsReplacementCommand(ec, eid, l, reader),
+                // 13
                 //MetafileDescriptorElement.FontList => new FontListCommand(ec, eid, l, reader),
+                // 14
                 //MetafileDescriptorElement.CharacterSetList => new CharacterSetListCommand(ec, eid, l, reader),
+                // 15
                 //MetafileDescriptorElement.CharacterCodingAnnouncer => new CharacterCodingAnnouncerCommand(ec, eid, l, reader),
+                // 16
                 //MetafileDescriptorElement.NamePrecision => new NamePrecisionCommand(ec, eid, l, reader),
-                //MetafileDescriptorElement.MaximumVdcExtent => new MaximumVdcExtentCommand(ec, eid, l, reader),
+                // 17
+                MetafileDescriptorElement.MaximumVdcExtent => new MaximumVdcExtentCommand(ec, eid, l, argumentReader),
 
+                // 18
                 //MetafileDescriptorElement.SegmentPriorityExtent or
-                //MetafileDescriptorElement.ColourCalibration or
-                //MetafileDescriptorElement.FontProperties or
-                //MetafileDescriptorElement.GlyphMapping or
-                //MetafileDescriptorElement.SymbolLibraryList or
-                //MetafileDescriptorElement.PictureDirectory =>
-                //    UnsupportedCommand.Unsupported(ec, eid, l, reader), // 📌 utilise ta méthode centralisée
 
+                // 19
+                MetafileDescriptorElement.ColourModel => new ColourModelCommand(ec, eid, l, argumentReader),
+                
+                // 20
+                //MetafileDescriptorElement.ColourCalibration or
+                // 21
+                //MetafileDescriptorElement.FontProperties or
+                // 22
+                //MetafileDescriptorElement.GlyphMapping or
+                // 23
+                //MetafileDescriptorElement.SymbolLibraryList or
+                // 24
+                //MetafileDescriptorElement.PictureDirectory => UnsupportedCommand.Unsupported(ec, eid, l, reader),
                 _ => UnsupportedCommand.Unsupported(ec, eid, l, reader)
             };
         }
@@ -356,23 +381,59 @@ namespace CGMAnalyzerCore.Commands
                 GraphicalPrimitiveElement.Polyline => new PolylineCommand(ec, eid, l, reader),
                 // 2
                 GraphicalPrimitiveElement.DisjointPolyline => new DisjointPolylineCommand(ec, eid, command, argumentReader),
+                // 3
                 //GraphicalPrimitiveElement.PolyMarker => new PolyMarkerCommand(ec, eid, l, reader),
+                // 4
                 //GraphicalPrimitiveElement.Text => new TextCommand(ec, eid, l, reader),
+                // 5
                 //GraphicalPrimitiveElement.RestrictedText => new RestrictedTextCommand(ec, eid, l, reader),
+                // 6
+                //GraphicalPrimitiveElement.AppendText => new AppendTextCommand(ec, eid, l, reader),  
+                // 7
                 //GraphicalPrimitiveElement.Polygon => new PolygonCommand(ec, eid, l, reader),
+                // 8 
                 //GraphicalPrimitiveElement.PolygonSet => new PolygonSetCommand(ec, eid, l, reader),
+                // 9
                 //GraphicalPrimitiveElement.CellArray => new CellArrayCommand(ec, eid, l, reader),
+                // 10
+                //GraphicalPrimitiveElement.GeneralizedDrawingPrimitive => new GeneralizedDrawingPrimitiveCommand(ec, eid, l, reader),
+                // 11
                 //GraphicalPrimitiveElement.Rectangle => new RectangleCommand(ec, eid, l, reader),
+                // 12
                 //GraphicalPrimitiveElement.Circle => new CircleCommand(ec, eid, l, reader),
+                // 13
                 //GraphicalPrimitiveElement.CircularArc3Point => new CircularArc3PointCommand(ec, eid, l, reader),
+                // 14
                 //GraphicalPrimitiveElement.CircularArc3PointClose => new CircularArc3PointCloseCommand(ec, eid, l, reader),
+                // 15
                 //GraphicalPrimitiveElement.CircularArcCentre => new CircularArcCentreCommand(ec, eid, l, reader),
+                // 16
                 //GraphicalPrimitiveElement.CircularArcCentreClose => new CircularArcCentreCloseCommand(ec, eid, l, reader),
+                // 17
                 //GraphicalPrimitiveElement.Ellipse => new EllipseCommand(ec, eid, l, reader),
-                //GraphicalPrimitiveElement.EllipticalArc => new EllipticalArcCommand(ec, eid, l, reader),
+                // 18
+                GraphicalPrimitiveElement.EllipticalArc => new EllipticalArcCommand(ec, eid, command, argumentReader),
+                // 19
                 //GraphicalPrimitiveElement.EllipticalArcClose => new EllipticalArcCloseCommand(ec, eid, l, reader),
+
+                // 20 
+                //GraphicalPrimitiveElement.CircularArcCentreReversed or,
+                // 21 
+                //GraphicalPrimitiveElement.ConnectingEdge or,
+                // 22 
+                //GraphicalPrimitiveElement.HyperbolicArc or,
+                // 23
+                //GraphicalPrimitiveElement.ParabolicArc or,
+                // 24
+                //GraphicalPrimitiveElement.NonUniformBSpline or,
+                // 25
+                //GraphicalPrimitiveElement.NonUniformRationalBSpline => UnsupportedCommand.Unsupported(ec, eid, l, reader),
+
+                // 26
                 //GraphicalPrimitiveElement.PolyBezier => new PolyBezierCommand(ec, eid, l, reader),
+                // 28
                 //GraphicalPrimitiveElement.BitonalTile => new BitonalTileCommand(ec, eid, l, reader),
+                // 29
                 //GraphicalPrimitiveElement.Tile => new TileCommand(ec, eid, l, reader),
                 _ => UnsupportedCommand.Unsupported(ec, eid, l, reader)
             };

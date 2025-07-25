@@ -53,7 +53,6 @@ namespace CGMAnalyzerCore.Parser
             return Encoding.UTF8.GetString(bytes);
         }
 
-
         public short MakeSignedInt16()
         {
 
@@ -101,7 +100,7 @@ namespace CGMAnalyzerCore.Parser
             return new Point2D.Double(MakeVdc(ec, eid), MakeVdc(ec, eid));
         }
 
-        public static double MakeVdc(int ec, int eid)
+        public double MakeVdc(int ec, int eid)
         {
             if (VDCTypeCommand.CurrentVDCType == VDCTypeEnum.Real)
             {
@@ -125,19 +124,13 @@ namespace CGMAnalyzerCore.Parser
 
             // Assume integer if not real
             int intPrecision = CgmContext.VdcIntegerPrecision;
-            switch (intPrecision)
+            return intPrecision switch
             {
-                case 16:
-                    //return MakeSignedInt16();
-                case 24:
-                    //return MakeSignedInt24();
-                case 32:
-                    //return MakeSignedInt32();
-                default:
-                    UnsupportedCommand.Unsupported(ec, eid, $"unsupported precision {intPrecision}");
-                    return MakeFixedPoint32(); // To delete just testing
-                    //return MakeSignedInt16();
-            }
+                16 => MakeSignedInt16(),
+                24 => MakeSignedInt24(),
+                32 => MakeSignedInt32(),
+                _ => throw new NotSupportedException($"Unsupported integer VdcIntegerPrecision: {intPrecision}")
+            };
         }
 
         public int SizeOfPoint()
@@ -261,6 +254,32 @@ namespace CGMAnalyzerCore.Parser
             throw new EndOfStreamException("Unexpected end of stream when trying to read UInt16.");
         }
 
+        public double MakeVdc()
+        {
+            SkipBits();
+
+            if (CgmContext.VdcType == VDCTypeEnum.Real)
+            {
+                var precision = CgmContext.VdcRealPrecision;
+                return precision switch
+                {
+                    VDCRealPrecisionEnum.FixedPoint32 => MakeFixedPoint32(),
+                    VDCRealPrecisionEnum.FixedPoint64 => MakeFixedPoint64(),
+                    VDCRealPrecisionEnum.FloatingPoint32 => MakeFloatingPoint32(),
+                    VDCRealPrecisionEnum.FloatingPoint64 => MakeFloatingPoint64(),
+                    _ => throw new NotSupportedException($"Unsupported real VDC precision: {precision}")
+                };
+            }
+
+            int intPrecision = CgmContext.IntegerPrecision;
+            return intPrecision switch
+            {
+                16 => MakeSignedInt16(),
+                24 => MakeSignedInt24(),
+                32 => MakeSignedInt32(),
+                _ => throw new NotSupportedException($"Unsupported integer VDC precision: {intPrecision}")
+            };
+        }
 
     }
 }

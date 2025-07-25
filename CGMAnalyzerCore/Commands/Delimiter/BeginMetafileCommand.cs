@@ -16,6 +16,12 @@ namespace CGMAnalyzerCore.Commands.Delimiter
             ReadArguments(reader);
         }
 
+
+        public override void Draw(Graphics g, Pen pen)
+        {
+            throw new NotImplementedException();
+        }
+
         public override void ReadArguments(BinaryReader reader)
         {
             // Les noms CGM sont souvent codés comme une séquence de bytes → ASCII string
@@ -26,11 +32,6 @@ namespace CGMAnalyzerCore.Commands.Delimiter
         public override string ToString()
         {
             return $"BEGIN_METAFILE \"{MetafileName}\"";
-        }
-
-        public override void Draw(Graphics g, Pen pen)
-        {
-            throw new NotImplementedException();
         }
     }
 }
