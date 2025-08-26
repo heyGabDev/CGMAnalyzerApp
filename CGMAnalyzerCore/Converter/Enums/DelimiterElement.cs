@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CGMAnalyzerCore.Converter.Enum
+namespace CGMAnalyzerCore.Converter.Enums
 {
     public enum DelimiterElement
     {

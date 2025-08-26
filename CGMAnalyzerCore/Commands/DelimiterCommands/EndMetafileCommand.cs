@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CGMAnalyzerCore.Commands.Delimiter
+namespace CGMAnalyzerCore.Commands.DelimiterCommands
 {
+    //Commande de structure
     public class EndMetafileCommand : BaseCgmCommand
     {
         public EndMetafileCommand(int ec, int eid, int l, BinaryReader reader)
@@ -16,7 +17,7 @@ namespace CGMAnalyzerCore.Commands.Delimiter
 
         public override void Draw(Graphics g, Pen pen)
         {
-            throw new NotImplementedException();
+            // No drawing
         }
 
         public override void ReadArguments(BinaryReader reader)

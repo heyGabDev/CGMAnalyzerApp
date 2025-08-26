@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CGMAnalyzerCore.Commands.Metafile
+namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
         /**
      * Class=1, Element=1
@@ -19,7 +19,7 @@ namespace CGMAnalyzerCore.Commands.Metafile
     {
         public int Version { get; private set; }
 
-        public MetafileVersionCommand(int ec, int eid, int length, CgmArgumentReader argReader)
+        public MetafileVersionCommand(int ec, int eid, int length, ExtractedArgumentReader argReader)
                     : base(ec, eid, length)
         {
             Version = argReader.MakeInt();

@@ -14,4 +14,10 @@
     <PackageReference Include="System.Drawing.Common" Version="9.0.7" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Commands\AttributeCommands\" />
+    <Folder Include="Commands\ExternalCommands\" />
+    <Folder Include="Commands\PictureCommands\" />
+  </ItemGroup>
+
 </Project>

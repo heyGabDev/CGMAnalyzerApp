@@ -9,7 +9,7 @@ namespace CGMAnalyzer.API.Services
 
             if (!File.Exists(tempPath))
             {
-                Console.WriteLine("Fichier CGM non trouvé.");
+                System.Diagnostics.Debug.WriteLine("Fichier CGM non trouvé.");
                 return new List<int>();
             }
 

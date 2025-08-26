@@ -6,17 +6,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CGMAnalyzerCore.Commands.Metafile
+namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
     public class IntegerPrecisionCommand : BaseCgmCommand
     {
         public int Precision { get; }
 
-        public IntegerPrecisionCommand(int ec, int eid, int length, CgmArgumentReader argReader)
+        public IntegerPrecisionCommand(int ec, int eid, int length, ExtractedArgumentReader argReader)
             : base(ec, eid, length)
         {
             Precision = argReader.NextArg();
-            CgmContext.IntegerPrecision = Precision;
+            CgmContext.VdcIntegerPrecision = Precision;
         }
 
         public override void ReadArguments(BinaryReader reader)

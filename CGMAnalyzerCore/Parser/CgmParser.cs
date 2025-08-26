@@ -1,6 +1,8 @@
 ﻿using CGMAnalyzerCore.Commands;
+using CGMAnalyzerCore.Commands.GraphicCommands;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
@@ -47,9 +49,11 @@ namespace CGMAnalyzerCore.Parser
             Reset();
             Commands = new List<BaseCgmCommand>(INITIAL_NUM_COMMANDS);
 
-            try
-            {
+            //try
+            //{
                 while (true)
+                {
+                try
                 {
                     var command = CgmCommand.Read(reader);
                     if (command == null)
@@ -57,7 +61,11 @@ namespace CGMAnalyzerCore.Parser
                         Messages.Add("End of file reached or no more commands to read.");
                         break;
                     }
-                        
+                    //if ()
+                    //{
+                    //    Debug.WriteLine($"[Ignored] Command {command}");
+                    //}
+
 
                     // Notifier les listeners (observateurs)
                     foreach (var listener in _commandListeners)
@@ -69,21 +77,31 @@ namespace CGMAnalyzerCore.Parser
 
                     if (command.ElementClass == 9)
                     {
-                        Console.WriteLine(command.ToString());
+                        System.Diagnostics.Debug.WriteLine(command.ToString());
                     }
 
-                    Commands.Add(command); ;
+                    Commands.Add(command);
                 }
-            }
-            catch (EndOfStreamException ex)
+                catch (EndOfStreamException ex)
             {
                 Messages.Add("End of stream reached unexpectedly. " + ex.Message);
-            }
+                System.Diagnostics.Debug.WriteLine($"[Stream reached Error] {ex.Message}");
+                }
             catch (Exception ex)
             {
                 Messages.Add("An error occurred while parsing the CGM file: " + ex.Message);
-                Console.WriteLine($"[Parser Error] {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[Parser Error] {ex.Message}");
             }
+        }
+            //catch (EndOfStreamException ex)
+            //{
+            //    Messages.Add("End of stream reached unexpectedly. " + ex.Message);
+            //}
+            //catch (Exception ex)
+            //{
+            //    Messages.Add("An error occurred while parsing the CGM file: " + ex.Message);
+            //    System.Diagnostics.Debug.WriteLinee($"[Parser Error] {ex.Message}");
+            //}
         }
 
         private void Reset()

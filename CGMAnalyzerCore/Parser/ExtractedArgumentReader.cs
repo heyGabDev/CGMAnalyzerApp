@@ -13,11 +13,16 @@ using static CGMAnalyzerCore.Geometry.Point2D;
 
 namespace CGMAnalyzerCore.Parser
 {
-    public class CgmArgumentReader 
+    /// <summary>
+    /// Lit des arguments CGM à partir d'un tableau d'octets déjà extraits (args[]).
+    /// Utilisé après que la commande ait été entièrement lue depuis le flux binaire.
+    /// </summary>
+    public class ExtractedArgumentReader
     {
         private readonly CgmCommand _command;
 
-        public CgmArgumentReader(CgmCommand command)
+
+        public ExtractedArgumentReader(CgmCommand command)
         {
             _command = command ?? throw new ArgumentNullException(nameof(command));
         }
@@ -29,28 +34,36 @@ namespace CGMAnalyzerCore.Parser
 
         public void SkipBits()
         {
-            _command.SkipBits();    
+            _command.SkipBits();
         }
 
         public int MakeUInt8()
         {
-            int value = NextArg(); // call cgmCommand
-            return value & 0xFF;
+            return NextArg() & 0xFF;
+        }
+
+        public string MakeString()
+        {
+            int length = GetStringCount();
+            byte[] bytes = new byte[length];
+            for (int i = 0; i < length; i++)
+            {
+                bytes[i] = (byte)(NextArg() & 0xFF);
+            }
+
+            try
+            {
+                return Encoding.GetEncoding("ISO-8859-1").GetString(bytes);
+            }
+            catch
+            {
+                return Encoding.Default.GetString(bytes);
+            }
         }
 
         public float MakeFloatCoord()
         {
             return NextArg();
-        }
-
-        public string MakeString(int length)
-        {
-            var bytes = new byte[length];
-            for (int i = 0; i < length; i++)
-            {
-                bytes[i] = (byte)(NextArg() & 0xFF);
-            }
-            return Encoding.UTF8.GetString(bytes);
         }
 
         public short MakeSignedInt16()
@@ -79,7 +92,7 @@ namespace CGMAnalyzerCore.Parser
 
         public int MakeInt()
         {
-            int precision = CgmContext.IntegerPrecision;
+            int precision = CgmContext.VdcIntegerPrecision;
             return MakeInt(precision);
         }
 
@@ -108,16 +121,16 @@ namespace CGMAnalyzerCore.Parser
                 switch (precision)
                 {
                     case VDCRealPrecisionEnum.FixedPoint32:
-                    //VDCRealPrecision.Type.FixedPoint32Bit:
+                        //VDCRealPrecision.Type.FixedPoint32Bit:
                         return MakeFixedPoint32();
                     case VDCRealPrecisionEnum.FixedPoint64:
                         return MakeFixedPoint64();
                     case VDCRealPrecisionEnum.FloatingPoint32:
-                        //return MakeFloatingPoint32();
+                    //return MakeFloatingPoint32();
                     case VDCRealPrecisionEnum.FloatingPoint64:
-                        //return MakeFloatingPoint64();
+                    //return MakeFloatingPoint64();
                     default:
-                        UnsupportedCommand.Unsupported(ec, eid,$"unsupported precision {precision}");
+                        UnsupportedCommand.Unsupported(ec, eid, $"unsupported precision {precision}");
                         return MakeFixedPoint32();
                 }
             }
@@ -186,35 +199,35 @@ namespace CGMAnalyzerCore.Parser
             return (char)(_command.Args[_command.CurrentArg++]);
         }
 
-        public string MakeString(BinaryReader reader)
+        //public string MakeString(BinaryReader reader)
+        //{
+        //    int length = GetStringCount(reader);
+        //    byte[] bytes = new byte[length];
+
+        //    for (int i = 0; i < length; i++)
+        //    {
+        //        bytes[i] = MakeByte(reader);
+        //    }
+
+        //    try
+        //    {
+        //        return System.Text.Encoding.GetEncoding("ISO-8859-1").GetString(bytes);
+        //    }
+        //    catch
+        //    {
+        //        return System.Text.Encoding.Default.GetString(bytes);
+        //    }
+        //}
+
+        public int GetStringCount()
         {
-            int length = GetStringCount(reader);
-            byte[] bytes = new byte[length];
-
-            for (int i = 0; i < length; i++)
-            {
-                bytes[i] = MakeByte(reader);
-            }
-
-            try
-            {
-                return System.Text.Encoding.GetEncoding("ISO-8859-1").GetString(bytes);
-            }
-            catch
-            {
-                return System.Text.Encoding.Default.GetString(bytes);
-            }
-        }
-
-        public int GetStringCount(BinaryReader reader)
-        {
-            int length = MakeUInt8(reader);
+            int length = MakeUInt8();
             if (length == 255)
             {
-                length = MakeUInt16(reader);
+                length = MakeUInt16();
                 if ((length & (1 << 16)) != 0)
                 {
-                    length = (length << 16) | MakeUInt16(reader);
+                    length = (length << 16) | MakeUInt16();
                 }
             }
             return length;
@@ -271,7 +284,7 @@ namespace CGMAnalyzerCore.Parser
                 };
             }
 
-            int intPrecision = CgmContext.IntegerPrecision;
+            int intPrecision = CgmContext.VdcIntegerPrecision;
             return intPrecision switch
             {
                 16 => MakeSignedInt16(),
@@ -281,5 +294,36 @@ namespace CGMAnalyzerCore.Parser
             };
         }
 
+        public short MakeEnum()
+        {
+            return MakeSignedInt16();
+        }
+
+        public double MakeReal()
+        {
+            var precision = CgmContext.VdcRealPrecision;
+
+            if (precision.Equals(VDCRealPrecisionEnum.FixedPoint32))
+            {
+                return MakeFixedPoint32();
+            }
+            if (precision.Equals(VDCRealPrecisionEnum.FixedPoint64))
+            {
+                return MakeFixedPoint64();
+            }
+            if (precision.Equals(VDCRealPrecisionEnum.FloatingPoint32))
+            {
+                return MakeFloatingPoint32();
+            }
+            if (precision.Equals(VDCRealPrecisionEnum.FloatingPoint64))
+            {
+                return MakeFloatingPoint64();
+            }
+
+            // unsupported("unsupported real precision "+precision);
+            return MakeFloatingPoint32();
+        }
+   
+        pub
     }
 }

@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CGMAnalyzerCore.Commands.Delimiter
+namespace CGMAnalyzerCore.Commands.DelimiterCommands
 {
+    //Commande de structure
     public class BeginPictureBodyCommand : BaseCgmCommand
     {
         public BeginPictureBodyCommand(int ec, int eid, int length, BinaryReader reader)
@@ -27,7 +28,7 @@ namespace CGMAnalyzerCore.Commands.Delimiter
 
         public override string ToString()
         {
-            return "Begin Picture Body";
+            return "BEGIN_PICTURE_BODY";
         }
     }
 }

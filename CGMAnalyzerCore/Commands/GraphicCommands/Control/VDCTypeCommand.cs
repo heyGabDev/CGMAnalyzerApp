@@ -42,20 +42,20 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands.Control
 
             if (CurrentVDCType == VDCTypeEnum.Real)
             {
-                Type precision = CgmContext.VdcRealPrecision.GetType();
-                if (precision.Equals(VDCRealPrecisionEnum.FixedPoint32))
+                Type precisionType = CgmContext.VdcRealPrecision.GetType();
+                if (precisionType.Equals(VDCRealPrecisionEnum.FixedPoint32))
                 {
                     return SizeOfFixedPoint32();
                 }
-                if (precision.Equals(VDCRealPrecisionEnum.FixedPoint32))
+                if (precisionType.Equals(VDCRealPrecisionEnum.FixedPoint32))
                 {
                     return SizeOfFixedPoint64();
                 }
-                if (precision.Equals(VDCRealPrecisionEnum.FloatingPoint32))
+                if (precisionType.Equals(VDCRealPrecisionEnum.FloatingPoint32))
                 {
                     return SizeOfFloatingPoint32();
                 }
-                if (precision.Equals(VDCRealPrecisionEnum.FloatingPoint64))
+                if (precisionType.Equals(VDCRealPrecisionEnum.FloatingPoint64))
                 {
                     return SizeOfFloatingPoint64();
                 }

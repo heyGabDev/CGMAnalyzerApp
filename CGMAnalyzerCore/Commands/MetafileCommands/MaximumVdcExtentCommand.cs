@@ -6,14 +6,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CGMAnalyzerCore.Commands.Metafile
+namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
     public class MaximumVdcExtentCommand : BaseCgmCommand
     {
         public Point2D.Double Point1 { get; }
         public Point2D.Double Point2 { get; }
 
-        public MaximumVdcExtentCommand(int ec, int eid, int l, CgmArgumentReader argReader)
+        public MaximumVdcExtentCommand(int ec, int eid, int l, ExtractedArgumentReader argReader)
             : base(ec, eid, l)
         {
             Point1 = argReader.MakePoint(ec, eid);

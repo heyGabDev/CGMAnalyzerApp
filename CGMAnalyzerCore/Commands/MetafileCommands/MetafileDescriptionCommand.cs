@@ -5,16 +5,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CGMAnalyzerCore.Commands.Metafile
+namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
     public class MetafileDescriptionCommand : BaseCgmCommand
     {
         public string Description { get; }
 
-        public MetafileDescriptionCommand(int ec, int eid, int length, CgmArgumentReader argReader)
+        public MetafileDescriptionCommand(int ec, int eid, int length, ExtractedArgumentReader argReader)
             : base(ec, eid, length)
         {
-            Description = argReader.MakeString(length);
+            Description = argReader.MakeString();
         }
 
         public override void Draw(Graphics g, Pen pen)

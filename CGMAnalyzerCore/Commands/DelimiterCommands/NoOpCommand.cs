@@ -1,20 +1,16 @@
-﻿using CGMAnalyzerCore.Parser;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CGMAnalyzerCore.Commands.Metafile
+namespace CGMAnalyzerCore.Commands.DelimiterCommands
 {
-    public class ColourModelCommand : BaseCgmCommand
+    public class NoOpCommand : BaseCgmCommand
     {
-        public int ColourModel { get; private set; }
-
-        public ColourModelCommand(int ec, int eid, int l, CgmArgumentReader argReader)
-            : base(ec, eid, l)
+        public NoOpCommand(int ec, int eid, int length, BinaryReader reader)
+            : base(ec, eid, length)
         {
-            ColourModel = argReader.MakeInt();
         }
 
         public override void Draw(Graphics g, Pen pen)
@@ -29,7 +25,7 @@ namespace CGMAnalyzerCore.Commands.Metafile
 
         public override string ToString()
         {
-            return $"ColourModelCommand: Version = {ColourModel}";
+            return $"NO_OP";
         }
     }
 }

@@ -15,7 +15,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
         private readonly double _startAngle;
         private readonly double _extentAngle;
 
-        public EllipticalArcCommand(int ec, int eid, CgmCommand command, CgmArgumentReader argumentReader)
+        public EllipticalArcCommand(int ec, int eid, CgmCommand command, ExtractedArgumentReader argumentReader)
             : base(ec, eid, command.Length)
         {
             _center = argumentReader.MakePoint(ec, eid);

@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Ignore le dossier wwwroot/images dans CGMAnalyzer.API
+CGMAnalyzer.API/wwwroot/

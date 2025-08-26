@@ -6,16 +6,31 @@ using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Geometry
 {
-    public abstract class Point2D : ICloneable
+    public class Point2D : ICloneable
     {
-        public abstract double X { get; }
-        public abstract double Y { get; }
+        public virtual double X { get; set; }
+        public virtual double Y { get; set; }
 
-        public abstract void SetLocation(double x, double y);
+        public Point2D() { }
 
-        public void SetLocation(Point2D p)
+        public Point2D(double x, double y)
+        {
+            X = x;
+            Y = y;
+        }
+        public virtual void SetLocation(double x, double y) {  
+            X = x; 
+            Y = y; 
+        }
+
+        public virtual void SetLocation(Point2D p)
         {
             SetLocation(p.X, p.Y);
+        }
+
+        public object Clone()
+        {
+            return MemberwiseClone();
         }
 
         public static double DistanceSq(double x1, double y1, double x2, double y2)
@@ -64,11 +79,13 @@ namespace CGMAnalyzerCore.Geometry
                    Y == other.Y;
         }
 
-        public object Clone()
+        public override string ToString()
         {
-            return this.MemberwiseClone();
+            return $"Point2D[{X}, {Y}]";
         }
 
+
+        // To Do : A ajouter constructeurs sous-classes Float et Double prenant directement un Point2D ou un double x, double y 
         public class Float : Point2D
         {
             public float XValue { get; set; }

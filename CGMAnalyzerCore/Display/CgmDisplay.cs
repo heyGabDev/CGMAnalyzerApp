@@ -96,5 +96,10 @@ namespace CGMAnalyzerCore.Display
             LineWidth = width;
             Pen.Width = width;
         }
+    
+        public void SetTileArrayInfo(TileArrayInfo tileArrayInfo)
+        {
+            // To Do : Implemant
+        }
     }
 }
