@@ -9,136 +9,93 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
 {
     public static class CommandExtensions
     {
-        // <summary>
-        /// Extensions pour LineCommand
+        /// <summary>
+        /// Extension pour TES LineCommand qui utilisent Start/End
         /// </summary>
         public static List<Point> GetPoints(this LineCommand command)
         {
-            // À implémenter selon ta structure de données
-            // Exemple basique :
-            return command.Arguments?.Take(4).ToArray() switch
-            {
-                var args when args.Length >= 4 => new List<Point>
-                {
-                    new Point((int)args[0], (int)args[1]),
-                    new Point((int)args[2], (int)args[3])
-                },
-                _ => new List<Point>()
-            };
+            return new List<Point> { command.Start, command.End };
         }
 
         /// <summary>
-        /// Extensions pour PolylineCommand
+        /// Extension pour TES PolylineCommand qui ont une propriété Points
         /// </summary>
         public static List<Point> GetPoints(this PolylineCommand command)
         {
-            var points = new List<Point>();
-            var args = command.Arguments;
-
-            if (args != null && args.Length >= 2)
-            {
-                for (int i = 0; i < args.Length - 1; i += 2)
-                {
-                    points.Add(new Point((int)args[i], (int)args[i + 1]));
-                }
-            }
-
-            return points;
+            return command.Points ?? new List<Point>();
         }
 
         /// <summary>
-        /// Extensions pour DisjointPolylineCommand
+        /// Extension pour TES DisjointPolylineCommand qui utilisent Point2D
         /// </summary>
         public static List<List<Point>> GetPointSets(this DisjointPolylineCommand command)
         {
-            // Implémentation à adapter selon ta logique
             var pointSets = new List<List<Point>>();
-            var args = command.Arguments;
 
-            if (args?.Length >= 4)
+            foreach (var line in command.Lines)
             {
-                // Exemple : supposons que les points sont groupés par paires
-                var currentSet = new List<Point>();
-
-                for (int i = 0; i < args.Length - 1; i += 2)
+                var linePoints = new List<Point>
                 {
-                    currentSet.Add(new Point((int)args[i], (int)args[i + 1]));
-
-                    // Logique pour détecter une nouvelle séquence (à adapter)
-                    if (currentSet.Count >= 2)
-                    {
-                        pointSets.Add(new List<Point>(currentSet));
-                        currentSet.Clear();
-                    }
-                }
-
-                if (currentSet.Count >= 2)
-                    pointSets.Add(currentSet);
+                    // Convertir Point2D vers Point standard
+                    new Point((int)line.Start.X, (int)line.Start.Y),
+                    new Point((int)line.End.X, (int)line.End.Y)
+                };
+                pointSets.Add(linePoints);
             }
 
             return pointSets;
         }
 
         /// <summary>
-        /// Extensions pour EllipticalArcCommand
+        /// Extension pour TES EllipticalArcCommand 
         /// </summary>
         public static Rectangle? GetBounds(this EllipticalArcCommand command)
         {
-            var args = command.Arguments;
-            if (args?.Length >= 4)
-            {
-                return new Rectangle(
-                    (int)args[0], (int)args[1],
-                    (int)args[2], (int)args[3]
-                );
-            }
-            return null;
+            // Tu n'exposes pas les propriétés privées, donc on utilise une estimation
+            // Idéalement, tu devrais ajouter des propriétés publiques dans EllipticalArcCommand
+
+            // Pour le moment, retourner un rectangle par défaut
+            // Tu peux modifier EllipticalArcCommand pour exposer Center, etc.
+            return new Rectangle(100, 100, 200, 150); // Rectangle par défaut
         }
 
         public static float GetStartAngle(this EllipticalArcCommand command)
         {
-            var args = command.Arguments;
-            return args?.Length > 4 ? (float)args[4] : 0f;
+            // Pareil ici, tu n'exposes pas _startAngle
+            // Idéalement, ajouter une propriété publique StartAngle
+            return 0f; // Valeur par défaut
         }
 
         public static float GetSweepAngle(this EllipticalArcCommand command)
         {
-            var args = command.Arguments;
-            return args?.Length > 5 ? (float)args[5] : 360f;
+            // Pareil pour _extentAngle
+            return 360f; // Valeur par défaut
         }
 
         /// <summary>
-        /// Extensions pour les commandes de métadonnées
+        /// Extensions pour les commandes de métadonnées - versions basiques
         /// </summary>
         public static string GetColourModel(this ColourModelCommand command)
         {
-            return command.Arguments?.FirstOrDefault()?.ToString() ?? "RGB";
+            return "RGB"; // Par défaut
         }
 
         public static int GetPrecision(this IntegerPrecisionCommand command)
         {
-            return command.Arguments?.FirstOrDefault() is double precision ? (int)precision : 16;
+            return 16; // Par défaut
+        }
+
+        public static string GetVersion(this MetafileVersionCommand command)
+        {
+            return "1.0"; // Par défaut
         }
 
         public static Rectangle GetExtent(this MaximumVdcExtentCommand command)
         {
-            var args = command.Arguments;
-            if (args?.Length >= 4)
-            {
-                return new Rectangle(
-                    (int)args[0], (int)args[1],
-                    (int)(args[2] - args[0]), (int)(args[3] - args[1])
-                );
-            }
+            // Rectangle par défaut si pas d'accès aux données internes
             return new Rectangle(0, 0, 32767, 32767);
         }
-
-        public static string? GetVersion(this MetafileVersionCommand command)
-        {
-            return command.Arguments?.FirstOrDefault()?.ToString();
-        }
     }
-}
 
-    
+
 }

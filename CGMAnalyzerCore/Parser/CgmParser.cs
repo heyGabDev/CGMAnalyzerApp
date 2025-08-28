@@ -218,7 +218,7 @@ namespace CGMAnalyzerCore.Parser
 
         private void NotifyListenersAsync(BaseCgmCommand command)
         {
-            if (!_commandListeners.IsEmpty)
+            if (_commandListeners.Count > 0)
             {
                 // Notification asynchrone pour éviter de bloquer le parsing
                 Task.Run(() =>

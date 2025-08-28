@@ -9,6 +9,10 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
 {
     public class EllipticalArcCommand : BaseCgmCommand
     {
+        public Point2D.Double Center => _center;
+        public double StartAngle => _startAngle;
+        public double ExtentAngle => _extentAngle;
+
         private readonly Point2D.Double _center;
         private readonly Point2D.Double _first;
         private readonly Point2D.Double _second;

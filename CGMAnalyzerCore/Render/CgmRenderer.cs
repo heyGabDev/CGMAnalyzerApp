@@ -416,4 +416,5 @@ namespace CGMAnalyzerCore.Render
 
         }
 
+    }
 }

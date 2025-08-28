@@ -1,4 +1,6 @@
-﻿namespace CGMAnalyzerCore.Converter.Interface
+﻿using CGMAnalyzerCore.Render; // Ajouter ce using
+
+namespace CGMAnalyzerCore.Converter.Interface
 {
     public interface ICgmConverter
     {
@@ -13,13 +15,5 @@
         Task<byte[]> ConvertToBmpBytesAsync(Stream cgmStream, string fileName, RenderOptions options);
     }
 
-    public class RenderOptions
-    {
-        public int Width { get; set; } = 800;
-        public int Height { get; set; } = 600;
-        public bool HighQuality { get; set; } = true;
-        public System.Drawing.Color BackgroundColor { get; set; } = System.Drawing.Color.White;
-        public List<string>? VisibleLayers { get; set; } // null = tous les layers
-    }
+    // SUPPRIMER cette classe RenderOptions d'ici
 }
-

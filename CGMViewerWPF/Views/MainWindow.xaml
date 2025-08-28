@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         Title="CGM Viewer App - Visualiseur de fichiers CGM" 
         Height="800" Width="1400" 
@@ -45,13 +46,9 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <!-- Toolbar -->
             <RowDefinition Height="Auto"/>
-            <!-- Status/Progress -->
             <RowDefinition Height="*"/>
-            <!-- Main content -->
             <RowDefinition Height="Auto"/>
-            <!-- Status bar -->
         </Grid.RowDefinitions>
 
         <!-- Toolbar -->
@@ -80,9 +77,18 @@
             </StackPanel>
         </Border>
 
-        <!-- Progress & Status -->
-        <Border Grid.Row="1" Background="#FFFAFAFA" BorderBrush="#FFE0E0E0" BorderThickness="0,0,0,1"
-                Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <!-- Progress & Status - CORRIGÉ -->
+        <Border Grid.Row="1" Background="#FFFAFAFA" BorderBrush="#FFE0E0E0" BorderThickness="0,0,0,1">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
             <StackPanel Margin="12,8">
                 <TextBlock Text="{Binding StatusMessage}" 
                            Style="{StaticResource StatusTextStyle}"
@@ -164,101 +170,54 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Header with tabs -->
+                    <!-- Header -->
                     <Border Grid.Row="0" Background="#FFF8F9FA" BorderBrush="#FFE0E0E0" BorderThickness="0,0,0,1"
                             CornerRadius="4,4,0,0">
-                        <TabControl Background="Transparent" BorderThickness="0">
-                            <TabItem Header="🖼️ Aperçu BMP">
-                                <Grid/>
-                            </TabItem>
-                            <TabItem Header="🎨 Rendu CGM">
-                                <Grid/>
-                            </TabItem>
-                        </TabControl>
+                        <TextBlock Text="🖼️ Aperçu de l'image" 
+                                   Style="{StaticResource HeaderTextStyle}"
+                                   Margin="12,8"/>
                     </Border>
 
-                    <!-- Image Display -->
-                    <TabControl Grid.Row="1" BorderThickness="0" Background="Transparent">
-                        <!-- BMP Preview Tab -->
-                        <TabItem>
-                            <ScrollViewer ZoomMode="Enabled" 
-                                          HorizontalScrollBarVisibility="Auto"
-                                          VerticalScrollBarVisibility="Auto"
-                                          Background="#FFF5F5F5">
-                                <Image Source="{Binding ImageSource}" 
-                                       Stretch="Uniform"
-                                       RenderOptions.BitmapScalingMode="HighQuality">
-                                    <Image.Style>
-                                        <Style TargetType="Image">
-                                            <Style.Triggers>
-                                                <Trigger Property="Source" Value="{x:Null}">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                </Trigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Image.Style>
-                                </Image>
+                    <!-- Image Display - CORRIGÉ -->
+                    <ScrollViewer Grid.Row="1" 
+                                  HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Background="#FFF5F5F5">
+                        <Grid>
+                            <!-- Image -->
+                            <Image Source="{Binding ImageSource}" 
+                                   Stretch="Uniform"
+                                   RenderOptions.BitmapScalingMode="HighQuality">
+                                <Image.Style>
+                                    <Style TargetType="Image">
+                                        <Style.Triggers>
+                                            <Trigger Property="Source" Value="{x:Null}">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Image.Style>
+                            </Image>
 
-                                <!-- Placeholder when no image -->
-                                <TextBlock Text="🖼️ Sélectionnez un fichier pour voir l'aperçu"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"
-                                           FontSize="16"
-                                           Foreground="#FF6D6D6D">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding ImageSource}" Value="{x:Null}">
-                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </ScrollViewer>
-                        </TabItem>
-
-                        <!-- CGM Preview Tab -->
-                        <TabItem>
-                            <ScrollViewer ZoomMode="Enabled" 
-                                          HorizontalScrollBarVisibility="Auto"
-                                          VerticalScrollBarVisibility="Auto"
-                                          Background="#FFF5F5F5">
-                                <Image Source="{Binding CgmPreviewImage}" 
-                                       Stretch="Uniform"
-                                       RenderOptions.BitmapScalingMode="HighQuality">
-                                    <Image.Style>
-                                        <Style TargetType="Image">
-                                            <Style.Triggers>
-                                                <Trigger Property="Source" Value="{x:Null}">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                </Trigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Image.Style>
-                                </Image>
-
-                                <!-- Placeholder for CGM -->
-                                <TextBlock Text="🎨 Rendu CGM natif indisponible"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"
-                                           FontSize="16"
-                                           Foreground="#FF6D6D6D">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding CgmPreviewImage}" Value="{x:Null}">
-                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </ScrollViewer>
-                        </TabItem>
-                    </TabControl>
+                            <!-- Placeholder -->
+                            <TextBlock Text="🖼️ Sélectionnez un fichier pour voir l'aperçu"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       FontSize="16"
+                                       Foreground="#FF6D6D6D">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ImageSource}" Value="{x:Null}">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                    </ScrollViewer>
                 </Grid>
             </Border>
 
@@ -300,7 +259,7 @@
 
                     <!-- Errors Header -->
                     <Border Grid.Row="2" Background="#FFFFF3E0" BorderBrush="#FFE0E0E0" BorderThickness="0,1,0,1">
-                        <TextBlock Text="⚠️ Messages & Erreurs" 
+                        <TextBlock Text="⚠️ Messages et Erreurs" 
                                    Style="{StaticResource HeaderTextStyle}"
                                    Margin="12,8"/>
                     </Border>
@@ -345,10 +304,19 @@
             </Grid>
         </Border>
 
-        <!-- Loading Overlay -->
+        <!-- Loading Overlay - CORRIGÉ -->
         <Border Grid.RowSpan="4" 
-                Background="#80000000"
-                Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
+                Background="#80000000">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <ProgressBar IsIndeterminate="True" 
                              Width="200" Height="4"
