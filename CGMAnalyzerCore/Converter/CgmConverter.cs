@@ -10,18 +10,51 @@ namespace CGMAnalyzerCore.Convert
 {
     public class CgmConverter : ICgmConverter
     {
-        public async Task<byte[]> ConvertToBmpBytesAsync(Stream stream, string filename)
+        public async Task<byte[]> ConvertToBmpBytesAsync(Stream cgmStream, string fileName)
         {
-            var parser = new CgmParser();
-            parser.Load(stream, filename);
-
-            var renderer = new CgmRenderer(parser.Commands);
-            using var bmp = renderer.Render();
-
-            using var ms = new MemoryStream();
-            bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-            return ms.ToArray();
+            return await ConvertToBmpBytesAsync(cgmStream, fileName, new RenderOptions());
         }
+
+        public async Task<byte[]> ConvertToBmpBytesAsync(Stream cgmStream, string fileName, RenderOptions options)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    // 1. Parser le CGM
+                    var parser = new CgmParser();
+                    parser.Load(cgmStream, fileName);
+
+                    // 2. Créer le renderer avec les options
+                    using var renderer = new CgmRenderer(parser.Commands, options);
+
+                    // 3. Générer le bitmap
+                    using var bitmap = renderer.Render();
+
+                    // 4. Convertir en bytes BMP
+                    using var memoryStream = new MemoryStream();
+                    bitmap.Save(memoryStream, ImageFormat.Bmp);
+
+                    return memoryStream.ToArray();
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Erreur lors de la conversion CGM->BMP: {ex.Message}", ex);
+                }
+            });
+        }
+        //public async Task<byte[]> ConvertToBmpBytesAsync(Stream stream, string filename)
+        //{
+        //    var parser = new CgmParser();
+        //    parser.Load(stream, filename);
+
+        //    var renderer = new CgmRenderer(parser.Commands);
+        //    using var bmp = renderer.Render();
+
+        //    using var ms = new MemoryStream();
+        //    bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+        //    return ms.ToArray();
+        //}
 
         //public async Task<byte[]> ConvertToBmpBytesAsync(Stream cgmStream, string label = "CGM")
         //{
