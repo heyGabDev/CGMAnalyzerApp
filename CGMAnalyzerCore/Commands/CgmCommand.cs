@@ -51,13 +51,91 @@ namespace CGMAnalyzerCore.Commands
             LayerId = CgmContext.CurrentLayerId;
             ErrorCommand = false;
 
-            Args = new int[argCount];
-            for (int i = 0; i < argCount; i++)
+            //Args = new int[argCount];
+            //for (int i = 0; i < argCount; i++)
+            //{
+            //    Args[i] = reader.ReadUInt16();
+            //}
+
+            if (reader != null)
             {
-                Args[i] = reader.ReadUInt16();
+                if (argCount != 31)
+                {
+                    // Lecture normale - OCTETS, pas des mots de 16 bits
+                    Args = new int[argCount];
+                    for (int i = 0; i < argCount; i++)
+                {
+                    Args[i] = reader.ReadByte(); // 8 bits, pas 16 !
+                }
+                // Alignement sur frontière de mot si nombre impair d'octets
+                if (argCount % 2 == 1)
+                {
+                    try
+                    {
+                        reader.ReadByte(); // Skip padding
+                    }
+                    catch (EndOfStreamException)
+                    {
+                        // Fin de fichier, on ignore
+                    }
+                }
             }
+            else
+            {
+                // Forme longue (argCount == 31) - commandes partitionnées
+                bool done = false;
+                List<int> argsList = new List<int>();
+
+                do
+                {
+                    // Lire la longueur sur 16 bits
+                    int l = (reader.ReadByte() << 8) | reader.ReadByte();
+                    if (l == -1) break;
+
+                    if ((l & 0x8000) != 0) // bit 15 set = pas la dernière partition
+                    {
+                        done = false;
+                        l = l & 0x7FFF; // Clear bit 15
+                    }
+                    else
+                    {
+                        done = true;
+                    }
+
+                    // Lire les arguments de cette partition
+                    for (int i = 0; i < l; i++)
+                    {
+                        argsList.Add(reader.ReadByte());
+                    }
+
+                    // Alignement si nécessaire
+                    if (l % 2 == 1)
+                    {
+                        reader.ReadByte();
+                    }
+                }
+                while (!done);
+
+                Args = argsList.ToArray();
+            }
+
+            }
+
         }
-        
+
+        // Constructeur de copie - réutilise les arguments déjà lus
+        protected CgmCommand(CgmCommand source, int ec, int eid, int l)
+            : base(ec, eid, l)
+        {
+            ElementClassInt = ec;
+            ElementCode = eid;
+            LayerId = source.LayerId;
+            ErrorCommand = source.ErrorCommand;
+            Args = source.Args; // Réutilise les arguments
+            CurrentArg = 0;
+            PosInArg = 0;
+        }
+
         public static BaseCgmCommand Read(BinaryReader reader)
         {
             int k;
@@ -116,9 +194,15 @@ namespace CGMAnalyzerCore.Commands
                     return UnsupportedCommand.Unsupported(ec, eid, l, reader);
                 // Class: 9
                 case ElementEnums.ApplicationStructureElements:
-                return new CgmCommand(ec, eid, l, reader);
-                default:
-                    return UnsupportedCommand.Unsupported(ec, eid, l, reader);
+                    return ReadApplicationStructureElements(reader, ec, eid, l);
+
+                    default: return UnsupportedCommand.Unsupported(ec, eid, l, reader);
+
+                // Clean SGC 
+                //case ElementEnums.ApplicationStructureElements:
+                //return new CgmCommand(ec, eid, l, reader);
+                //default:
+                //    return UnsupportedCommand.Unsupported(ec, eid, l, reader);
             }
         }
 
@@ -134,11 +218,13 @@ namespace CGMAnalyzerCore.Commands
             return element switch
             {
                 // 0, 0
-                DelimiterElement.NoOp => new NoOpCommand(ec, eid, l, reader),
+                DelimiterElement.NoOp => command,
+                //DelimiterElement.NoOp => new NoOpCommand(ec, eid, l, reader),
                 // 0, 1
-                DelimiterElement.BeginMetafile => new BeginMetafileCommand(ec, eid, l, reader),
+                DelimiterElement.BeginMetafile => new BeginMetafileCommand(ec, eid, l, command, argumentReader),
                 // 0, 2
-                DelimiterElement.EndMetafile => new EndMetafileCommand(ec, eid, l, reader),
+                DelimiterElement.EndMetafile => command,
+                //DelimiterElement.EndMetafile => new EndMetafileCommand(ec, eid, l, reader),
                 // 0, 3
                 DelimiterElement.BeginPicture => new BeginPictureCommand(ec, eid, l, reader, argumentReader),
                 // 0, 4
@@ -480,16 +566,12 @@ namespace CGMAnalyzerCore.Commands
         //}
 
         // Class 9
-        private static BaseCgmCommand ApplicationStructureCommand(BinaryReader reader, int ec, int eid, int l) {
-            var element = (AttributeElement)eid;
+        private static BaseCgmCommand ReadApplicationStructureElements(BinaryReader reader, int ec, int eid, int l)
+        {
             var command = new CgmCommand(ec, eid, l, reader);
-            var argumentReader = new ExtractedArgumentReader(command);
-
-            return element switch
-            {
-                _ => UnsupportedCommand.Unsupported(ec, eid, l, reader)
-            };
+            return new ApplicationStructureCommand(command, ec, eid);
         }
+
 
         #endregion
 

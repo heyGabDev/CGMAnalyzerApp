@@ -14,7 +14,7 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
         public BeginPictureCommand(int ec, int eid, int l, BinaryReader reader, ExtractedArgumentReader argReader)
             : base(ec, eid, l)
         {
-            Name = argReader.MakeString(reader);
+            Name = argReader.MakeString();
         }
 
         public override void Draw(Graphics g, Pen pen)

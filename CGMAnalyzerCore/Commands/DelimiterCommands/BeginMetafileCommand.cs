@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CGMAnalyzerCore.Parser;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,10 +12,10 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
     {
         public string MetafileName { get; private set; } = "";
 
-        public BeginMetafileCommand(int ec, int eid, int length, BinaryReader reader)
+        public BeginMetafileCommand(int ec, int eid, int length, CgmCommand source, ExtractedArgumentReader argReader)
             : base(ec, eid, length)
         {
-            ReadArguments(reader);
+            MetafileName = argReader.MakeString();
         }
 
 

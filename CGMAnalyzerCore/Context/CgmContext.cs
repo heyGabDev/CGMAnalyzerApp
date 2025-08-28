@@ -24,7 +24,13 @@ namespace CGMAnalyzerCore.Context
         // ---- Layer
         public static int CurrentLayerId { get; set; } = 0;
 
-        //public static int IntegerPrecision { get; internal set; }
+        public static int IntegerPrecision { get; set; } = 16;
+
+        public static int IndexPrecision { get; set; } = 16;
+        public static int NamePrecision { get; set; } = 16;
+        public static int ColorPrecision { get; set; } = 8;
+        public static int ColorIndexPrecision { get; set; } = 8;
+        public static int RealPrecision { get; set; } = 32; // Fixed32 par défaut
 
         public static void Reset()
         {
@@ -32,6 +38,12 @@ namespace CGMAnalyzerCore.Context
             VdcIntegerPrecision = 16;
             VdcRealPrecision = VDCRealPrecisionEnum.FixedPoint32;
             CurrentLayerId = 0;
+            IntegerPrecision = 16;
+            IndexPrecision = 16;
+            NamePrecision = 16;
+            ColorPrecision = 8;
+            ColorIndexPrecision = 8;
+            RealPrecision = 32;
         }
     }
 

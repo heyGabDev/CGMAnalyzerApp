@@ -42,6 +42,26 @@ namespace CGMAnalyzerCore.Parser
             return NextArg() & 0xFF;
         }
 
+        public int MakeUInt16()
+        {
+            SkipBits();
+
+            if (_command.CurrentArg + 1 < _command.Args.Length)
+            {
+                // Deux octets disponibles
+                int high = _command.Args[_command.CurrentArg++];
+                int low = _command.Args[_command.CurrentArg++];
+                return (high << 8) | low;
+            }
+            else if (_command.CurrentArg < _command.Args.Length)
+            {
+                // Un seul octet restant (cas de fallback)
+                return _command.Args[_command.CurrentArg++];
+            }
+
+            throw new InvalidOperationException("No more arguments available");
+        }
+
         public string MakeString()
         {
             int length = GetStringCount();
@@ -323,7 +343,57 @@ namespace CGMAnalyzerCore.Parser
             // unsupported("unsupported real precision "+precision);
             return MakeFloatingPoint32();
         }
-   
-        pub
+
+
+        // TO DO : TO COMPLETE
+        internal object MakeColorIndex()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal object MakeDirectColor()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal object MakeByte()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal object MakeInt16()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal object MakeInt32()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal object MakeIndex()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal object MakeFixedString()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal object MakeColorValue()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal object MakeBitStream()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal object MakeColorList()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

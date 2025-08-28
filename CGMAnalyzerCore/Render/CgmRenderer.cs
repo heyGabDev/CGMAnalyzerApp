@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Drawing;
 using CGMAnalyzerCore.Commands;
-using CGMAnalyzerCore.Commands.Delimiter;
+using CGMAnalyzerCore.Commands.DelimiterCommands;
 using CGMAnalyzerCore.Commands.GraphicCommands;
-using CGMAnalyzerCore.Commands.Metafile;
+using CGMAnalyzerCore.Commands.MetafileCommands;
 
 namespace CGMAnalyzerCore.Render
 {
