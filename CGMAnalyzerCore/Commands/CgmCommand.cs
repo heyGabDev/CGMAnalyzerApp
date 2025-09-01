@@ -11,6 +11,7 @@ using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -51,35 +52,62 @@ namespace CGMAnalyzerCore.Commands
             LayerId = CgmContext.CurrentLayerId;
             ErrorCommand = false;
 
-            //Args = new int[argCount];
-            //for (int i = 0; i < argCount; i++)
-            //{
-            //    Args[i] = reader.ReadUInt16();
-            //}
-
             if (reader != null)
             {
                 if (argCount != 31)
                 {
-                    // Lecture normale - OCTETS, pas des mots de 16 bits
-                    Args = new int[argCount];
-                    for (int i = 0; i < argCount; i++)
-                {
-                    Args[i] = reader.ReadByte(); // 8 bits, pas 16 !
-                }
-                // Alignement sur frontière de mot si nombre impair d'octets
-                if (argCount % 2 == 1)
-                {
                     try
                     {
-                        reader.ReadByte(); // Skip padding
+                        // Vérifier qu'on a assez de bytes disponibles
+                        long remainingBytes = reader.BaseStream.Length - reader.BaseStream.Position;
+                        int bytesToRead = Math.Min(argCount, (int)remainingBytes);
+
+                        Args = new int[bytesToRead]; // Ajuster la taille
+
+                        for (int i = 0; i < bytesToRead; i++)
+                        {
+                            Args[i] = reader.ReadByte();
+                        }
+
+                        // Skip padding seulement si on peut
+                        if (bytesToRead % 2 == 1 && reader.BaseStream.Position < reader.BaseStream.Length)
+                        {
+                            try
+                            {
+                                reader.ReadByte();
+                            }
+                            catch (EndOfStreamException)
+                            {
+                                // Ignore padding error
+                            }
+                        }
                     }
                     catch (EndOfStreamException)
                     {
-                        // Fin de fichier, on ignore
+                        // Si on ne peut rien lire, créer un tableau vide
+                        Args = new int[0];
+                        Debug.WriteLine($"[CGM] Fin de stream atteinte pour commande {ec}:{eid}");
                     }
+
+                    //    // Lecture normale - OCTETS, pas des mots de 16 bits
+                    //    Args = new int[argCount];
+                    //    for (int i = 0; i < argCount; i++)
+                    //{
+                    //    Args[i] = reader.ReadByte(); // 8 bits, pas 16 !
+                    //}
+                    //// Alignement sur frontière de mot si nombre impair d'octets
+                    //if (argCount % 2 == 1)
+                    //{
+                    //    try
+                    //    {
+                    //        reader.ReadByte(); // Skip padding
+                    //    }
+                    //    catch (EndOfStreamException)
+                    //    {
+                    //        // Fin de fichier, on ignore
+                    //    }
+                    //}
                 }
-            }
             else
             {
                 // Forme longue (argCount == 31) - commandes partitionnées
@@ -360,59 +388,57 @@ namespace CGMAnalyzerCore.Commands
                 // 2
                 GraphicalPrimitiveElement.DisjointPolyline => new DisjointPolylineCommand(ec, eid, command, argumentReader),
                 // 3
-                //GraphicalPrimitiveElement.PolyMarker => new PolyMarkerCommand(ec, eid, l, reader),
+                GraphicalPrimitiveElement.PolyMarker => new PolyMarkerCommand(ec, eid, command, argumentReader),
                 // 4
-                //GraphicalPrimitiveElement.Text => new TextCommand(ec, eid, l, reader),
+                GraphicalPrimitiveElement.Text => new TextCommand(ec, eid, command, argumentReader),
                 // 5
-                //GraphicalPrimitiveElement.RestrictedText => new RestrictedTextCommand(ec, eid, l, reader),
+                GraphicalPrimitiveElement.RestrictedText => new RestrictedTextCommand(ec, eid, command, argumentReader),
                 // 6
-                //GraphicalPrimitiveElement.AppendText => new AppendTextCommand(ec, eid, l, reader),  
+                GraphicalPrimitiveElement.AppendText => new AppendTextCommand(ec, eid, command, argumentReader),  
                 // 7
-                //GraphicalPrimitiveElement.Polygon => new PolygonCommand(ec, eid, l, reader),
+                GraphicalPrimitiveElement.Polygon => new PolygonCommand(ec, eid, command, argumentReader),
                 // 8 
-                //GraphicalPrimitiveElement.PolygonSet => new PolygonSetCommand(ec, eid, l, reader),
+                GraphicalPrimitiveElement.PolygonSet => new PolygonSetCommand(ec, eid, command, argumentReader),
                 // 9
-                //GraphicalPrimitiveElement.CellArray => new CellArrayCommand(ec, eid, l, reader),
+                GraphicalPrimitiveElement.CellArray => new CellArrayCommand(ec, eid, command, argumentReader),
                 // 10
-                //GraphicalPrimitiveElement.GeneralizedDrawingPrimitive => new GeneralizedDrawingPrimitiveCommand(ec, eid, l, reader),
+                GraphicalPrimitiveElement.GeneralizedDrawingPrimitive => new GeneralizedDrawingPrimitiveCommand(ec, eid, command, argumentReader),
                 // 11
-                //GraphicalPrimitiveElement.Rectangle => new RectangleCommand(ec, eid, l, reader),
+                GraphicalPrimitiveElement.Rectangle => new RectangleCommand(ec, eid, command, argumentReader),
                 // 12
-                //GraphicalPrimitiveElement.Circle => new CircleCommand(ec, eid, l, reader),
+                GraphicalPrimitiveElement.Circle => new CircleCommand(ec, eid, command, argumentReader),
                 // 13
-                //GraphicalPrimitiveElement.CircularArc3Point => new CircularArc3PointCommand(ec, eid, l, reader),
+                GraphicalPrimitiveElement.CircularArc3Point => new CircularArc3PointCommand(ec, eid, command, argumentReader),
                 // 14
-                //GraphicalPrimitiveElement.CircularArc3PointClose => new CircularArc3PointCloseCommand(ec, eid, l, reader),
+                GraphicalPrimitiveElement.CircularArc3PointClose => new CircularArc3PointCloseCommand(ec, eid, command, argumentReader),
                 // 15
-                //GraphicalPrimitiveElement.CircularArcCentre => new CircularArcCentreCommand(ec, eid, l, reader),
+                GraphicalPrimitiveElement.CircularArcCentre => new CircularArcCentreCommand(ec, eid, command, argumentReader),
                 // 16
-                //GraphicalPrimitiveElement.CircularArcCentreClose => new CircularArcCentreCloseCommand(ec, eid, l, reader),
+                GraphicalPrimitiveElement.CircularArcCentreClose => new CircularArcCentreCloseCommand(ec, eid, command, argumentReader),
                 // 17
-                //GraphicalPrimitiveElement.Ellipse => new EllipseCommand(ec, eid, l, reader),
+                GraphicalPrimitiveElement.Ellipse => new EllipseCommand(ec, eid, command, argumentReader),
                 // 18
                 GraphicalPrimitiveElement.EllipticalArc => new EllipticalArcCommand(ec, eid, command, argumentReader),
                 // 19
-                //GraphicalPrimitiveElement.EllipticalArcClose => new EllipticalArcCloseCommand(ec, eid, l, reader),
-
+                GraphicalPrimitiveElement.EllipticalArcClose => new EllipticalArcCloseCommand(ec, eid, command, argumentReader),
                 // 20 
-                //GraphicalPrimitiveElement.CircularArcCentreReversed or,
+                GraphicalPrimitiveElement.CircularArcCentreReversed or
                 // 21 
-                //GraphicalPrimitiveElement.ConnectingEdge or,
+                GraphicalPrimitiveElement.ConnectingEdge or
                 // 22 
-                //GraphicalPrimitiveElement.HyperbolicArc or,
+                GraphicalPrimitiveElement.HyperbolicArc or
                 // 23
-                //GraphicalPrimitiveElement.ParabolicArc or,
+                GraphicalPrimitiveElement.ParabolicArc or
                 // 24
-                //GraphicalPrimitiveElement.NonUniformBSpline or,
+                GraphicalPrimitiveElement.NonUniformBSpline or
                 // 25
-                //GraphicalPrimitiveElement.NonUniformRationalBSpline => UnsupportedCommand.Unsupported(ec, eid, l, reader),
-
+                GraphicalPrimitiveElement.NonUniformRationalBSpline => UnsupportedCommand.Unsupported(ec, eid, l, reader),
                 // 26
-                //GraphicalPrimitiveElement.PolyBezier => new PolyBezierCommand(ec, eid, l, reader),
+                GraphicalPrimitiveElement.PolyBezier => new PolyBezierCommand(ec, eid, command, argumentReader),
                 // 28
-                //GraphicalPrimitiveElement.BitonalTile => new BitonalTileCommand(ec, eid, l, reader),
+                GraphicalPrimitiveElement.BitonalTile => new BitonalTileCommand(ec, eid, command, argumentReader),
                 // 29
-                //GraphicalPrimitiveElement.Tile => new TileCommand(ec, eid, l, reader),
+                GraphicalPrimitiveElement.Tile => new TileCommand(ec, eid, command, argumentReader),
                 _ => UnsupportedCommand.Unsupported(ec, eid, l, reader)
             };
         }
@@ -592,6 +618,28 @@ namespace CGMAnalyzerCore.Commands
         public override void ReadArguments(BinaryReader reader)
         {
             throw new NotImplementedException();
+
+            //try
+            //{
+            //    int pointCount = Length / 4; // Chaque point = 2 x Int16 (2*2 octets)
+
+            //    // AJOUTER : Vérifier qu'on ne dépasse pas
+            //    long remainingBytes = reader.BaseStream.Length - reader.BaseStream.Position;
+            //    int maxPoints = (int)(remainingBytes / 4);
+            //    pointCount = Math.Min(pointCount, maxPoints);
+
+            //    for (int i = 0; i < pointCount; i++)
+            //    {
+            //        int x = reader.ReadInt16();
+            //        int y = reader.ReadInt16();
+            //        Points.Add(new Point(x, y));
+            //    }
+            //}
+            //catch (EndOfStreamException)
+            //{
+            //    // Log et continuer
+            //    Debug.WriteLine($"EndOfStream dans {GetType().Name}");
+            //}
         }
         public override void Draw(Graphics g, Pen pen){}
         public virtual string ToStringDetail()

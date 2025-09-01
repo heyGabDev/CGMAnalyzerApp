@@ -4,6 +4,9 @@ using System.IO;
 
 namespace CGMAnalyzerCore.Commands.GraphicCommands
 {
+    /// <summary>
+    /// POLYMARKER (case 1)
+    /// </summary>
     public class PolylineCommand : BaseCgmCommand
     {
         public List<Point> Points { get; private set; } = new();
@@ -17,6 +20,12 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
         public override void ReadArguments(BinaryReader reader)
         {
             int pointCount = Length / 4; // Chaque point = 2 x Int16 (2*2 octets)
+
+            // AJOUTER : Vérifier qu'on ne dépasse pas
+            long remainingBytes = reader.BaseStream.Length - reader.BaseStream.Position;
+            int maxPoints = (int)(remainingBytes / 4);
+            pointCount = Math.Min(pointCount, maxPoints);
+
             for (int i = 0; i < pointCount; i++)
             {
                 int x = reader.ReadInt16();

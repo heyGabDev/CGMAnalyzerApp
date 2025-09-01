@@ -10,6 +10,9 @@ using System.IO;
 
 namespace CGMAnalyzerCore.Commands.GraphicCommands
 {
+    // <summary>
+    /// POLYGON (case 2) 
+    /// </summary>
     public class DisjointPolylineCommand : BaseCgmCommand
     {
         private readonly List<(Point2D Start, Point2D End)> _lines = new();

@@ -24,13 +24,15 @@ namespace CGMAnalyzerCore.Context
         // ---- Layer
         public static int CurrentLayerId { get; set; } = 0;
 
-        public static int IntegerPrecision { get; set; } = 16;
-
-        public static int IndexPrecision { get; set; } = 16;
-        public static int NamePrecision { get; set; } = 16;
-        public static int ColorPrecision { get; set; } = 8;
-        public static int ColorIndexPrecision { get; set; } = 8;
+        public static int IntegerPrecision { get; set; } = 16; // Par défaut 16 bits
+        public static int IndexPrecision { get; set; } = 16; // Par défaut 16 bits
+        public static int NamePrecision { get; set; } = 16; // Par défaut 16 bits
+        public static int ColorPrecision { get; set; } = 8; // Par défaut 8 bits
+        public static int ColorIndexPrecision { get; set; } = 8; // Par défaut 8 bits
         public static int RealPrecision { get; set; } = 32; // Fixed32 par défaut
+        public static int[] MinimumColorValueRGB { get; set; } = new int[] { 0, 0, 0 };
+        public static int[] MaximumColorValueRGB { get; set; } = new int[] { 255, 255, 255 };
+        public static ColourModelEnum ColourModel { get; set; } = ColourModelEnum.RGB;
 
         public static void Reset()
         {
@@ -60,4 +62,14 @@ namespace CGMAnalyzerCore.Context
         FloatingPoint32 = 2,
         FloatingPoint64 = 3,
     }
+
+    public enum ColourModelEnum
+    {
+        RGB = 1,
+        CIELAB = 2,
+        CIELUV = 3,
+        CMYK = 4,
+        RGB_RELATED = 5
+    }
+
 }

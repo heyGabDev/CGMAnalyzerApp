@@ -4,8 +4,15 @@ using static CGMAnalyzerCore.Messages.Message;
 
 namespace CGMAnalyzerCore.Commands.GraphicCommands
 {
-    public class UnsupportedCommand  
+    public class UnsupportedCommand
     {
+        //TO DO : CONTROLE TEST
+        public static BaseCgmCommand CreateUnsupported(int ec, int eid, int length, BinaryReader reader)
+        {
+            // Au lieu de lever une exception, créer une commande "neutre"
+            return new NullCommand(ec, eid, length, reader);
+        }
+
         public static BaseCgmCommand Unsupported(int ec, int eid, int length, BinaryReader reader)
         {
             if (ec == 0 && eid == 0)
@@ -40,4 +47,41 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
                 msg);
         }
     }
+
+    //TO DO : CONTROLE TEST
+    public class NullCommand : BaseCgmCommand
+    {
+        public NullCommand(int ec, int eid, int length, BinaryReader reader)
+            : base(ec, eid, length)
+        {
+            // Lire et ignorer les arguments sans traitement de facon securisée
+            for (int i = 0; i < length; i++)
+            {
+                try
+                {
+                    reader.ReadByte();
+                }
+                catch (EndOfStreamException)
+                {
+                    break; // Arrêter si on atteint la fin
+                }
+            }
+        }
+
+        public override void Draw(Graphics g, Pen pen)
+        {
+            // Ne rien faire - commande ignorée
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Déjà lu dans le constructeur
+        }
+
+        public override string ToString()
+        {
+            return $"[Unsupported] Class={ElementClass}, ID={ElementId}";
+        }
+    }
+
 }

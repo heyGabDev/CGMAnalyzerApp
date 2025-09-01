@@ -25,6 +25,9 @@ namespace CGMAnalyzerCore.Parser
 
         private readonly List<ICommandListener> _commandListeners = new();
         private readonly Dictionary<int, int> _commandStats = new();
+        
+        //TO DO : CONTROLE TEST
+        private readonly Dictionary<string, int> _unsupportedCommands = new();
 
         public void AddListener(ICommandListener listener)
         {
@@ -93,6 +96,13 @@ namespace CGMAnalyzerCore.Parser
                 {
                     try
                     {
+                        // Vérifier qu'il reste des données
+                        if (reader.BaseStream.Position >= reader.BaseStream.Length)
+                        {
+                            Messages.Add("Fin du stream atteinte normalement");
+                            break;
+                        }
+
                         var command = CgmCommand.Read(reader);
                         if (command == null)
                         {
@@ -102,6 +112,15 @@ namespace CGMAnalyzerCore.Parser
 
                         // Statistiques des commandes
                         TrackCommandUsage(command);
+
+                        //TO DO : CONTROLE TEST
+                        if (command is NullCommand)
+                        {
+                            var key = $"Class{command.ElementClass}:ID{command.ElementId}";
+                            _unsupportedCommands.TryGetValue(key, out var count);
+                            _unsupportedCommands[key] = count + 1;
+                        }
+                        //TO DO : FIN CONTROLE TEST
 
                         // Notifier les listeners en parallèle pour éviter les blocages
                         NotifyListenersAsync(command);
@@ -123,18 +142,6 @@ namespace CGMAnalyzerCore.Parser
                         {
                             Commands.Capacity = Math.Min(Commands.Capacity * 2, MAX_COMMANDS);
                         }
-
-                        //    // Notifier les listeners (observateurs)
-                        //    foreach (var listener in _commandListeners)
-                        //{
-                        //    listener.CommandProcessed(command);
-                        //}
-
-
-                        //if (command.ElementClass == 9)
-                        //{
-                        //    System.Diagnostics.Debug.WriteLine(command.ToString());
-                        //}
 
                         Commands.Add(command);
                     }
@@ -168,6 +175,16 @@ namespace CGMAnalyzerCore.Parser
             finally
             {
                 stopwatch.Stop();
+
+                //TO DO : CONTROLE TEST
+                if (_unsupportedCommands.Any())
+                {
+                    var unsupportedSummary = string.Join(", ",
+                        _unsupportedCommands.Select(kvp => $"{kvp.Key}({kvp.Value}x)"));
+                    Messages.Add($"Commandes non supportées ignorées: {unsupportedSummary}");
+                }
+                //TO DO : FIN CONTROLE TEST
+
                 Messages.Add($"Parsing terminé en {stopwatch.ElapsedMilliseconds}ms. {Commands.Count} commandes traitées.");
             }
         }
@@ -205,7 +222,16 @@ namespace CGMAnalyzerCore.Parser
             var versionCommand = Commands.FirstOrDefault(c => c.ElementClass == 1 && c.ElementId == 1);
             if (versionCommand != null)
             {
-                Metadata.Version = versionCommand.ToString();
+                //TO DO : POUR CONTROL TEST
+                Messages.Add($"Version CGM détectée : {versionCommand}");
+                // Log si version non standard
+                if (!versionCommand.ToString().Contains("1") && !versionCommand.ToString().Contains("3"))
+                {
+                    Messages.Add("Attention : Version CGM non standard détectée");
+                }
+
+                // TO DO : A decommanter apres controle
+                // Metadata.Version = versionCommand.ToString();
             }
         }
 
@@ -237,6 +263,5 @@ namespace CGMAnalyzerCore.Parser
                 });
             }
         }
-
     }
 }
