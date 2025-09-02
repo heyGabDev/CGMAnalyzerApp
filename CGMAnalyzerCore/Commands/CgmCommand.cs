@@ -247,39 +247,36 @@ namespace CGMAnalyzerCore.Commands
             {
                 // 0, 0
                 DelimiterElement.NoOp => command,
-                //DelimiterElement.NoOp => new NoOpCommand(ec, eid, l, reader),
                 // 0, 1
                 DelimiterElement.BeginMetafile => new BeginMetafileCommand(ec, eid, l, command, argumentReader),
                 // 0, 2
-                DelimiterElement.EndMetafile => command,
-                //DelimiterElement.EndMetafile => new EndMetafileCommand(ec, eid, l, reader),
+                DelimiterElement.EndMetafile => new EndMetafileCommand(ec, eid, l, command),
                 // 0, 3
-                DelimiterElement.BeginPicture => new BeginPictureCommand(ec, eid, l, reader, argumentReader),
+                DelimiterElement.BeginPicture => new BeginPictureCommand(ec, eid, l, command, argumentReader),
                 // 0, 4
-                DelimiterElement.BeginPictureBody => new BeginPictureBodyCommand(ec, eid, l, reader),
+                DelimiterElement.BeginPictureBody => new BeginPictureBodyCommand(ec, eid, l, command),
                 // 0, 5
-                DelimiterElement.EndPicture => new EndPictureCommand(ec, eid, l, argumentReader),
+                DelimiterElement.EndPicture => new EndPictureCommand(ec, eid, l, command),
 
-                // 0, 6 => 0,9 non supportés explicitement
+                // 0, 6 => 0,9 et 0, 13 => 0,17 non supportés explicitement
                 DelimiterElement.BeginSegment or
                 DelimiterElement.EndSegment or
                 DelimiterElement.BeginFigure or
                 DelimiterElement.EndFigure or
-
-                // 0, 13
                 DelimiterElement.BeginProtectionRegion or
                 DelimiterElement.EndProtectionRegion or
                 DelimiterElement.BeginCompoundLine or
                 DelimiterElement.EndCompoundLine or
                 DelimiterElement.BeginCompoundTextPath or
-                DelimiterElement.EndCompoundTextPath => new CgmCommand(ec, eid, l, reader),
 
+                // 0,18
+                DelimiterElement.EndCompoundTextPath => UnsupportedCommand.Unsupported(ec, eid, l, reader),
                 // 0, 19
                 DelimiterElement.BeginTileArray => new BeginTileArrayCommand(ec, eid, l, argumentReader),
-                //DelimiterElement.EndTileArray => new EndTileArrayCommand(ec, eid, l, reader),
-                //DelimiterElement.BeginApplicationStructure => new BeginApplicationStructureCommand(ec, eid, l, reader),
-                //DelimiterElement.BeginApplicationStructureBody => new BeginApplicationStructureBodyCommand(ec, eid, l, reader),
-                //DelimiterElement.EndApplicationStructure => new EndApplicationStructureCommand(ec, eid, l, reader),
+                DelimiterElement.EndTileArray => new EndTileArrayCommand(ec, eid, l, command),
+                DelimiterElement.BeginApplicationStructure => new BeginApplicationStructureCommand(ec, eid, l, command, argumentReader),
+                DelimiterElement.BeginApplicationStructureBody => new BeginApplicationStructureBodyCommand(ec, eid, l, command),
+                DelimiterElement.EndApplicationStructure => new EndApplicationStructureCommand(ec, eid, l, command),
 
                 _ => UnsupportedCommand.Unsupported(ec, eid, l, reader) //a modifier avec mss ci-dessous
                 //throw new NotSupportedException($"Unsupported DelimiterElement: {element} (eid={eid})")

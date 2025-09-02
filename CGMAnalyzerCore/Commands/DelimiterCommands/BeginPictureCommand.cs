@@ -11,7 +11,7 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
     {
         public string Name { get; private set; }
 
-        public BeginPictureCommand(int ec, int eid, int l, BinaryReader reader, ExtractedArgumentReader argReader)
+        public BeginPictureCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
             : base(ec, eid, l)
         {
             Name = argReader.MakeString();

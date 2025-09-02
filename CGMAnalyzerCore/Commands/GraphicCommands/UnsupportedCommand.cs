@@ -13,6 +13,15 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             return new NullCommand(ec, eid, length, reader);
         }
 
+        /// <summary>
+        /// Enregistre que la commande n'est pas supportée ET retourne une commande générique.
+        /// </summary>
+        /// <param name="ec"></param>
+        /// <param name="eid"></param>
+        /// <param name="length"></param>
+        /// <param name="reader"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
         public static BaseCgmCommand Unsupported(int ec, int eid, int length, BinaryReader reader)
         {
             if (ec == 0 && eid == 0)

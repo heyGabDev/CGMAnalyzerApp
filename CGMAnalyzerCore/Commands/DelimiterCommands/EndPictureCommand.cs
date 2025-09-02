@@ -8,12 +8,13 @@ using System.Threading.Tasks;
 namespace CGMAnalyzerCore.Commands.DelimiterCommands
 {
     //Commande de structure
-    public class EndPictureCommand : BaseCgmCommand
+    public class EndPictureCommand : CgmCommand
     {
-        public EndPictureCommand(int ec, int eid, int l, ExtractedArgumentReader argReader)
-            : base(ec, eid, l)
+        public EndPictureCommand(int ec, int eid, int l, CgmCommand baseCommand)
+            : base(baseCommand, ec, eid, l)
         {
-            // Rien à lire ici, la commande ne contient pas d’arguments
+          //  System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
+          //"Not all arguments were read in EndPicture");
         }
 
         public override void Draw(Graphics g, Pen pen)

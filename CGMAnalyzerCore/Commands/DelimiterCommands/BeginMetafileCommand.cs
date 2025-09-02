@@ -12,7 +12,7 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
     {
         public string MetafileName { get; private set; } = "";
 
-        public BeginMetafileCommand(int ec, int eid, int length, CgmCommand source, ExtractedArgumentReader argReader)
+        public BeginMetafileCommand(int ec, int eid, int length, CgmCommand baseCommand, ExtractedArgumentReader argReader)
             : base(ec, eid, length)
         {
             MetafileName = argReader.MakeString();
