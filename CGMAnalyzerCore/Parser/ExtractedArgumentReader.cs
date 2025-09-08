@@ -2,7 +2,8 @@
 using CGMAnalyzerCore.Commands.GraphicCommands;
 using CGMAnalyzerCore.Commands.GraphicCommands.Control;
 using CGMAnalyzerCore.Context;
-using CGMAnalyzerCore.Converter.Enums;
+using CGMAnalyzerCore.Enums.Colors;
+using CGMAnalyzerCore.Enums.Precision;
 using CGMAnalyzerCore.Geometry;
 using System;
 using System.Collections.Generic;
@@ -310,7 +311,7 @@ namespace CGMAnalyzerCore.Parser
             int precision = CgmContext.ColorPrecision;
             var model = CgmContext.ColourModel;
 
-            if (model == ColourModelEnum.RGB)
+            if (model == ColorModelEnum.RGB)
             {
                 int r = ScaleColorValueRGB(MakeUInt(precision));
                 int g = ScaleColorValueRGB(MakeUInt(precision));

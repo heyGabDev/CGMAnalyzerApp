@@ -1,4 +1,5 @@
 ﻿using CGMAnalyzerCore.Context;
+using CGMAnalyzerCore.Enums.Precision;
 using CGMAnalyzerCore.Parser;
 
 namespace CGMAnalyzerCore.Commands.GraphicCommands.Control

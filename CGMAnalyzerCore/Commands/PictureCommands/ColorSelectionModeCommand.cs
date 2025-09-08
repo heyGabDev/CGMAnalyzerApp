@@ -8,13 +8,8 @@ using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.PictureCommands
 {
-    public class ColourSelectionModeCommand : CgmCommand
+    public partial class ColourSelectionModeCommand : CgmCommand
     {
-        public enum ColorSelectionType
-        {
-            INDEXED = 0,
-            DIRECT = 1
-        }
 
         public ColorSelectionType Type { get; private set; }
 

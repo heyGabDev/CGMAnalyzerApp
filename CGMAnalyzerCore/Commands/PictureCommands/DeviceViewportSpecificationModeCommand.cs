@@ -8,14 +8,8 @@ using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.PictureCommands
 {
-    public class DeviceViewportSpecificationModeCommand : CgmCommand
+    public partial class DeviceViewportSpecificationModeCommand : CgmCommand
     {
-        public enum DeviceViewportMode
-        {
-            FractionOfDrawingSurface = 0,
-            MillimetersWithScaleFactor = 1,
-            PhysicalDeviceCoordinates = 2
-        }
 
         public DeviceViewportMode Mode { get; private set; }
         public double MetricScaleFactor { get; private set; }

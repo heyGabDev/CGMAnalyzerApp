@@ -1,4 +1,5 @@
 ﻿using CGMAnalyzerCore.Context;
+using CGMAnalyzerCore.Enums.Colors;
 using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
@@ -21,11 +22,11 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
         {
             var colorModel = CgmContext.ColourModel;
 
-            if (colorModel == ColourModelEnum.RGB || colorModel == ColourModelEnum.CMYK)
+            if (colorModel == ColorModelEnum.RGB || colorModel == ColorModelEnum.CMYK)
             {
                 int precision = CgmContext.ColorPrecision;
 
-                if (colorModel == ColourModelEnum.RGB)
+                if (colorModel == ColorModelEnum.RGB)
                 {
                     MinimumColorValueRGB = new int[] {
                     argReader.MakeUInt(precision),
@@ -47,9 +48,9 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
                     // Unsupported color model CMYK for now
                 }
             }
-            else if (colorModel == ColourModelEnum.CIELAB ||
-                     colorModel == ColourModelEnum.CIELUV ||
-                     colorModel == ColourModelEnum.RGB_RELATED)
+            else if (colorModel == ColorModelEnum.CIELAB ||
+                     colorModel == ColorModelEnum.CIELUV ||
+                     colorModel == ColorModelEnum.RGB_RELATED)
             {
                 FirstComponentScale = argReader.MakeReal();
                 SecondComponentScale = argReader.MakeReal();
@@ -71,14 +72,14 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
             var sb = new StringBuilder();
             sb.Append("ColourValueExtent");
 
-            if (CgmContext.ColourModel == ColourModelEnum.RGB)
+            if (CgmContext.ColourModel == ColorModelEnum.RGB)
             {
                 sb.Append($" min RGB=({MinimumColorValueRGB[0]},{MinimumColorValueRGB[1]},{MinimumColorValueRGB[2]})");
                 sb.Append($" max RGB=({MaximumColorValueRGB[0]},{MaximumColorValueRGB[1]},{MaximumColorValueRGB[2]})");
             }
-            else if (CgmContext.ColourModel == ColourModelEnum.CIELAB ||
-                     CgmContext.ColourModel == ColourModelEnum.CIELUV ||
-                     CgmContext.ColourModel == ColourModelEnum.RGB_RELATED)
+            else if (CgmContext.ColourModel == ColorModelEnum.CIELAB ||
+                     CgmContext.ColourModel == ColorModelEnum.CIELUV ||
+                     CgmContext.ColourModel == ColorModelEnum.RGB_RELATED)
             {
                 sb.Append($" first={FirstComponentScale} second={SecondComponentScale} third={ThirdComponentScale}");
             }

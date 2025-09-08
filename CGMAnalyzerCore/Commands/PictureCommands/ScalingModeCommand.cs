@@ -7,13 +7,8 @@ using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.PictureCommands
 {
-    public class ScalingModeCommand : CgmCommand
+    public partial class ScalingModeCommand : CgmCommand
     {
-        public enum ScalingModeType
-        {
-            ABSTRACT = 0,
-            METRIC = 1
-        }
 
         public ScalingModeType Mode { get; private set; }
         public double MetricScalingFactor { get; private set; }

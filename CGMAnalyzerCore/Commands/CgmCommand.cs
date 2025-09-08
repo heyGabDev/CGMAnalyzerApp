@@ -6,7 +6,7 @@ using CGMAnalyzerCore.Commands.GraphicCommands.Control;
 using CGMAnalyzerCore.Commands.MetafileCommands;
 using CGMAnalyzerCore.Commands.PictureCommands;
 using CGMAnalyzerCore.Context;
-using CGMAnalyzerCore.Converter.Enums;
+using CGMAnalyzerCore.Enums.Core;
 using CGMAnalyzerCore.Geometry;
 using CGMAnalyzerCore.Parser;
 using System;

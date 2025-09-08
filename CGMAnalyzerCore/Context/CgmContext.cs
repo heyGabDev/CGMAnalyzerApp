@@ -1,4 +1,5 @@
-﻿using CGMAnalyzerCore.Converter.Enums;
+﻿using CGMAnalyzerCore.Enums.Colors;
+using CGMAnalyzerCore.Enums.Precision;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,7 +39,7 @@ namespace CGMAnalyzerCore.Context
         public static int ColorPrecision { get; set; } = 8;
         public static int[] MinimumColorValueRGB { get; set; } = new int[] { 0, 0, 0 };
         public static int[] MaximumColorValueRGB { get; set; } = new int[] { 255, 255, 255 };
-        public static ColourModelEnum ColourModel { get; set; } = ColourModelEnum.RGB;
+        public static ColorModelEnum ColourModel { get; set; } = ColorModelEnum.RGB;
 
         // ---- Picture Descriptor settings (nouvelles propriétés)
         public static ColorSelectionType ColorSelectionMode { get; set; } = ColorSelectionType.INDEXED;
@@ -59,7 +60,7 @@ namespace CGMAnalyzerCore.Context
             RealPrecision = 0; // Fixed32
             ColorIndexPrecision = 8;
             ColorPrecision = 8;
-            ColourModel = ColourModelEnum.RGB;
+            ColourModel = ColorModelEnum.RGB;
             MinimumColorValueRGB = new int[] { 0, 0, 0 };
             MaximumColorValueRGB = new int[] { 255, 255, 255 };
 
@@ -71,29 +72,4 @@ namespace CGMAnalyzerCore.Context
             DeviceViewportSpecificationMode = DeviceViewportMode.FractionOfDrawingSurface;
         }
     }
-
-
-    public enum VDCTypeEnum
-    {
-        Integer = 0,
-        Real = 1
-    }
-
-    public enum VDCRealPrecisionEnum
-    {
-        FixedPoint32 = 0,
-        FixedPoint64 = 1,
-        FloatingPoint32 = 2,
-        FloatingPoint64 = 3,
-    }
-
-    public enum ColourModelEnum
-    {
-        RGB = 1,
-        CIELAB = 2,
-        CIELUV = 3,
-        CMYK = 4,
-        RGB_RELATED = 5
-    }
-
 }
