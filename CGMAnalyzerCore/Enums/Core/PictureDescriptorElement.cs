@@ -8,6 +8,7 @@ namespace CGMAnalyzerCore.Enums.Core
 {
     public enum PictureDescriptorElement
     {
+        Unused0 = 0,
         ScalingMode = 1,
         ColorSelectionMode = 2,
         LineWidthSpecificationMode = 3,

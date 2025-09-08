@@ -8,6 +8,7 @@ namespace CGMAnalyzerCore.Enums.Core
 {
     public enum AttributeElement
     {
+        Unused0 = 0,
         LineBundleIndex = 1,
         LineType = 2,
         LineWidth = 3,

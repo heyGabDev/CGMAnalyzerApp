@@ -8,6 +8,7 @@ namespace CGMAnalyzerCore.Enums.Core
 {
     public enum  MetafileDescriptorElement
     {
+        Unused0 = 0,
         MetafileVersion = 1,
         MetafileDescription = 2,
         VdcType = 3,

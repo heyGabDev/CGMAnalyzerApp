@@ -1,4 +1,5 @@
 ﻿
+using CGMAnalyzerCore.Commands.ControlCommands;
 using CGMAnalyzerCore.Commands.DelimiterCommands;
 using CGMAnalyzerCore.Commands.EscapeCommands;
 using CGMAnalyzerCore.Commands.GraphicCommands;
@@ -389,12 +390,17 @@ namespace CGMAnalyzerCore.Commands
 
         // Class 3
         private static BaseCgmCommand ReadControlElements(BinaryReader reader, int ec, int eid, int l) {
-            var element = (AttributeElement)eid;
+            var element = (ControlElement)eid;
             var command = new CgmCommand(ec, eid, l, reader);
             var argumentReader = new ExtractedArgumentReader(command);
 
             return element switch
             {
+                ControlElement.VdcIntegerPrecision => new VDCIntegerPrecisionCommand(ec, eid, l, command, argumentReader),
+                ControlElement.VdcRealPrecision => new VDCRealPrecisionCommand(ec, eid, l, command, argumentReader),
+                ControlElement.ClipRectangle => new ClipRectangleCommand(ec, eid, l, command, argumentReader),
+                ControlElement.ClipIndicator => new ClipIndicatorCommand(ec, eid, l, command, argumentReader),
+
                 _ => UnsupportedCommand.Unsupported(ec, eid, l, reader)
             };
         }
