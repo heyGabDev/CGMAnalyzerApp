@@ -15,12 +15,12 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
      * @author BBNT Solutions
      * @version $Id$
      */
-    public class MetafileVersionCommand : BaseCgmCommand
+    public class MetafileVersionCommand : CgmCommand
     {
         public int Version { get; private set; }
 
-        public MetafileVersionCommand(int ec, int eid, int length, ExtractedArgumentReader argReader)
-                    : base(ec, eid, length)
+        public MetafileVersionCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
+                    : base(baseCommand, ec, eid, l)
         {
             Version = argReader.MakeInt();
         }

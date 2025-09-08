@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
-    public class MetafileDescriptionCommand : BaseCgmCommand
+    public class MetafileDescriptionCommand : CgmCommand
     {
         public string Description { get; }
 
-        public MetafileDescriptionCommand(int ec, int eid, int length, ExtractedArgumentReader argReader)
-            : base(ec, eid, length)
+        public MetafileDescriptionCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
+            : base(baseCommand, ec, eid, l)
         {
             Description = argReader.MakeString();
         }

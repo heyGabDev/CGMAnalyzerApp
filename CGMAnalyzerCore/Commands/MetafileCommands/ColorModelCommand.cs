@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
-    public class ColourModelCommand : BaseCgmCommand
+    public class ColorModelCommand : BaseCgmCommand
     {
         public int ColourModel { get; private set; }
 
-        public ColourModelCommand(int ec, int eid, int l, ExtractedArgumentReader argReader)
+        public ColorModelCommand(int ec, int eid, int l, ExtractedArgumentReader argReader)
             : base(ec, eid, l)
         {
             ColourModel = argReader.MakeInt();

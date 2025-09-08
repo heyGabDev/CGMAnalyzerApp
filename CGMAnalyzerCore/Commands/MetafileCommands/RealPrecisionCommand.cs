@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
-    public class RealPrecisionCommand : BaseCgmCommand
+    public class RealPrecisionCommand : CgmCommand
     {
         public enum PrecisionType
         {
@@ -17,8 +17,8 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 
         public static PrecisionType Precision { get; private set; }
 
-        public RealPrecisionCommand(int ec, int eid, int l, ExtractedArgumentReader argReader)
-            : base(ec, eid, l)
+        public RealPrecisionCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
+            : base(baseCommand, ec, eid, l)
         {
             int p1 = argReader.MakeInt();
 

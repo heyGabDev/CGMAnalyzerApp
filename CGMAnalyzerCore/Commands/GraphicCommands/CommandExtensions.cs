@@ -75,7 +75,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
         /// <summary>
         /// Extensions pour les commandes de métadonnées - versions basiques
         /// </summary>
-        public static string GetColourModel(this ColourModelCommand command)
+        public static string GetColourModel(this ColorModelCommand command)
         {
             return "RGB"; // Par défaut
         }

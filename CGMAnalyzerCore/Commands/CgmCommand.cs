@@ -185,7 +185,7 @@ namespace CGMAnalyzerCore.Commands
             return ReadCommand(reader, ec, eid, l);
         }
 
-        private static BaseCgmCommand ReadCommand(BinaryReader reader, int ec, int eid, int l)
+        public static BaseCgmCommand ReadCommand(BinaryReader reader, int ec, int eid, int l)
         {
             var element = (ElementEnums)ec;
             var command = new CgmCommand(ec, eid, l, reader);
@@ -293,56 +293,49 @@ namespace CGMAnalyzerCore.Commands
             return element switch
             {
                 // 1
-                MetafileDescriptorElement.MetafileVersion => new MetafileVersionCommand(ec, eid, l, argumentReader),
+                MetafileDescriptorElement.MetafileVersion => new MetafileVersionCommand(ec, eid, l, command, argumentReader),
                 // 2
-                MetafileDescriptorElement.MetafileDescription => new MetafileDescriptionCommand(ec, eid, l, argumentReader),
+                MetafileDescriptorElement.MetafileDescription => new MetafileDescriptionCommand(ec, eid, l, command, argumentReader),
                 // 3
-                MetafileDescriptorElement.VdcType => new VDCTypeCommand(ec, eid, l, reader),
+                MetafileDescriptorElement.VdcType => new VDCTypeCommand(ec, eid, l, command, argumentReader),
                 // 4
-                MetafileDescriptorElement.IntegerPrecision => new IntegerPrecisionCommand(ec, eid, l, argumentReader),
+                MetafileDescriptorElement.IntegerPrecision => new IntegerPrecisionCommand(ec, eid, l, command,argumentReader),
                 // 5
-                MetafileDescriptorElement.RealPrecision => new RealPrecisionCommand(ec, eid, l, argumentReader),
+                MetafileDescriptorElement.RealPrecision => new RealPrecisionCommand(ec, eid, l, command, argumentReader),
                 // 6
-                //MetafileDescriptorElement.IndexPrecision => new IndexPrecisionCommand(ec, eid, l, reader),
+                MetafileDescriptorElement.IndexPrecision => new IndexPrecisionCommand(ec, eid, l, command, argumentReader),
                 // 7
-                //MetafileDescriptorElement.ColourPrecision => new ColourPrecisionCommand(ec, eid, l, reader),
+                MetafileDescriptorElement.ColorPrecision => new ColorPrecisionCommand(ec, eid, l, command, argumentReader),
                 // 8
-                //MetafileDescriptorElement.ColourIndexPrecision => new ColourIndexPrecisionCommand(ec, eid, l, reader),
+                MetafileDescriptorElement.ColorIndexPrecision => new ColorIndexPrecisionCommand(ec, eid, l, command, argumentReader),
                 // 9
-                //MetafileDescriptorElement.MaximumColourIndex => new MaximumColourIndexCommand(ec, eid, l, reader),
+                MetafileDescriptorElement.MaximumColorIndex => new MaximumColorIndexCommand(ec, eid, l, command, argumentReader),
                 // 10
-                //MetafileDescriptorElement.ColourValueExtent => new ColourValueExtentCommand(ec, eid, l, reader),
+                MetafileDescriptorElement.ColorValueExtent => new ColorValueExtentCommand(ec, eid, l, command, argumentReader),
                 // 11
-                //MetafileDescriptorElement.MetafileElementList => new MetafileElementListCommand(ec, eid, l, reader),
+                MetafileDescriptorElement.MetafileElementList => new MetafileElementListCommand(ec, eid, l, command, argumentReader),
                 // 12
-                //MetafileDescriptorElement.MetafileDefaultsReplacement => new MetafileDefaultsReplacementCommand(ec, eid, l, reader),
+                MetafileDescriptorElement.MetafileDefaultsReplacement => new MetafileDefaultsReplacementCommand(ec, eid, l, command, argumentReader),
                 // 13
-                //MetafileDescriptorElement.FontList => new FontListCommand(ec, eid, l, reader),
+                MetafileDescriptorElement.FontList => new FontListCommand(ec, eid, l, command, argumentReader),
                 // 14
-                //MetafileDescriptorElement.CharacterSetList => new CharacterSetListCommand(ec, eid, l, reader),
+                MetafileDescriptorElement.CharacterSetList => new CharacterSetListCommand(ec, eid, l, command, argumentReader),
                 // 15
-                //MetafileDescriptorElement.CharacterCodingAnnouncer => new CharacterCodingAnnouncerCommand(ec, eid, l, reader),
+                MetafileDescriptorElement.CharacterCodingAnnouncer => new CharacterCodingAnnouncerCommand(ec, eid, l, command, argumentReader),
                 // 16
-                //MetafileDescriptorElement.NamePrecision => new NamePrecisionCommand(ec, eid, l, reader),
+                MetafileDescriptorElement.NamePrecision => new NamePrecisionCommand(ec, eid, l,command, argumentReader),
                 // 17
                 MetafileDescriptorElement.MaximumVdcExtent => new MaximumVdcExtentCommand(ec, eid, l, argumentReader),
-
                 // 18
-                //MetafileDescriptorElement.SegmentPriorityExtent or
-
+                MetafileDescriptorElement.SegmentPriorityExtent => UnsupportedCommand.Unsupported(ec, eid, l, reader),
                 // 19
-                MetafileDescriptorElement.ColourModel => new ColourModelCommand(ec, eid, l, argumentReader),
-                
-                // 20
-                //MetafileDescriptorElement.ColourCalibration or
-                // 21
-                //MetafileDescriptorElement.FontProperties or
-                // 22
-                //MetafileDescriptorElement.GlyphMapping or
-                // 23
-                //MetafileDescriptorElement.SymbolLibraryList or
-                // 24
-                //MetafileDescriptorElement.PictureDirectory => UnsupportedCommand.Unsupported(ec, eid, l, reader),
+                MetafileDescriptorElement.ColorModel => new ColorModelCommand(ec, eid, l, argumentReader),
+
+                // 20 - 24
+                MetafileDescriptorElement.FontProperties or
+                MetafileDescriptorElement.GlyphMapping or
+                MetafileDescriptorElement.SymbolLibraryList or
+                MetafileDescriptorElement.PictureDirectory => UnsupportedCommand.Unsupported(ec, eid, l, reader),
                 _ => UnsupportedCommand.Unsupported(ec, eid, l, reader)
             };
         }

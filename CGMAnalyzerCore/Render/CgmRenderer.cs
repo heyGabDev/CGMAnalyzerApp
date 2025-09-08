@@ -221,7 +221,7 @@ namespace CGMAnalyzerCore.Render
                     return RenderEllipticalArc(graphics, ellipticalArcCommand);
 
                 // Commandes de métadonnées (affectent le contexte)
-                case ColourModelCommand colourModelCommand:
+                case ColorModelCommand colourModelCommand:
                     UpdateColourModel(colourModelCommand);
                     return true;
 
@@ -352,7 +352,7 @@ namespace CGMAnalyzerCore.Render
             );
         }
 
-        private void UpdateColourModel(ColourModelCommand command)
+        private void UpdateColourModel(ColorModelCommand command)
         {
             // Mettre à jour le modèle de couleur du contexte
             _context.ColourModel = command.GetColourModel();

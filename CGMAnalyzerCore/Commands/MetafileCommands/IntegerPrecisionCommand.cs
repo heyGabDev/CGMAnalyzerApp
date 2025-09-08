@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
-    public class IntegerPrecisionCommand : BaseCgmCommand
+    public class IntegerPrecisionCommand : CgmCommand
     {
         public int Precision { get; }
 
-        public IntegerPrecisionCommand(int ec, int eid, int length, ExtractedArgumentReader argReader)
-            : base(ec, eid, length)
+        public IntegerPrecisionCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
+            : base(baseCommand, ec, eid, l)
         {
             Precision = argReader.NextArg();
             CgmContext.VdcIntegerPrecision = Precision;

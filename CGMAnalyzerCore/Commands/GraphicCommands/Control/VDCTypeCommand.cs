@@ -1,4 +1,5 @@
 ﻿using CGMAnalyzerCore.Context;
+using CGMAnalyzerCore.Parser;
 
 namespace CGMAnalyzerCore.Commands.GraphicCommands.Control
 {
@@ -9,9 +10,11 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands.Control
 
         public VDCTypeEnum Type { get; }
 
-        public VDCTypeCommand(int ec, int eid, int length, BinaryReader reader) : base(ec, eid, length, reader)
+        public VDCTypeCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
+            : base(baseCommand, ec, eid, l)
         {
-            int vdcTypeCode = reader.ReadByte() & 0x1F;
+            //int vdcTypeCode = argReader.ReadByte() & 0x1F;
+            int vdcTypeCode = argReader.NextArg();
             Type = vdcTypeCode switch
             {
                 0 => VDCTypeEnum.Integer,
