@@ -248,17 +248,17 @@ namespace CGMAnalyzerCore.Commands
                 // 0, 0
                 DelimiterElement.NoOp => command,
                 // 0, 1
-                DelimiterElement.BeginMetafile => new BeginMetafileCommand(ec, eid, l, command, argumentReader),
+                DelimiterElement.BeginMetafile => new BeginMetafileCommand(ec, eid, l, command),
                 // 0, 2
                 DelimiterElement.EndMetafile => new EndMetafileCommand(ec, eid, l, command),
                 // 0, 3
-                DelimiterElement.BeginPicture => new BeginPictureCommand(ec, eid, l, command, argumentReader),
+                DelimiterElement.BeginPicture => new BeginPictureCommand(ec, eid, l, command),
                 // 0, 4
                 DelimiterElement.BeginPictureBody => new BeginPictureBodyCommand(ec, eid, l, command),
                 // 0, 5
                 DelimiterElement.EndPicture => new EndPictureCommand(ec, eid, l, command),
 
-                // 0, 6 => 0,9 et 0, 13 => 0,17 non supportés explicitement
+                // 0, 6 => 0,9 et 0,13 => 0,17 non supportés explicitement
                 DelimiterElement.BeginSegment or
                 DelimiterElement.EndSegment or
                 DelimiterElement.BeginFigure or
@@ -271,8 +271,8 @@ namespace CGMAnalyzerCore.Commands
 
                 // 0,18
                 DelimiterElement.EndCompoundTextPath => UnsupportedCommand.Unsupported(ec, eid, l, reader),
-                // 0, 19
-                DelimiterElement.BeginTileArray => new BeginTileArrayCommand(ec, eid, l, argumentReader),
+                // 0,19
+                DelimiterElement.BeginTileArray => new BeginTileArrayCommand(ec, eid, l, command, argumentReader),
                 DelimiterElement.EndTileArray => new EndTileArrayCommand(ec, eid, l, command),
                 DelimiterElement.BeginApplicationStructure => new BeginApplicationStructureCommand(ec, eid, l, command, argumentReader),
                 DelimiterElement.BeginApplicationStructureBody => new BeginApplicationStructureBodyCommand(ec, eid, l, command),
@@ -612,6 +612,7 @@ namespace CGMAnalyzerCore.Commands
         {
             return MemberwiseClone();
         }
+        
         public override void ReadArguments(BinaryReader reader)
         {
             throw new NotImplementedException();
@@ -638,7 +639,9 @@ namespace CGMAnalyzerCore.Commands
             //    Debug.WriteLine($"EndOfStream dans {GetType().Name}");
             //}
         }
+        
         public override void Draw(Graphics g, Pen pen){}
+        
         public virtual string ToStringDetail()
         {
             return $"{GetType().Name} - EC:{ElementClassInt} EID:{ElementCode}";

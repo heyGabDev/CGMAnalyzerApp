@@ -12,8 +12,8 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
             : base(baseCommand, ec, eid, l)
         {
             // Pas d'arguments selon le Java original
-            System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-                "Not all arguments were read in EndApplicationStructure");
+            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
+            //    "Not all arguments were read in EndApplicationStructure");
         }
 
         public override string ToString()

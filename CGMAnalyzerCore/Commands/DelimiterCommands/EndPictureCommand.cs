@@ -22,10 +22,11 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
             // No drawing
         }
 
-        public override void ReadArguments(BinaryReader reader)
-        {
-            throw new NotImplementedException();
-        }
+        // TO DELETE : Géré par CgmCommand
+        //public override void ReadArguments(BinaryReader reader)
+        //{
+        //    throw new NotImplementedException();
+        //}
 
         public override string ToString()
         {

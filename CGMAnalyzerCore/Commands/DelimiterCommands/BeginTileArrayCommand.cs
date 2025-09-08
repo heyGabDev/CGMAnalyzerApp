@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.DelimiterCommands
 {
-    public class BeginTileArrayCommand : BaseCgmCommand
+    public class BeginTileArrayCommand : CgmCommand
     {
         public Point2D Position { get; }
         public int CellPathDirection { get; }
@@ -25,22 +25,26 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
         public int NCellsInPathDirection { get; }
         public int NCellsInLineDirection { get; }
 
-        public BeginTileArrayCommand(int ec, int eid, int l, ExtractedArgumentReader reader)
-            : base(ec, eid, l)
+        public BeginTileArrayCommand(int ec, int eid, int l, CgmCommand baseCommand,ExtractedArgumentReader argReader)
+            : base(baseCommand, ec, eid, l)
         {
-            Position = reader.MakePoint(ec, eid);
-            CellPathDirection = reader.MakeEnum();
-            LineProgressionDirection = reader.MakeEnum();
-            NTilesInPathDirection = reader.MakeInt();
-            NTilesInLineDirection = reader.MakeInt();
-            NCellsPerTileInPathDirection = reader.MakeInt();
-            NCellsPerTileInLineDirection = reader.MakeInt();
-            CellSizeInPathDirection = reader.MakeReal();
-            CellSizeInLineDirection = reader.MakeReal();
-            ImageOffsetInPathDirection = reader.MakeInt();
-            ImageOffsetInLineDirection = reader.MakeInt();
-            NCellsInPathDirection = reader.MakeInt();
-            NCellsInLineDirection = reader.MakeInt();
+            Position = argReader.MakePoint();
+            CellPathDirection = argReader.MakeEnum();
+            LineProgressionDirection = argReader.MakeEnum();
+            NTilesInPathDirection = argReader.MakeInt();
+            NTilesInLineDirection = argReader.MakeInt();
+            NCellsPerTileInPathDirection = argReader.MakeInt();
+            NCellsPerTileInLineDirection = argReader.MakeInt();
+            CellSizeInPathDirection = argReader.MakeReal();
+            CellSizeInLineDirection = argReader.MakeReal();
+            ImageOffsetInPathDirection = argReader.MakeInt();
+            ImageOffsetInLineDirection = argReader.MakeInt();
+            NCellsInPathDirection = argReader.MakeInt();
+            NCellsInLineDirection = argReader.MakeInt();
+
+            // Vérification que tous les arguments ont été lus (comme dans le Java)
+            System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
+                "Not all arguments were read in BeginTileArray");
         }
 
         public void ApplyToDisplay(CgmDisplay display)
@@ -68,16 +72,11 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
             display.SetTileArrayInfo(tileInfo);
         }
 
-    
         public override void Draw(Graphics g, Pen pen)
         {
             // No drawing
         }
 
-        public override void ReadArguments(BinaryReader reader)
-        {
-            throw new NotImplementedException();
-        }
 
         public override string ToString()
         {

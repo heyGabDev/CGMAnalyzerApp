@@ -21,10 +21,11 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
             // Pas d'effet graphique direct, utilisé comme délimiteur logique.
         }
 
-        public override void ReadArguments(BinaryReader reader)
-        {
-            throw new NotImplementedException();
-        }
+        // TO DELETE : Géré par CgmCommand
+        //public override void ReadArguments(BinaryReader reader)
+        //{
+        //    throw new NotImplementedException();
+        //}
 
         public override string ToString()
         {
