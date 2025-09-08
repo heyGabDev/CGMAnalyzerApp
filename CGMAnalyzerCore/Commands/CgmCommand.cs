@@ -4,6 +4,7 @@ using CGMAnalyzerCore.Commands.EscapeCommands;
 using CGMAnalyzerCore.Commands.GraphicCommands;
 using CGMAnalyzerCore.Commands.GraphicCommands.Control;
 using CGMAnalyzerCore.Commands.MetafileCommands;
+using CGMAnalyzerCore.Commands.PictureCommands;
 using CGMAnalyzerCore.Context;
 using CGMAnalyzerCore.Converter.Enums;
 using CGMAnalyzerCore.Geometry;
@@ -342,12 +343,46 @@ namespace CGMAnalyzerCore.Commands
 
         // Class 2
         private static BaseCgmCommand ReadPictureDescriptorElements(BinaryReader reader, int ec, int eid, int l) {
-            var element = (MetafileDescriptorElement)eid;
+            var element = (PictureDescriptorElement)eid;
             var command = new CgmCommand(ec, eid, l, reader);
             var argumentReader = new ExtractedArgumentReader(command);
 
             return element switch
             {
+                // 2, 1
+                PictureDescriptorElement.ScalingMode => new ScalingModeCommand(ec, eid, l, command, argumentReader),
+                // 2, 2
+                PictureDescriptorElement.ColorSelectionMode => new ColourSelectionModeCommand(ec, eid, l, command, argumentReader),
+                // 2, 3
+                PictureDescriptorElement.LineWidthSpecificationMode => new LineWidthSpecificationModeCommand(ec, eid, l, command, argumentReader),
+                // 2, 4
+                PictureDescriptorElement.MarkerSizeSpecificationMode => new MarkerSizeSpecificationModeCommand(ec, eid, l, command, argumentReader),
+                // 2, 5
+                PictureDescriptorElement.EdgeWidthSpecificationMode => new EdgeWidthSpecificationModeCommand(ec, eid, l, command, argumentReader),
+                // 2, 6
+                PictureDescriptorElement.VdcExtent => new VDCExtentCommand(ec, eid, l, command, argumentReader),
+                // 2, 7
+                PictureDescriptorElement.BackgroundColor => new BackgroundColorCommand(ec, eid, l, command, argumentReader),
+                // 2, 8
+                PictureDescriptorElement.DeviceViewport => UnsupportedCommand.Unsupported(ec, eid, l, reader),
+                // 2, 9
+                PictureDescriptorElement.DeviceViewportSpecificationMode => new DeviceViewportSpecificationModeCommand(ec, eid, l, command, argumentReader),
+                // 2, 10-15
+                PictureDescriptorElement.DeviceViewportMapping or
+                PictureDescriptorElement.LineRepresentation or
+                PictureDescriptorElement.MarkerRepresentation or
+                PictureDescriptorElement.TextRepresentation or
+                PictureDescriptorElement.FillRepresentation or
+                PictureDescriptorElement.EdgeRepresentation => UnsupportedCommand.Unsupported(ec, eid, l, reader),
+                // 2, 16
+                PictureDescriptorElement.InteriorStyleSpecificationMode => new InteriorStyleSpecificationModeCommand(ec, eid, l, command, argumentReader),
+                // 2, 17
+                PictureDescriptorElement.LineAndEdgeTypeDefinition => new LineAndEdgeTypeDefinitionCommand(ec, eid, l, command, argumentReader),
+                // 2, 18-20
+                PictureDescriptorElement.HatchStyleDefinition or
+                PictureDescriptorElement.GeometricPatternDefinition or
+                PictureDescriptorElement.ApplicationStructureDirectory => UnsupportedCommand.Unsupported(ec, eid, l, reader),
+
                 _ => UnsupportedCommand.Unsupported(ec, eid, l, reader)
             };
         }

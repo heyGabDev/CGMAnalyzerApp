@@ -239,6 +239,20 @@ namespace CGMAnalyzerCore.Parser
             return wholePart + (fractionPart / (1L << 32));
         }
 
+        public double MakeFloatingPoint()
+        {
+            var precision = CgmContext.RealPrecision;
+            if (precision == 2) // FLOATING_32
+            {
+                return MakeFloatingPoint32();
+            }
+            if (precision == 3) // FLOATING_64
+            {
+                return MakeFloatingPoint64();
+            }
+            return MakeFloatingPoint32();
+        }
+
         public double MakeFloatingPoint32()
         {
             SkipBits();

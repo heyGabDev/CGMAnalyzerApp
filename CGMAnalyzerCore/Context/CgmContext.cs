@@ -1,8 +1,11 @@
-﻿using System;
+﻿using CGMAnalyzerCore.Converter.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static CGMAnalyzerCore.Commands.PictureCommands.ColourSelectionModeCommand;
+using static CGMAnalyzerCore.Commands.PictureCommands.DeviceViewportSpecificationModeCommand;
 
 namespace CGMAnalyzerCore.Context
 {
@@ -24,15 +27,25 @@ namespace CGMAnalyzerCore.Context
         // ---- Layer
         public static int CurrentLayerId { get; set; } = 0;
 
-        public static int IntegerPrecision { get; set; } = 16; // Par défaut 16 bits
-        public static int IndexPrecision { get; set; } = 16; // Par défaut 16 bits
-        public static int NamePrecision { get; set; } = 16; // Par défaut 16 bits
-        public static int ColorPrecision { get; set; } = 8; // Par défaut 8 bits
-        public static int ColorIndexPrecision { get; set; } = 8; // Par défaut 8 bits
-        public static int RealPrecision { get; set; } = 32; // Fixed32 par défaut
+        // ---- Precision settings
+        public static int IntegerPrecision { get; set; } = 16;
+        public static int IndexPrecision { get; set; } = 16;
+        public static int NamePrecision { get; set; } = 16;
+        public static int RealPrecision { get; set; } = 0; // 0 = Fixed32 par défaut
+
+        // ---- Colour settings 
+        public static int ColorIndexPrecision { get; set; } = 8;
+        public static int ColorPrecision { get; set; } = 8;
         public static int[] MinimumColorValueRGB { get; set; } = new int[] { 0, 0, 0 };
         public static int[] MaximumColorValueRGB { get; set; } = new int[] { 255, 255, 255 };
         public static ColourModelEnum ColourModel { get; set; } = ColourModelEnum.RGB;
+
+        // ---- Picture Descriptor settings (nouvelles propriétés)
+        public static ColorSelectionType ColorSelectionMode { get; set; } = ColorSelectionType.INDEXED;
+        public static SpecificationMode LineWidthSpecificationMode { get; set; } = SpecificationMode.ABSOLUTE;
+        public static SpecificationMode MarkerSizeSpecificationMode { get; set; } = SpecificationMode.ABSOLUTE;
+        public static SpecificationMode EdgeWidthSpecificationMode { get; set; } = SpecificationMode.ABSOLUTE;
+        public static DeviceViewportMode DeviceViewportSpecificationMode { get; set; } = DeviceViewportMode.FractionOfDrawingSurface;
 
         public static void Reset()
         {
@@ -43,11 +56,22 @@ namespace CGMAnalyzerCore.Context
             IntegerPrecision = 16;
             IndexPrecision = 16;
             NamePrecision = 16;
-            ColorPrecision = 8;
+            RealPrecision = 0; // Fixed32
             ColorIndexPrecision = 8;
-            RealPrecision = 32;
+            ColorPrecision = 8;
+            ColourModel = ColourModelEnum.RGB;
+            MinimumColorValueRGB = new int[] { 0, 0, 0 };
+            MaximumColorValueRGB = new int[] { 255, 255, 255 };
+
+            // Reset Picture Descriptor settings
+            ColorSelectionMode = ColorSelectionType.INDEXED;
+            LineWidthSpecificationMode = SpecificationMode.ABSOLUTE;
+            MarkerSizeSpecificationMode = SpecificationMode.ABSOLUTE;
+            EdgeWidthSpecificationMode = SpecificationMode.ABSOLUTE;
+            DeviceViewportSpecificationMode = DeviceViewportMode.FractionOfDrawingSurface;
         }
     }
+
 
     public enum VDCTypeEnum
     {

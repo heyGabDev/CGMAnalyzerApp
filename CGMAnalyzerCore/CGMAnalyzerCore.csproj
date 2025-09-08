@@ -19,7 +19,6 @@
   <ItemGroup>
     <Folder Include="Commands\AttributeCommands\" />
     <Folder Include="Commands\ExternalCommands\" />
-    <Folder Include="Commands\PictureCommands\" />
   </ItemGroup>
 
 </Project>
