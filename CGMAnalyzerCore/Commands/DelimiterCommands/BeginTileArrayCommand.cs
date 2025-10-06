@@ -3,6 +3,7 @@ using CGMAnalyzerCore.Geometry;
 using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,6 +25,7 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
         public int ImageOffsetInLineDirection { get; }
         public int NCellsInPathDirection { get; }
         public int NCellsInLineDirection { get; }
+        public string BeginTileArray { get; private set; } = "";
 
         public BeginTileArrayCommand(int ec, int eid, int l, CgmCommand baseCommand,ExtractedArgumentReader argReader)
             : base(baseCommand, ec, eid, l)
@@ -42,9 +44,29 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
             NCellsInPathDirection = argReader.MakeInt();
             NCellsInLineDirection = argReader.MakeInt();
 
-            // Vérification que tous les arguments ont été lus (comme dans le Java)
-            System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-                "Not all arguments were read in BeginTileArray");
+            try
+            {
+                if (baseCommand.Args != null && baseCommand.Args.Length > 0)
+                {
+                    // Lire les arguments avec validation
+                    BeginTileArray = argReader.ReadString();
+                }
+                else
+                {
+                    BeginTileArray = "Default";
+                    ErrorCommand = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[CGM] Erreur lecture BeginTileArray: {ex.Message}");
+                BeginTileArray = "Error";
+                ErrorCommand = true;
+            }
+
+            ValidateArgumentsRead("BeginTileArray");
+            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
+            //    "Not all arguments were read in BeginTileArray");
         }
 
         public void ApplyToDisplay(CgmDisplay display)
@@ -71,12 +93,6 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
 
             display.SetTileArrayInfo(tileInfo);
         }
-
-        public override void Draw(Graphics g, Pen pen)
-        {
-            // No drawing
-        }
-
 
         public override string ToString()
         {

@@ -2,6 +2,7 @@
 using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,8 +17,21 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
         public BeginApplicationStructureCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
             : base(baseCommand, ec, eid, l)
         {
-            Id = argReader.MakeString();
-            Type = argReader.MakeString();
+            try
+            {
+                if (baseCommand.Args != null && baseCommand.Args.Length > 0)
+                {
+                    // Lire les arguments avec validation
+                    Type = argReader.ReadString();
+                }
+                else
+                {
+                    Type = "Default";
+                    ErrorCommand = true;
+                }            
+                
+                Id = argReader.MakeString();
+                Type = argReader.MakeString();
 
             // Logic from Java original
             if (Type.Equals("LAYER", StringComparison.OrdinalIgnoreCase))
@@ -25,9 +39,17 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
                 LayerId++;
                 CgmContext.CurrentLayerId++;
             }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[CGM] Erreur lecture BeginApplicationStructure: {ex.Message}");
+                Type = "Error";
+                ErrorCommand = true;
+            }
 
-            System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-                "Not all arguments were read in BeginApplicationStructure");
+            ValidateArgumentsRead("BeginApplicationStructure");
+            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
+            //    "Not all arguments were read in BeginApplicationStructure");
         }
 
         public override string ToString()

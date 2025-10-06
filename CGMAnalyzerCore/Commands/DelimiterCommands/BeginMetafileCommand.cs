@@ -1,6 +1,7 @@
 ﻿using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,17 +13,34 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
     {
         public string MetafileName { get; private set; } = "";
 
-        public BeginMetafileCommand(int ec, int eid, int l, CgmCommand baseCommand)
+        public BeginMetafileCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argumentReader)
             : base(baseCommand,ec, eid, l)
         {
-            //MetafileName = argReader.MakeString();
+            try
+            {
+                if (baseCommand.Args != null && baseCommand.Args.Length > 0)
+                {
+                    // Lire les arguments avec validation
+                    MetafileName = argumentReader.ReadString();
+                }
+                else
+                {
+                    MetafileName = "Default";
+                    ErrorCommand = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[CGM] Erreur lecture BeginMetafile: {ex.Message}");
+                MetafileName = "Error";
+                ErrorCommand = true;
+            }
+
+            ValidateArgumentsRead("MetafileName");
+            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
+            //    "Not all arguments were read in MetafileName");
         }
 
-
-        public override void Draw(Graphics g, Pen pen)
-        {
-            // No drawing
-        }
 
         // TO DELETE : Géré par CgmCommand
         //public override void ReadArguments(BinaryReader reader)

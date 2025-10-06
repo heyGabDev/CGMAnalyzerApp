@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,12 +28,22 @@ namespace CGMAnalyzerCore.Commands
         /// Cette méthode est appelée après l'identification EC/EID.
         /// </summary>
         /// <param name="reader">Le flux binaire d'entrée</param>
-        public abstract void ReadArguments(BinaryReader reader);
+        public virtual void ReadArguments(BinaryReader reader) { }
 
         /// <summary>
         /// Permet aux commandes de nettoyer ou finaliser leurs arguments après lecture.
         /// </summary>
         public virtual void CleanUpArguments() { }
+
+        /// <summary>
+        /// 
+        /// </summary>
+       public virtual void LogCommandInfo()
+       {
+            Debug.WriteLine($"[CGM] Command {GetType().Name} - EC:{ElementClass} EID:{ElementId}");
+       }
+        
+
 
         /// <summary>
         /// Représentation textuelle pour debug/logs.

@@ -12,6 +12,7 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
         public BeginPictureBodyCommand(int ec, int eid, int l, CgmCommand baseCommand)
             : base(baseCommand, ec, eid, l)
         {
+            ValidateArgumentsRead("BeginPictureBody");
             //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
             //"Not all arguments were read in BeginPictureBody");
         }

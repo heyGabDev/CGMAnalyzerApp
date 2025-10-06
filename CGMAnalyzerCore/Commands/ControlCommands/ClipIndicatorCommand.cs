@@ -15,9 +15,10 @@ namespace CGMAnalyzerCore.Commands.ControlCommands
             : base(baseCommand, ec, eid, l)
         {
             ClipFlag = argReader.MakeEnum() == 1;
+            ValidateArgumentsRead("ClipIndicator");
 
-            System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-                "Not all arguments were read in ClipIndicator");
+            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
+            //    "Not all arguments were read in ClipIndicator");
         }
 
         public override string ToString()

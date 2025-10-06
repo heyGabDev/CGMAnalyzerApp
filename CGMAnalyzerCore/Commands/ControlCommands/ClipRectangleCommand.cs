@@ -28,8 +28,10 @@ namespace CGMAnalyzerCore.Commands.ControlCommands
                 Point2.Y - Point1.Y
             );
 
-            System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-                "Not all arguments were read in ClipRectangle");
+            ValidateArgumentsRead("ClipRectangle");
+
+            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
+            //    "Not all arguments were read in ClipRectangle");
         }
 
         public override string ToString()

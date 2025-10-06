@@ -13,8 +13,11 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
         public EndPictureCommand(int ec, int eid, int l, CgmCommand baseCommand)
             : base(baseCommand, ec, eid, l)
         {
-          //  System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-          //"Not all arguments were read in EndPicture");
+            // Pas d'arguments selon le Java original
+
+            ValidateArgumentsRead("EndPicture");
+            //  System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
+            //"Not all arguments were read in EndPicture");
         }
 
         public override void Draw(Graphics g, Pen pen)

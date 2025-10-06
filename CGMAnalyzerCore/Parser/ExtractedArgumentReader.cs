@@ -8,6 +8,7 @@ using CGMAnalyzerCore.Geometry;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,6 +28,48 @@ namespace CGMAnalyzerCore.Parser
         public ExtractedArgumentReader(CgmCommand command)
         {
             _command = command ?? throw new ArgumentNullException(nameof(command));
+        }
+
+        public string ReadString()
+        {
+            if (_command.AllArgumentsRead)
+                return string.Empty;
+
+            // 1. Lire d'abord la longueur de la chaîne (1 octet)
+            int length = NextArg();
+
+            if (length <= 0 || length > 255 || length == 0)  // CGM limite généralement à 255
+                return string.Empty;
+
+            int requiredArgs = length + ((length + 1) % 2);  // +padding si nécessaire
+            if (_command.CurrentArg + requiredArgs > _command.Args.Length)
+            {
+                Debug.WriteLine($"[CGM] Pas assez d'arguments pour lire la chaîne (besoin: {requiredArgs}, disponible: {_command.Args.Length - _command.CurrentArg})");
+                return string.Empty;
+            }
+
+            // 2. Lire les caractères un par un
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < length; i++)
+            {
+                if (_command.CurrentArg >= _command.Args.Length)
+                {
+                    // Protection contre lecture au-delà du tableau
+                    break;
+                }
+
+                char c = (char)NextArg();
+                sb.Append(c);
+            }
+
+            // 3. Gestion du padding CGM (alignement sur frontière paire)
+            // Si la chaîne a une longueur impaire, sauter l'octet de padding
+            if ((length + 1) % 2 == 1)
+            {
+                NextArg(); // Skip padding byte
+            }
+
+            return sb.ToString();
         }
 
         public int NextArg()

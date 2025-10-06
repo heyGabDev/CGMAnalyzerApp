@@ -14,6 +14,8 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
             : base(baseCommand, ec, eid, l)
         {
             // Pas d'arguments selon le Java original
+
+            ValidateArgumentsRead("BeginPicture");
             //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
             //    "Not all arguments were read in BeginPicture");
         }

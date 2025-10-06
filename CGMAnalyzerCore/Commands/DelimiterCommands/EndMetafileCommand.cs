@@ -12,6 +12,9 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
         public EndMetafileCommand(int ec, int eid, int l, CgmCommand baseCommand)
             : base(baseCommand, ec, eid, l)
         {
+            // Pas d'arguments selon le Java original
+
+            ValidateArgumentsRead("EndMetafile");
             //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
             //"Not all arguments were read in EndMetafile");
         }
