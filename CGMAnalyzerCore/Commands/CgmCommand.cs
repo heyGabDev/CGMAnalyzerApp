@@ -39,7 +39,7 @@ namespace CGMAnalyzerCore.Commands
         public bool AllArgumentsRead => CurrentArg >= Args?.Length;
 
         /// <summary>
-        /// 
+        /// Lecture & instanciation d'ec, eid, l
         /// </summary>
         /// <param name="ec"></param> // Element class = ec
         /// <param name="eid"></param> // Element ID = eid
@@ -633,10 +633,10 @@ namespace CGMAnalyzerCore.Commands
             return ElementCode;
         }
 
-        //public object Clone()
-        //{
-        //    return MemberwiseClone();
-        //}
+        public object Clone()
+        {
+            return MemberwiseClone();
+        }
 
         public override void ReadArguments(BinaryReader reader) { }
 
@@ -712,7 +712,9 @@ namespace CGMAnalyzerCore.Commands
 
         public override void LogCommandInfo()
         {
-            Debug.WriteLine($"[CGM] Command {GetType().Name} - EC:{ElementClassInt} EID:{ElementCode} Args:{Args?.Length ?? 0} CurrentArg:{CurrentArg}");
+            Debug.WriteLine($"[CGM] Command {GetType().Name} - EC:{ElementClassInt} EID:{ElementCode} " +
+                     $"ArgsTotal:{Args?.Length ?? 0} CurrentArg:{CurrentArg} " +
+                     $"Remaining:{RemainingArgs()} HasMore:{HasMoreArgs()}");
         }
         #endregion
     }

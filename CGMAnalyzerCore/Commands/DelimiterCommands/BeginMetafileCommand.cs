@@ -19,11 +19,11 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
                 if (baseCommand.Args != null && baseCommand.Args.Length > 0)
                 {
                     try
-                        {
-                        // Lire les arguments avec validation
-                        MetafileName = argumentReader.ReadString();
-                        ValidateArgumentsRead("MetafileName");
-                        }
+                    {
+                    // Lire les arguments avec validation
+                    MetafileName = argumentReader.ReadString();
+                    ValidateArgumentsRead("BeginMetafileCommand");
+                    }
                     catch (Exception ex)
                         {
                             Debug.WriteLine($"[CGM] Erreur lecture BeginMetafile: {ex.Message}");
