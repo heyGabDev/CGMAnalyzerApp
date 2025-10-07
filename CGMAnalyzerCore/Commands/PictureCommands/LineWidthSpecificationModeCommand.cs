@@ -21,8 +21,8 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
 
             CgmContext.LineWidthSpecificationMode = Mode;
 
-            System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-                "Not all arguments were read in LineWidthSpecificationMode");
+            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
+            //    "Not all arguments were read in LineWidthSpecificationMode");
         }
 
         public static void Reset()

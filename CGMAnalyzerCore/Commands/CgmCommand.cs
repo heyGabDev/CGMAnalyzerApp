@@ -1,5 +1,4 @@
-﻿
-using CGMAnalyzerCore.Commands.AttributeCommands;
+﻿using CGMAnalyzerCore.Commands.AttributeCommands;
 using CGMAnalyzerCore.Commands.ControlCommands;
 using CGMAnalyzerCore.Commands.DelimiterCommands;
 using CGMAnalyzerCore.Commands.EscapeCommands;
@@ -30,48 +29,44 @@ namespace CGMAnalyzerCore.Commands
 
     public class CgmCommand : BaseCgmCommand, ICloneable
     {
-        /// <summary>Index actuel dans Args</summary>
-        protected internal int CurrentArg = 0;
-        /// <summary>Tous les arguments bruts (mots 16 bits)</summary>
-        protected internal int[] Args;
-        /// <summary>Position du bit dans l'argument courant</summary>
-        protected internal int PosInArg = 0;
-        /// <summary> Indique si tous les arguments ont été lus </summary>
+        public int ElementClassInt { get; set; }
+        public int ElementCode { get; set; }
+        public int LayerId { get; set; }
+        public bool ErrorCommand { get; set; }
+        public int[] Args { get; set; }
+        public int CurrentArg { get; set; } = 0;
+        public int PosInArg { get; set; } = 0;
         public bool AllArgumentsRead => CurrentArg >= Args?.Length;
-
-
-        protected readonly int ElementClassInt;
-        protected readonly int ElementCode;
-
-        public int LayerId;
-        public bool ErrorCommand;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="ec"></param> // Element class = ec
         /// <param name="eid"></param> // Element ID = eid
-        /// <param name="argCount"></param> // l The number of arguments for the command
+        /// <param name="l"></param> // l The number of arguments for the command
         /// <param name="reader"></param> // in The input stream used to read the command
-        public CgmCommand(int ec, int eid, int argCount, BinaryReader reader) : base(ec, eid, argCount)
+        public CgmCommand(int ec, int eid, int l, BinaryReader reader) : base(ec, eid, l)
         {
             ElementClassInt = ec;
             ElementCode = eid;
             LayerId = CgmContext.CurrentLayerId;
             ErrorCommand = false;
+            CurrentArg = 0;  // Initialiser CurrentArg à 0
+            PosInArg = 0;
 
             if (reader != null)
             {
-                if (argCount != 31)
+                if (l != 31)
                 {
-                    // Créer Args avec la taille exacte attendue
-                    Args = new int[argCount];
+                    // ===== FORME COURTE =====
+                    // IMPORTANT : Args doit contenir des OCTETS, pas des UInt16
+                    Args = new int[l];
 
                     try
                     {
-                        // Lire autant d'octets que possible, mais pas plus qu'attendu
+                        // Vérifier qu'on a assez de données
                         long remainingBytes = reader.BaseStream.Length - reader.BaseStream.Position;
-                        int bytesToRead = Math.Min(argCount, (int)remainingBytes);
+                        int bytesToRead = Math.Min(l, (int)remainingBytes);
 
                         // Lire les octets disponibles
                         for (int i = 0; i < bytesToRead; i++)
@@ -79,36 +74,33 @@ namespace CGMAnalyzerCore.Commands
                             Args[i] = reader.ReadByte();
                         }
 
-                        // Les éléments non lus restent à 0 (valeur par défaut) => évite les erreurs d'index out of bounds
-                        // Gestion du padding (alignement sur frontière de mot)
-                        if (argCount % 2 == 1 && reader.BaseStream.Position < reader.BaseStream.Length)
+                        // Les octets non lus restent à 0
+                        if (bytesToRead < l)
+                        {
+                            Debug.WriteLine($"[CGM] Commande {ec}:{eid} - Lu {bytesToRead}/{l} octets (fin de stream)");
+                        }
+
+                        // Gestion du padding - alignement sur frontière de MOT (2 octets)
+                        if (l % 2 == 1 && reader.BaseStream.Position < reader.BaseStream.Length)
                         {
                             try
                             {
-                                reader.ReadByte(); // Skip padding byte
+                                reader.ReadByte(); // Un seul octet de padding
                             }
                             catch (EndOfStreamException)
                             {
                                 // Fin de fichier pendant le padding - pas grave
                             }
                         }
-
-                        // Log pour debug
-                        if (bytesToRead < argCount)
-                        {
-                            Debug.WriteLine($"[CGM] Commande {ec}:{eid} - Lu {bytesToRead}/{argCount} octets (fin de stream)");
-                        }
                     }
                     catch (EndOfStreamException)
                     {
-                        // Si on ne peut rien lire du tout Args reste initialisé avec des 0
                         Debug.WriteLine($"[CGM] Fin de stream atteinte pour commande {ec}:{eid}");
                     }
                 }
                 else
                 {
                     // ===== FORME LONGUE (argCount == 31) =====
-                    // Commandes partitionnées - votre code existant était correct
                     bool done = false;
                     List<int> argsList = new List<int>();
 
@@ -116,14 +108,15 @@ namespace CGMAnalyzerCore.Commands
                     {
                         do
                         {
-                            // Lire la longueur sur 16 bits
-                            int l = (reader.ReadByte() << 8) | reader.ReadByte();
-                            if (l == -1) break;
+                            // Lire la longueur sur 16 bits (2 octets)
+                            int l16 = Read16(reader);
 
-                            if ((l & 0x8000) != 0) // bit 15 set = pas la dernière partition
+                            if (l16 == -1) break;
+
+                            if ((l16 & 0x8000) != 0) // bit 15 set = pas la dernière partition
                             {
                                 done = false;
-                                l = l & 0x7FFF; // Clear bit 15
+                                l16 = l16 & 0x7FFF; // Clear bit 15
                             }
                             else
                             {
@@ -131,17 +124,17 @@ namespace CGMAnalyzerCore.Commands
                             }
 
                             // Lire les arguments de cette partition
-                            for (int i = 0; i < l; i++)
+                            for (int i = 0; i < l16; i++)
                             {
                                 argsList.Add(reader.ReadByte());
                             }
 
-                            // Alignement si nécessaire
-                            if (l % 2 == 1)
+                            // Alignement sur frontière de mot si nécessaire
+                            if (l16 % 2 == 1 && reader.BaseStream.Position < reader.BaseStream.Length)
                             {
                                 try
                                 {
-                                    reader.ReadByte(); // Skip padding
+                                    reader.ReadByte(); // Un seul octet de padding
                                 }
                                 catch (EndOfStreamException)
                                 {
@@ -151,13 +144,12 @@ namespace CGMAnalyzerCore.Commands
                             }
                         }
                         while (!done);
-
                         Args = argsList.ToArray();
                     }
                     catch (EndOfStreamException)
                     {
-                        // Erreur pendant la lecture de forme longue
-                        Args = argsList.ToArray(); // Utiliser ce qu'on a pu lire
+                        // Utiliser ce qu'on a pu lire
+                        Args = argsList.ToArray();
                         Debug.WriteLine($"[CGM] Erreur lecture forme longue pour commande {ec}:{eid}");
                     }
                 }
@@ -167,6 +159,23 @@ namespace CGMAnalyzerCore.Commands
                 // ===== PAS DE READER =====
                 // Cas où on appelle le constructeur sans reader (ex: pour copie)
                 Args = new int[0];
+            }
+        }
+
+        /// <summary>
+        /// Méthode helper pour lire 16 bits (équivalent au read16 Java)
+        /// </summary>
+        private int Read16(BinaryReader reader)
+        {
+            try
+            {
+                byte b1 = reader.ReadByte();
+                byte b2 = reader.ReadByte();
+                return (b1 << 8) | b2;
+            }
+            catch (EndOfStreamException)
+            {
+                return -1;
             }
         }
 
@@ -189,21 +198,23 @@ namespace CGMAnalyzerCore.Commands
 
             try
             {
-                k = reader.ReadByte();
-                k = (k << 8) | reader.ReadByte();
+                byte b1 = reader.ReadByte();
+                byte b2 = reader.ReadByte();
+                k = (b1 << 8) | b2;
             }
             catch (EndOfStreamException)
             {
                 return null;
             }
 
-            int ec = k >> 12;
+            int ec = (k >> 12) & 0xF;
             int eid = (k >> 5) & 0x7F;
             int l = k & 0x1F;
 
             return ReadCommand(reader, ec, eid, l);
         }
 
+        #region ReadElementElement function
         public static BaseCgmCommand ReadCommand(BinaryReader reader, int ec, int eid, int l)
         {
             var element = (ElementEnums)ec;
@@ -243,12 +254,12 @@ namespace CGMAnalyzerCore.Commands
                 case ElementEnums.ApplicationStructureElements:
                     return ReadApplicationStructureElements(reader, ec, eid, l);
 
-                    default: return UnsupportedCommand.Unsupported(ec, eid, l, reader);
+                default: return UnsupportedCommand.Unsupported(ec, eid, l, reader);
             }
         }
+        #endregion
 
         #region ReadElementClass function
-
         // Class: 0 
         private static BaseCgmCommand ReadDelimiterElements(BinaryReader reader, int ec, int eid, int l)
         {
@@ -312,7 +323,7 @@ namespace CGMAnalyzerCore.Commands
                 // 1, 3
                 MetafileDescriptorElement.VdcType => new VDCTypeCommand(ec, eid, l, command, argumentReader),
                 // 1, 4
-                MetafileDescriptorElement.IntegerPrecision => new IntegerPrecisionCommand(ec, eid, l, command,argumentReader),
+                MetafileDescriptorElement.IntegerPrecision => new IntegerPrecisionCommand(ec, eid, l, command, argumentReader),
                 // 1, 5
                 MetafileDescriptorElement.RealPrecision => new RealPrecisionCommand(ec, eid, l, command, argumentReader),
                 // 1, 6
@@ -336,7 +347,7 @@ namespace CGMAnalyzerCore.Commands
                 // 1, 15
                 MetafileDescriptorElement.CharacterCodingAnnouncer => new CharacterCodingAnnouncerCommand(ec, eid, l, command, argumentReader),
                 // 1, 16
-                MetafileDescriptorElement.NamePrecision => new NamePrecisionCommand(ec, eid, l,command, argumentReader),
+                MetafileDescriptorElement.NamePrecision => new NamePrecisionCommand(ec, eid, l, command, argumentReader),
                 // 1, 17
                 MetafileDescriptorElement.MaximumVdcExtent => new MaximumVdcExtentCommand(ec, eid, l, argumentReader),
                 // 1, 18
@@ -354,7 +365,8 @@ namespace CGMAnalyzerCore.Commands
         }
 
         // Class 2
-        private static BaseCgmCommand ReadPictureDescriptorElements(BinaryReader reader, int ec, int eid, int l) {
+        private static BaseCgmCommand ReadPictureDescriptorElements(BinaryReader reader, int ec, int eid, int l)
+        {
             var element = (PictureDescriptorElement)eid;
             var command = new CgmCommand(ec, eid, l, reader);
             var argumentReader = new ExtractedArgumentReader(command);
@@ -400,7 +412,8 @@ namespace CGMAnalyzerCore.Commands
         }
 
         // Class 3
-        private static BaseCgmCommand ReadControlElements(BinaryReader reader, int ec, int eid, int l) {
+        private static BaseCgmCommand ReadControlElements(BinaryReader reader, int ec, int eid, int l)
+        {
             var element = (ControlElement)eid;
             var command = new CgmCommand(ec, eid, l, reader);
             var argumentReader = new ExtractedArgumentReader(command);
@@ -436,7 +449,7 @@ namespace CGMAnalyzerCore.Commands
                 // 5
                 GraphicalPrimitiveElement.RestrictedText => new RestrictedTextCommand(ec, eid, command, argumentReader),
                 // 6
-                GraphicalPrimitiveElement.AppendText => new AppendTextCommand(ec, eid, command, argumentReader),  
+                GraphicalPrimitiveElement.AppendText => new AppendTextCommand(ec, eid, command, argumentReader),
                 // 7
                 GraphicalPrimitiveElement.Polygon => new PolygonCommand(ec, eid, command, argumentReader),
                 // 8 
@@ -489,10 +502,10 @@ namespace CGMAnalyzerCore.Commands
         private static BaseCgmCommand ReadAttributeElements(BinaryReader reader, int ec, int eid, int l)
         {
             var element = (AttributeElement)eid;
-            var command = new CgmCommand (ec, eid, l, reader);
+            var command = new CgmCommand(ec, eid, l, reader);
             var argumentReader = new ExtractedArgumentReader(command);
 
-            return element switch 
+            return element switch
             {
                 // 1 - Bundle indices (pas d'implémentation spécifique)
                 AttributeElement.LineBundleIndex or
@@ -537,8 +550,8 @@ namespace CGMAnalyzerCore.Commands
                 AttributeElement.EdgeVisibility => new EdgeVisibilityCommand(ec, eid, l, command, argumentReader),
 
                 // 31-33 - Pattern attributes (non supportés)
-                AttributeElement.FillReferencePoint or 
-                AttributeElement.PatternTable or 
+                AttributeElement.FillReferencePoint or
+                AttributeElement.PatternTable or
                 AttributeElement.PatternSize => UnsupportedCommand.Unsupported(ec, eid, l, reader),
 
                 // 34 - Colour table
@@ -608,8 +621,6 @@ namespace CGMAnalyzerCore.Commands
             var command = new CgmCommand(ec, eid, l, reader);
             return new ApplicationStructureCommand(command, ec, eid);
         }
-
-
         #endregion
 
         public int GetElementClass()
@@ -622,13 +633,13 @@ namespace CGMAnalyzerCore.Commands
             return ElementCode;
         }
 
-        public object Clone()
-        {
-            return MemberwiseClone();
-        }
-        
+        //public object Clone()
+        //{
+        //    return MemberwiseClone();
+        //}
+
         public override void ReadArguments(BinaryReader reader) { }
-        
+
         public override void Draw(Graphics g, Pen pen)
         {
             if (ErrorCommand)
@@ -637,11 +648,11 @@ namespace CGMAnalyzerCore.Commands
                 return;
             }
         }
-        
-        public virtual string ToStringDetail()
-        {
-            return $"{GetType().Name} - EC:{ElementClassInt} EID:{ElementCode}";
-        }
+
+        //public virtual string ToStringDetail()
+        //{
+        //    return $"{GetType().Name} - EC:{ElementClassInt} EID:{ElementCode}";
+        //}
 
         internal int NextArg()
         {
@@ -656,7 +667,8 @@ namespace CGMAnalyzerCore.Commands
 
         internal void SkipBits()
         {
-            if (PosInArg % 8 != 0) //this.posInArg
+            //if (PosInArg % 8 != 0) //this.posInArg
+            if (PosInArg != 0)
             {
                 // we read some bits from the current arg but aren't done, skip the rest
                 PosInArg = 0; //this.posInArg = 0;
@@ -664,6 +676,32 @@ namespace CGMAnalyzerCore.Commands
             }
         }
 
+        /// <summary>
+        /// Réinitialise la position de lecture
+        /// </summary>
+        public void ResetPosition()
+        {
+            CurrentArg = 0;
+            PosInArg = 0;
+        }
+
+        /// <summary>
+        /// Vérifie s'il reste des arguments à lire
+        /// </summary>
+        public bool HasMoreArgs()
+        {
+            return CurrentArg < Args.Length;
+        }
+
+        /// <summary>
+        /// Nombre d'octets restants
+        /// </summary>
+        public int RemainingArgs()
+        {
+            return Args.Length - CurrentArg;
+        }
+
+        #region Logger
         protected void ValidateArgumentsRead(string commandName)
         {
             if (CurrentArg != Args.Length)
@@ -676,5 +714,6 @@ namespace CGMAnalyzerCore.Commands
         {
             Debug.WriteLine($"[CGM] Command {GetType().Name} - EC:{ElementClassInt} EID:{ElementCode} Args:{Args?.Length ?? 0} CurrentArg:{CurrentArg}");
         }
+        #endregion
     }
 }

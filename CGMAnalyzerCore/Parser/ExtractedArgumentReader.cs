@@ -82,8 +82,7 @@ namespace CGMAnalyzerCore.Parser
             _command.SkipBits();
         }
 
-        // ========== MÉTHODES BASIQUES (basées sur makeUInt*) ==========
-
+        #region MÉTHODES BASIQUES (basées sur makeUInt*)
         public int MakeUInt8()
         {
             SkipBits();
@@ -133,9 +132,9 @@ namespace CGMAnalyzerCore.Parser
                 _ => MakeUInt8() // default comme dans Java
             };
         }
+        #endregion
 
-        // ========== MÉTHODES SIGNÉES (basées sur makeSignedInt*) ==========
-
+        #region MÉTHODES SIGNÉES (basées sur makeSignedInt*)
         public int MakeSignedInt8()
         {
             SkipBits();
@@ -159,9 +158,9 @@ namespace CGMAnalyzerCore.Parser
             SkipBits();
             return (NextArg() << 24) | (NextArg() << 16) | (NextArg() << 8) | NextArg();
         }
+        #endregion
 
-        // ========== MÉTHODES SPÉCIALISÉES (basées sur make*) ==========
-
+        #region MÉTHODES SPÉCIALISÉES (basées sur make*) 
         public byte MakeByte()
         {
             SkipBits();
@@ -209,12 +208,38 @@ namespace CGMAnalyzerCore.Parser
         {
             return MakeSignedInt16();
         }
+        #endregion
 
-        // ========== POINTS ET VDC ==========
-
+        #region MÉTHODES POINTS ET VDC 
         public Point2D.Double MakePoint()
         {
-            return new Point2D.Double(MakeVdc(), MakeVdc());
+            //TEST
+            // Dépend de VDCType et VDCPrecision
+            if (CgmContext.VdcType == VDCTypeEnum.Integer)
+            {
+                if (CgmContext.VdcIntegerPrecision == 16)
+                {
+                    var x = MakeSignedInt16();
+                    var y = MakeSignedInt16();
+                    return new Point2D.Double(x, y);
+                }
+                else if (CgmContext.VdcIntegerPrecision == 32)
+                {
+                    var x = MakeSignedInt32();
+                    var y = MakeSignedInt32();
+                    return new Point2D.Double(x, y);
+                }
+            }
+            else // VDC Real
+            {
+                var x = MakeReal();
+                var y = MakeReal();
+                return new Point2D.Double(x, y);
+            }
+
+            throw new NotSupportedException($"VDC precision non supportée");
+
+            //return new Point2D.Double(MakeVdc(), MakeVdc());
         }
 
         public Point2D.Double MakePoint(int ec, int eid)
@@ -253,9 +278,9 @@ namespace CGMAnalyzerCore.Parser
             // Device viewport coordinates - based on specification mode
             return MakeReal(); // Simplified
         }
+        #endregion
 
-        // ========== NOMBRES RÉELS ==========
-
+        #region MÉTHODES NOMBRES RÉELS
         public double MakeReal()
         {
             var precision = CgmContext.RealPrecision;
@@ -329,14 +354,23 @@ namespace CGMAnalyzerCore.Parser
             return MakeSignedInt32();
         }
 
+        // <summary>
+        /// Lit un float 32 bits
+        /// </summary>
+        public float MakeFloat32()
+        {
+            int bits = MakeSignedInt32();
+            return BitConverter.ToSingle(BitConverter.GetBytes(bits), 0);
+        }
+        #endregion
+
+        #region MÉTHODES COULEURS 
         public object MakeColorValue()
         {
             // Pour les composants de couleur individuels
             int precision = CgmContext.ColorPrecision;
             return MakeUInt(precision);
         }
-
-        // ========== COULEURS ==========
 
         public int MakeColorIndex()
         {
@@ -382,26 +416,41 @@ namespace CGMAnalyzerCore.Parser
 
             return Math.Min(255, Math.Max(0, value)); // Clamp par défaut
         }
+        #endregion
 
-        // ========== CHAÎNES ==========
-
+        #region MÉTHODES CHAÎNES 
         public string MakeString()
         {
-            int length = GetStringCount();
+            // TEST
+            int length = MakeByte();
+            if (length == 255)
+            {
+                length = MakeUInt16();
+            }
+
             byte[] bytes = new byte[length];
             for (int i = 0; i < length; i++)
             {
                 bytes[i] = MakeByte();
             }
 
-            try
-            {
-                return Encoding.GetEncoding("ISO-8859-1").GetString(bytes);
-            }
-            catch
-            {
-                return Encoding.Default.GetString(bytes);
-            }
+            return System.Text.Encoding.GetEncoding("ISO-8859-1").GetString(bytes);
+
+            //int length = GetStringCount();
+            //byte[] bytes = new byte[length];
+            //for (int i = 0; i < length; i++)
+            //{
+            //    bytes[i] = MakeByte();
+            //}
+
+            //try
+            //{
+            //    return Encoding.GetEncoding("ISO-8859-1").GetString(bytes);
+            //}
+            //catch
+            //{
+            //    return Encoding.Default.GetString(bytes);
+            //}
         }
 
         public string MakeFixedString()
@@ -428,9 +477,9 @@ namespace CGMAnalyzerCore.Parser
             }
             return length;
         }
+        #endregion
 
-        // ========== MÉTHODES DE TAILLE ==========
-
+        #region MÉTHODES DE TAILLE
         public int SizeOfPoint()
         {
             return 2 * SizeOfVdc();
@@ -467,8 +516,9 @@ namespace CGMAnalyzerCore.Parser
         {
             return 2; // Standard CGM
         }
+        #endregion
 
-        // ========== MÉTHODES BIT ==========
+        #region MÉTHODES BIT
 
         private int MakeUInt1()
         {
@@ -504,8 +554,9 @@ namespace CGMAnalyzerCore.Parser
             return ret;
         }
 
-        // ========== MÉTHODES NON IMPLÉMENTÉES (placeholder) ==========
+        #endregion
 
+        #region MÉTHODES NON IMPLÉMENTÉES (placeholder)
         public object MakeBitStream()
         {
             // Implémentation complexe - placeholder
@@ -517,387 +568,6 @@ namespace CGMAnalyzerCore.Parser
             // Liste de couleurs - implémentation complexe
             return new List<System.Drawing.Color>();
         }
+        #endregion
     }
-    //public int MakeUInt8()
-    //{
-    //    return NextArg() & 0xFF;
-    //}
-
-    //public int MakeUInt16()
-    //{
-    //    SkipBits();
-
-    //    if (_command.CurrentArg + 1 < _command.Args.Length)
-    //    {
-    //        // Deux octets disponibles
-    //        int high = _command.Args[_command.CurrentArg++];
-    //        int low = _command.Args[_command.CurrentArg++];
-    //        return (high << 8) | low;
-    //    }
-    //    else if (_command.CurrentArg < _command.Args.Length)
-    //    {
-    //        // Un seul octet restant (cas de fallback)
-    //        return _command.Args[_command.CurrentArg++];
-    //    }
-
-    //    throw new InvalidOperationException("No more arguments available");
-    //}
-
-    //public string MakeString()
-    //{
-    //    int length = GetStringCount();
-    //    byte[] bytes = new byte[length];
-    //    for (int i = 0; i < length; i++)
-    //    {
-    //        bytes[i] = (byte)(NextArg() & 0xFF);
-    //    }
-
-    //    try
-    //    {
-    //        return Encoding.GetEncoding("ISO-8859-1").GetString(bytes);
-    //    }
-    //    catch
-    //    {
-    //        return Encoding.Default.GetString(bytes);
-    //    }
-    //}
-
-    //public float MakeFloatCoord()
-    //{
-    //    return NextArg();
-    //}
-
-    //public short MakeSignedInt16()
-    //{
-
-    //    return unchecked((short)(NextArg() & 0xFFFF));
-    //}
-
-    //public int MakeSignedInt24()
-    //{
-    //    int b1 = NextArg() & 0xFF;
-    //    int b2 = NextArg() & 0xFF;
-    //    int b3 = NextArg() & 0xFF;
-    //    int value = (b1 << 16) | (b2 << 8) | b3;
-    //    if ((value & 0x800000) != 0)
-    //        value |= unchecked((int)0xFF000000); // sign extend
-    //    return value;
-    //}
-
-    //public int MakeSignedInt32()
-    //{
-    //    int high = NextArg();
-    //    int low = NextArg();
-    //    return (high << 16) | low;
-    //}
-
-    //public int MakeInt()
-    //{
-    //    int precision = CgmContext.VdcIntegerPrecision;
-    //    return MakeInt(precision);
-    //}
-
-    //public int MakeInt(int precision)
-    //{
-    //    return precision switch
-    //    {
-    //        8 => (sbyte)NextArg(),
-    //        16 => (short)((NextArg() << 8) | NextArg()),
-    //        24 => (NextArg() << 16) | (NextArg() << 8) | NextArg(),
-    //        32 => (NextArg() << 24) | (NextArg() << 16) | (NextArg() << 8) | NextArg(),
-    //        _ => throw new NotSupportedException($"Unsupported integer precision: {precision}")
-    //    };
-    //}
-
-    //public Point2D.Double MakePoint(int ec, int eid)
-    //{
-    //    return new Point2D.Double(MakeVdc(ec, eid), MakeVdc(ec, eid));
-    //}
-
-    //public double MakeVdc(int ec, int eid)
-    //{
-    //    if (VDCTypeCommand.CurrentVDCType == VDCTypeEnum.Real)
-    //    {
-    //        var precision = CgmContext.VdcRealPrecision;
-    //        switch (precision)
-    //        {
-    //            case VDCRealPrecisionEnum.FixedPoint32:
-    //                //VDCRealPrecision.Type.FixedPoint32Bit:
-    //                return MakeFixedPoint32();
-    //            case VDCRealPrecisionEnum.FixedPoint64:
-    //                return MakeFixedPoint64();
-    //            case VDCRealPrecisionEnum.FloatingPoint32:
-    //            //return MakeFloatingPoint32();
-    //            case VDCRealPrecisionEnum.FloatingPoint64:
-    //            //return MakeFloatingPoint64();
-    //            default:
-    //                UnsupportedCommand.Unsupported(ec, eid, $"unsupported precision {precision}");
-    //                return MakeFixedPoint32();
-    //        }
-    //    }
-
-    //    // Assume integer if not real
-    //    int intPrecision = CgmContext.VdcIntegerPrecision;
-    //    return intPrecision switch
-    //    {
-    //        16 => MakeSignedInt16(),
-    //        24 => MakeSignedInt24(),
-    //        32 => MakeSignedInt32(),
-    //        _ => throw new NotSupportedException($"Unsupported integer VdcIntegerPrecision: {intPrecision}")
-    //    };
-    //}
-
-    //public int SizeOfPoint()
-    //{
-    //    return 2 * VDCTypeCommand.SizeOfVdc();
-    //}
-
-    //public static double MakeFixedPoint32()
-    //{
-    //    double wholePart = 1; //makeSignedInt16();
-    //    double fractionPart = 1;//makeUInt16();
-
-    //    return wholePart + (fractionPart / (2 << 15));
-    //}
-
-    //public static double MakeFixedPoint64()
-    //{
-    //    double wholePart = 2; //makeSignedInt32();
-    //    double fractionPart = 2; //makeUInt32();
-
-    //    return wholePart + (fractionPart / (2 << 31));
-    //}
-
-    //public double MakeFloatingPoint32()
-    //{
-    //    SkipBits();
-    //    int bits = 0;
-    //    for (int i = 0; i < 4; i++)
-    //    {
-    //        bits = (bits << 8) | MakeChar();
-    //    }
-    //    return BitConverter.Int32BitsToSingle(bits);
-    //}
-
-    //public double MakeFloatingPoint64()
-    //{
-    //    SkipBits();
-    //    long bits = 0;
-    //    for (int i = 0; i < 8; i++)
-    //    {
-    //        bits = (bits << 8) | MakeChar();
-    //    }
-    //    return BitConverter.Int64BitsToDouble(bits);
-    //}
-
-    //public char MakeChar()
-    //{
-    //    _command.SkipBits();
-
-    //    if (_command.CurrentArg >= _command.Args.Length)
-    //        throw new IndexOutOfRangeException("Attempted to read beyond the end of the argument list.");
-
-    //    return (char)(_command.Args[_command.CurrentArg++]);
-    //}
-
-    ////public string MakeString(BinaryReader reader)
-    ////{
-    ////    int length = GetStringCount(reader);
-    ////    byte[] bytes = new byte[length];
-
-    ////    for (int i = 0; i < length; i++)
-    ////    {
-    ////        bytes[i] = MakeByte(reader);
-    ////    }
-
-    ////    try
-    ////    {
-    ////        return System.Text.Encoding.GetEncoding("ISO-8859-1").GetString(bytes);
-    ////    }
-    ////    catch
-    ////    {
-    ////        return System.Text.Encoding.Default.GetString(bytes);
-    ////    }
-    ////}
-
-    //public int GetStringCount()
-    //{
-    //    int length = MakeUInt8();
-    //    if (length == 255)
-    //    {
-    //        length = MakeUInt16();
-    //        if ((length & (1 << 16)) != 0)
-    //        {
-    //            length = (length << 16) | MakeUInt16();
-    //        }
-    //    }
-    //    return length;
-    //}
-
-    //public byte MakeByte(BinaryReader reader)
-    //{
-    //    SkipBits();
-    //    return reader.ReadByte();
-    //}
-
-    //public int MakeUInt8(BinaryReader reader)
-    //{
-    //    SkipBits(); // Appelle ta méthode existante
-    //    return reader.ReadByte(); // Byte = 8 bits non signé
-    //}
-
-    //public int MakeUInt16(BinaryReader reader)
-    //{
-    //    SkipBits(); // Appelle ta méthode existante
-
-    //    // On vérifie s’il reste 2 octets à lire
-    //    if (reader.BaseStream.Length - reader.BaseStream.Position >= 2)
-    //    {
-    //        byte high = reader.ReadByte();
-    //        byte low = reader.ReadByte();
-    //        return (high << 8) | low;
-    //    }
-
-    //    // Si seulement 1 octet reste
-    //    if (reader.BaseStream.Length - reader.BaseStream.Position >= 1)
-    //    {
-    //        // Optionnel : log de fallback
-    //        return reader.ReadByte();
-    //    }
-
-    //    throw new EndOfStreamException("Unexpected end of stream when trying to read UInt16.");
-    //}
-
-    //public double MakeVdc()
-    //{
-    //    SkipBits();
-
-    //    if (CgmContext.VdcType == VDCTypeEnum.Real)
-    //    {
-    //        var precision = CgmContext.VdcRealPrecision;
-    //        return precision switch
-    //        {
-    //            VDCRealPrecisionEnum.FixedPoint32 => MakeFixedPoint32(),
-    //            VDCRealPrecisionEnum.FixedPoint64 => MakeFixedPoint64(),
-    //            VDCRealPrecisionEnum.FloatingPoint32 => MakeFloatingPoint32(),
-    //            VDCRealPrecisionEnum.FloatingPoint64 => MakeFloatingPoint64(),
-    //            _ => throw new NotSupportedException($"Unsupported real VDC precision: {precision}")
-    //        };
-    //    }
-
-    //    int intPrecision = CgmContext.VdcIntegerPrecision;
-    //    return intPrecision switch
-    //    {
-    //        16 => MakeSignedInt16(),
-    //        24 => MakeSignedInt24(),
-    //        32 => MakeSignedInt32(),
-    //        _ => throw new NotSupportedException($"Unsupported integer VDC precision: {intPrecision}")
-    //    };
-    //}
-
-    //public short MakeEnum()
-    //{
-    //    return MakeSignedInt16();
-    //}
-
-    //public double MakeReal()
-    //{
-    //    var precision = CgmContext.VdcRealPrecision;
-
-    //    if (precision.Equals(VDCRealPrecisionEnum.FixedPoint32))
-    //    {
-    //        return MakeFixedPoint32();
-    //    }
-    //    if (precision.Equals(VDCRealPrecisionEnum.FixedPoint64))
-    //    {
-    //        return MakeFixedPoint64();
-    //    }
-    //    if (precision.Equals(VDCRealPrecisionEnum.FloatingPoint32))
-    //    {
-    //        return MakeFloatingPoint32();
-    //    }
-    //    if (precision.Equals(VDCRealPrecisionEnum.FloatingPoint64))
-    //    {
-    //        return MakeFloatingPoint64();
-    //    }
-
-    //    // unsupported("unsupported real precision "+precision);
-    //    return MakeFloatingPoint32();
-    //}
-
-
-    //// TO DO : TO COMPLETE
-    //internal object MakeColorIndex()
-    //{
-    //    throw new NotImplementedException();
-    //}
-
-    //internal object MakeDirectColor()
-    //{
-    //    throw new NotImplementedException();
-    //}
-
-    //internal object MakeByte()
-    //{
-    //    throw new NotImplementedException();
-    //}
-
-    //internal object MakeInt16()
-    //{
-    //    throw new NotImplementedException();
-    //}
-
-    //internal object MakeInt32()
-    //{
-    //    throw new NotImplementedException();
-    //}
-
-    //internal object MakeIndex()
-    //{
-    //    throw new NotImplementedException();
-    //}
-
-    //internal object MakeFixedString()
-    //{
-    //    throw new NotImplementedException();
-    //}
-
-    //internal object MakeColorValue()
-    //{
-    //    throw new NotImplementedException();
-    //}
-
-    //internal object MakeBitStream()
-    //{
-    //    throw new NotImplementedException();
-    //}
-
-    //internal object MakeColorList()
-    //{
-    //    throw new NotImplementedException();
-    //}
-
-    //public static int SizeOfIndex(ExtractedArgumentReader reader)
-    //{
-    //    // Taille typique d'un index en CGM (peut varier selon la précision)
-    //    return 2; // 16 bits par défaut
-    //}
-
-    //public static int SizeOfInt(ExtractedArgumentReader reader)
-    //{
-    //    // Taille d'un entier selon la précision CGM
-    //    return 2; // 16 bits par défaut
-    //}
-
-    //public static int MakeIndex(ExtractedArgumentReader reader)
-    //{
-    //    // Lire un index (similaire à un entier mais pour référencer)
-    //    return reader.MakeInt();
-    //}
-
-    //public static int MakeUInt8(ExtractedArgumentReader reader)
-    //{
-    //    // Lire un entier non signé 8 bits
-    //    return reader.MakeUInt(8);
-    //}
 }

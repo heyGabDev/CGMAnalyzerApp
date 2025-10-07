@@ -12,6 +12,9 @@ namespace CGMAnalyzerCore.Commands
         public int ElementClass { get; }
         public int ElementId { get; }
         public int Length { get; }
+        /// <summary>Tous les arguments bruts (mots 16 bits)</summary>
+        protected internal int[] Args;
+
 
         protected BaseCgmCommand(int elementClass, int elementId, int length)
         {
@@ -42,8 +45,6 @@ namespace CGMAnalyzerCore.Commands
        {
             Debug.WriteLine($"[CGM] Command {GetType().Name} - EC:{ElementClass} EID:{ElementId}");
        }
-        
-
 
         /// <summary>
         /// Représentation textuelle pour debug/logs.

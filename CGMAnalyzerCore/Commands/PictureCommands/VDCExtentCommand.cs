@@ -25,7 +25,8 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
 
         public Point2D.Double[] GetExtent()
         {
-            return new Point2D.Double[] { LowerLeftCorner, UpperRightCorner };
+            var toto = new Point2D.Double[] { LowerLeftCorner, UpperRightCorner };
+            return toto; //new Point2D.Double[] { LowerLeftCorner, UpperRightCorner };
         }
 
         public override string ToString()

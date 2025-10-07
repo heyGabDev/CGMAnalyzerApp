@@ -13,6 +13,9 @@ namespace CGMAnalyzerCore.Render
         public string ColourModel { get; set; } = "RGB";
         public int IntegerPrecision { get; set; } = 16;
         public Rectangle VdcExtent { get; set; } = new Rectangle(0, 0, 32767, 32767);
+        public bool EdgeVisibility { get; internal set; }
+        public bool FillEnabled { get; internal set; }
+        public object InteriorStyle { get; internal set; }
 
         private Pen? _currentPen;
         private Brush? _currentBrush;

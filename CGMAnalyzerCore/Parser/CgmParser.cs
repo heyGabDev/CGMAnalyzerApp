@@ -24,11 +24,11 @@ namespace CGMAnalyzerCore.Parser
         public static int CurrentLayerId = 0;
         private readonly List<BaseCgmCommand> commands = new();
 
-        public void AddListener(ICommandListener listener)
-        {
-            if(listener != null)
-                _commandListeners.Add(listener);
-        }
+        //public void AddListener(ICommandListener listener)
+        //{
+        //    if(listener != null)
+        //        _commandListeners.Add(listener);
+        //}
 
         // <summary>
         /// Charge et parse un fichier CGM depuis un stream
@@ -61,50 +61,6 @@ namespace CGMAnalyzerCore.Parser
             LoadAsync(stream, filename).GetAwaiter().GetResult();
         }
 
-        public void ParseCgmFile(string filePath)
-        {
-            using (var reader = new BinaryReader(File.OpenRead(filePath)))
-            {
-                while (reader.BaseStream.Position < reader.BaseStream.Length)
-                {
-                    try
-                    {
-                        var command = CgmCommand.Read(reader);
-                        if (command != null && !((CgmCommand)command).ErrorCommand)
-                        {
-                            commands.Add(command);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"[CGM] Erreur parsing: {ex.Message}");
-                        // Essayer de continuer après l'erreur
-                        if (reader.BaseStream.Position < reader.BaseStream.Length - 2)
-                        {
-                            reader.BaseStream.Position += 2; // Skip problematic data
-                        }
-                    }
-                }
-            }
-        }
-
-        // TODO SGC - Delete
-        //public void Load(Stream stream, string filename)
-        //{
-        //    Stream inputStream = stream;
-
-        //    if (filename.EndsWith(".cgm.gz", StringComparison.OrdinalIgnoreCase) ||
-        //        filename.EndsWith(".cgmz", StringComparison.OrdinalIgnoreCase))
-        //    {
-        //        inputStream = new GZipStream(stream, CompressionMode.Decompress);
-        //    }
-
-        //    using var buffered = new BufferedStream(inputStream);
-        //    using var reader = new BinaryReader(buffered);
-
-        //    Read(reader);
-        //}
-
         public void Read(BinaryReader reader)
         {
             Reset();
@@ -120,7 +76,7 @@ namespace CGMAnalyzerCore.Parser
                         // Vérifier qu'il reste des données
                         if (reader.BaseStream.Position >= reader.BaseStream.Length)
                         {
-                            Messages.Add("Fin du stream atteinte normalement");
+                            Messages.Add("End of stream reached normally");
                             break;
                         }
 

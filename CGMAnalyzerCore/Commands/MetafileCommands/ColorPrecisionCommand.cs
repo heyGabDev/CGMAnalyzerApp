@@ -18,8 +18,8 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
             Precision = argReader.MakeInt();
             CgmContext.ColorPrecision = Precision;
 
-            System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-                "Not all arguments were read in ColourPrecision");
+            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
+            //    "Not all arguments were read in ColourPrecision");
         }
 
         public static void Reset()

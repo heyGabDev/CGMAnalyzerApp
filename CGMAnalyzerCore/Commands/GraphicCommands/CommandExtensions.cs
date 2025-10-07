@@ -1,4 +1,6 @@
 ﻿using CGMAnalyzerCore.Commands.MetafileCommands;
+using CGMAnalyzerCore.Geometry;
+using DotLiquid.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +11,15 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
 {
     public static class CommandExtensions
     {
+        /// <summary>
+        /// Extension pour PolyBezierCommand qui retourne les points de contrôle en Point2D
+        /// </summary>
+        public static IReadOnlyList<Point2D> GetControlPoints(this PolyBezierCommand command)
+        {
+            // Convertir Point2D en Point pour être cohérent avec les autres commandes
+            return command.ControlPoints;
+        }
+
         /// <summary>
         /// Extension pour TES LineCommand qui utilisent Start/End
         /// </summary>
@@ -23,6 +34,16 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
         public static List<Point> GetPoints(this PolylineCommand command)
         {
             return command.Points ?? new List<Point>();
+        }
+
+        //RenderPolygon
+        public static List<Point> GetPoints(this PolygonCommand command)
+        {
+            // Vérifie si Points est null, puis convertit chaque Point2D en Point
+            if (command.Points == null)
+                return new List<Point>();
+
+            return command.Points.Select(p => new Point((int)p.X, (int)p.Y)).ToList();
         }
 
         /// <summary>
