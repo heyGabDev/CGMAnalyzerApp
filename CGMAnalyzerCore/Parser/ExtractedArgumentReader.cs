@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using static CGMAnalyzerCore.Geometry.Point2D;
 
 namespace CGMAnalyzerCore.Parser
@@ -38,38 +39,49 @@ namespace CGMAnalyzerCore.Parser
             // 1. Lire d'abord la longueur de la chaîne (1 octet)
             int length = MakeUInt8();
 
-            if (length < 0 || length > 255 || length == 0)  // CGM limite généralement à 255
-                return string.Empty;
+            // Debug pour voir ce qui se passe
+            Debug.WriteLine($"[ReadString] Length: {length}, CurrentArg: {_command.CurrentArg}/{_command.Args.Length}");
 
-            int requiredArgs = length + ((length + 1) % 2);  // +padding si nécessaire
-            if (_command.CurrentArg + requiredArgs > _command.Args.Length)
+
+            if (length < 0 || length > 255)  // CGM limite généralement à 255
             {
-                Debug.WriteLine($"[CGM] Pas assez d'arguments pour lire la chaîne (besoin: {requiredArgs}, disponible: {_command.Args.Length - _command.CurrentArg})");
+                Debug.WriteLine($"[ReadString] Longueur invalide: {length}");
                 return string.Empty;
             }
 
-            // 2. Lire les caractères un par un
+            // 2. Vérifier qu'il y a assez d'arguments restants
+            if (_command.CurrentArg + length > _command.Args.Length)
+            {
+                Debug.WriteLine($"[ReadString] Pas assez d'octets: besoin de {length}, reste {_command.Args.Length - _command.CurrentArg}");
+                return string.Empty;
+            }
+
+            // 3. Lire les caractères
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < length; i++)
             {
-                if (_command.CurrentArg >= _command.Args.Length)
+                if (!_command.HasMoreArgs())
                 {
-                    // Protection contre lecture au-delà du tableau
+                    Debug.WriteLine($"[ReadString] Fin prématurée à l'octet {i}/{length}");
                     break;
                 }
-
                 char c = (char)NextArg();
                 sb.Append(c);
             }
 
-            // 3. Gestion du padding CGM (alignement sur frontière paire)
-            // Si la chaîne a une longueur impaire, sauter l'octet de padding
-            if ((length + 1) % 2 == 1)
+            // 4.Gestion correcte du padding CGM
+            // Le padding est nécessaire si (longueur + 1 octet de longueur) est impair
+            // Car CGM aligne sur frontière de mot (2 octets)
+            int totalBytesRead = 1 + length; // 1 pour la longueur + length pour la chaîne
+            if (totalBytesRead % 2 == 1 && _command.HasMoreArgs())
             {
+                Debug.WriteLine($"[ReadString] Skip padding byte");
                 NextArg(); // Skip padding byte
             }
 
-            return sb.ToString();
+            string result = sb.ToString();
+            Debug.WriteLine($"[ReadString] Lu: '{result}'");
+            return result;
         }
 
         public int NextArg()

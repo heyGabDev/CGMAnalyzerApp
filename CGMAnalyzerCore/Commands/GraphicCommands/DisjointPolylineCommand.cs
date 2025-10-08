@@ -20,8 +20,10 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
         public IReadOnlyList<(Point2D Start, Point2D End)> Lines => _lines;
 
         public DisjointPolylineCommand(int ec, int eid, CgmCommand command, ExtractedArgumentReader argRerader)
-            : base(command.ElementClass, command.ElementId, command.Length)
+            : base(ec, eid, command.Length)
         {
+            Args = command.Args;
+            command.ResetPosition();
 
             int pointCount = command.Args.Length / argRerader.SizeOfPoint(); // SizeOfPoint();
             if (pointCount % 2 != 0)
@@ -29,9 +31,9 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
 
             for (int i = 0; i < pointCount / 2; i++)
             {
-                Point2D p1 = argRerader.MakePoint(command.ElementClass, command.ElementId);
-                Point2D p2 = argRerader.MakePoint(command.ElementClass, command.ElementId);
-                _lines.Add((p1, p2));
+                Point2D start = argRerader.MakePoint(ec, eid);
+                Point2D end = argRerader.MakePoint(ec, eid);
+                _lines.Add((start, end));
             }
         }
 
