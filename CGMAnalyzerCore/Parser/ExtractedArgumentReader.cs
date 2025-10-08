@@ -36,9 +36,9 @@ namespace CGMAnalyzerCore.Parser
                 return string.Empty;
 
             // 1. Lire d'abord la longueur de la chaîne (1 octet)
-            int length = NextArg();
+            int length = MakeUInt8();
 
-            if (length <= 0 || length > 255 || length == 0)  // CGM limite généralement à 255
+            if (length < 0 || length > 255 || length == 0)  // CGM limite généralement à 255
                 return string.Empty;
 
             int requiredArgs = length + ((length + 1) % 2);  // +padding si nécessaire

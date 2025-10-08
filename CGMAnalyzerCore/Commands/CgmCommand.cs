@@ -29,17 +29,12 @@ namespace CGMAnalyzerCore.Commands
 
     public class CgmCommand : BaseCgmCommand, ICloneable
     {
-        public int ElementClassInt { get; set; }
-        public int ElementCode { get; set; }
         public int LayerId { get; set; }
         public bool ErrorCommand { get; set; }
-        public int[] Args { get; set; }
-        public int CurrentArg { get; set; } = 0;
-        public int PosInArg { get; set; } = 0;
-        public bool AllArgumentsRead => CurrentArg >= Args?.Length;
+
 
         /// <summary>
-        /// Lecture & instanciation d'ec, eid, l
+        /// Constructeur principal - lit les octets depuis le stream
         /// </summary>
         /// <param name="ec"></param> // Element class = ec
         /// <param name="eid"></param> // Element ID = eid
@@ -47,118 +42,126 @@ namespace CGMAnalyzerCore.Commands
         /// <param name="reader"></param> // in The input stream used to read the command
         public CgmCommand(int ec, int eid, int l, BinaryReader reader) : base(ec, eid, l)
         {
-            ElementClassInt = ec;
-            ElementCode = eid;
             LayerId = CgmContext.CurrentLayerId;
             ErrorCommand = false;
-            CurrentArg = 0;  // Initialiser CurrentArg à 0
-            PosInArg = 0;
 
             if (reader != null)
             {
                 if (l != 31)
                 {
                     // ===== FORME COURTE =====
-                    // IMPORTANT : Args doit contenir des OCTETS, pas des UInt16
-                    Args = new int[l];
-
-                    try
-                    {
-                        // Vérifier qu'on a assez de données
-                        long remainingBytes = reader.BaseStream.Length - reader.BaseStream.Position;
-                        int bytesToRead = Math.Min(l, (int)remainingBytes);
-
-                        // Lire les octets disponibles
-                        for (int i = 0; i < bytesToRead; i++)
-                        {
-                            Args[i] = reader.ReadByte();
-                        }
-
-                        // Les octets non lus restent à 0
-                        if (bytesToRead < l)
-                        {
-                            Debug.WriteLine($"[CGM] Commande {ec}:{eid} - Lu {bytesToRead}/{l} octets (fin de stream)");
-                        }
-
-                        // Gestion du padding - alignement sur frontière de MOT (2 octets)
-                        if (l % 2 == 1 && reader.BaseStream.Position < reader.BaseStream.Length)
-                        {
-                            try
-                            {
-                                reader.ReadByte(); // Un seul octet de padding
-                            }
-                            catch (EndOfStreamException)
-                            {
-                                // Fin de fichier pendant le padding - pas grave
-                            }
-                        }
-                    }
-                    catch (EndOfStreamException)
-                    {
-                        Debug.WriteLine($"[CGM] Fin de stream atteinte pour commande {ec}:{eid}");
-                    }
+                    ReadShortForm(l, reader);
                 }
                 else
                 {
-                    // ===== FORME LONGUE (argCount == 31) =====
-                    bool done = false;
-                    List<int> argsList = new List<int>();
-
-                    try
-                    {
-                        do
-                        {
-                            // Lire la longueur sur 16 bits (2 octets)
-                            int l16 = Read16(reader);
-
-                            if (l16 == -1) break;
-
-                            if ((l16 & 0x8000) != 0) // bit 15 set = pas la dernière partition
-                            {
-                                done = false;
-                                l16 = l16 & 0x7FFF; // Clear bit 15
-                            }
-                            else
-                            {
-                                done = true;
-                            }
-
-                            // Lire les arguments de cette partition
-                            for (int i = 0; i < l16; i++)
-                            {
-                                argsList.Add(reader.ReadByte());
-                            }
-
-                            // Alignement sur frontière de mot si nécessaire
-                            if (l16 % 2 == 1 && reader.BaseStream.Position < reader.BaseStream.Length)
-                            {
-                                try
-                                {
-                                    reader.ReadByte(); // Un seul octet de padding
-                                }
-                                catch (EndOfStreamException)
-                                {
-                                    // Fin de fichier pendant le padding
-                                    break;
-                                }
-                            }
-                        }
-                        while (!done);
-                        Args = argsList.ToArray();
-                    }
-                    catch (EndOfStreamException)
-                    {
-                        // Utiliser ce qu'on a pu lire
-                        Args = argsList.ToArray();
-                        Debug.WriteLine($"[CGM] Erreur lecture forme longue pour commande {ec}:{eid}");
-                    }
+                    // ===== FORME LONGUE =====
+                    ReadLongForm(reader);
                 }
             }
             else
             {
-                // ===== PAS DE READER =====
-                // Cas où on appelle le constructeur sans reader (ex: pour copie)
                 Args = new int[0];
+            }
+        }
+
+        // <summary>
+        /// Constructeur de copie pour les commandes dérivées
+        /// </summary>
+        protected CgmCommand(CgmCommand source, int ec, int eid, int l)
+            : base(ec, eid, l)
+        {
+            LayerId = source.LayerId;
+            ErrorCommand = source.ErrorCommand;
+            Args = source.Args; // Partage la référence
+            CurrentArg = 0;
+            PosInArg = 0;
+        }
+
+        private void ReadShortForm(int l, BinaryReader reader)
+        {
+            Args = new int[l];
+
+            try
+            {
+                long remainingBytes = reader.BaseStream.Length - reader.BaseStream.Position;
+                int bytesToRead = Math.Min(l, (int)remainingBytes);
+
+                // IMPORTANT : Lire des OCTETS (8 bits)
+                for (int i = 0; i < bytesToRead; i++)
+                {
+                    Args[i] = reader.ReadByte();
+                }
+
+                if (bytesToRead < l)
+                {
+                    Debug.WriteLine($"[CGM] EC:{ElementClass} EID:{ElementId} - Lu {bytesToRead}/{l} octets");
+                }
+
+                // Padding sur frontière de mot (2 octets)
+                if (l % 2 == 1 && reader.BaseStream.Position < reader.BaseStream.Length)
+                {
+                    try
+                    {
+                        reader.ReadByte(); // Un octet de padding
+                    }
+                    catch (EndOfStreamException) { }
+                }
+            }
+            catch (EndOfStreamException)
+            {
+                Debug.WriteLine($"[CGM] EOF pour EC:{ElementClass} EID:{ElementId}");
+            }
+        }
+
+        private void ReadLongForm(BinaryReader reader)
+        {
+            bool done = false;
+            var argsList = new List<int>();
+
+            try
+            {
+                do
+                {
+                    int l = Read16(reader);
+                    if (l == -1) break;
+
+                    if ((l & 0x8000) != 0) // bit 15 = continuation
+                    {
+                        done = false;
+                        l = l & 0x7FFF;
+                    }
+                    else
+                    {
+                        done = true;
+                    }
+
+                    // Lire les OCTETS de cette partition
+                    for (int i = 0; i < l; i++)
+                    {
+                        argsList.Add(reader.ReadByte());
+                    }
+
+                    // Padding
+                    if (l % 2 == 1 && reader.BaseStream.Position < reader.BaseStream.Length)
+                    {
+                        try
+                        {
+                            reader.ReadByte();
+                        }
+                        catch (EndOfStreamException)
+                        {
+                            break;
+                        }
+                    }
+                }
+                while (!done);
+
+                Args = argsList.ToArray();
+            }
+            catch (EndOfStreamException)
+            {
+                Args = argsList.ToArray();
+                Debug.WriteLine($"[CGM] Erreur forme longue EC:{ElementClass} EID:{ElementId}");
             }
         }
 
@@ -179,19 +182,7 @@ namespace CGMAnalyzerCore.Commands
             }
         }
 
-        // Constructeur de copie - réutilise les arguments déjà lus
-        protected CgmCommand(CgmCommand source, int ec, int eid, int l)
-            : base(ec, eid, l)
-        {
-            ElementClassInt = ec;
-            ElementCode = eid;
-            LayerId = source.LayerId;
-            ErrorCommand = source.ErrorCommand;
-            Args = source.Args; // Réutilise les arguments
-            CurrentArg = 0;
-            PosInArg = 0;
-        }
-
+        #region ===== FACTORY METHODS =====
         public static BaseCgmCommand Read(BinaryReader reader)
         {
             int k;
@@ -213,8 +204,9 @@ namespace CGMAnalyzerCore.Commands
 
             return ReadCommand(reader, ec, eid, l);
         }
+        #endregion
 
-        #region ReadElementElement function
+        #region ===== ReadElementElement function =====
         public static BaseCgmCommand ReadCommand(BinaryReader reader, int ec, int eid, int l)
         {
             var element = (ElementEnums)ec;
@@ -259,7 +251,7 @@ namespace CGMAnalyzerCore.Commands
         }
         #endregion
 
-        #region ReadElementClass function
+        #region ===== ReadElementClass function =====
         // Class: 0 
         private static BaseCgmCommand ReadDelimiterElements(BinaryReader reader, int ec, int eid, int l)
         {
@@ -623,23 +615,7 @@ namespace CGMAnalyzerCore.Commands
         }
         #endregion
 
-        public int GetElementClass()
-        {
-            return ElementClassInt;
-        }
-
-        public int GetElementCode()
-        {
-            return ElementCode;
-        }
-
-        public object Clone()
-        {
-            return MemberwiseClone();
-        }
-
-        public override void ReadArguments(BinaryReader reader) { }
-
+        #region ===== IMPLÉMENTATIONS =====
         public override void Draw(Graphics g, Pen pen)
         {
             if (ErrorCommand)
@@ -649,72 +625,9 @@ namespace CGMAnalyzerCore.Commands
             }
         }
 
-        //public virtual string ToStringDetail()
-        //{
-        //    return $"{GetType().Name} - EC:{ElementClassInt} EID:{ElementCode}";
-        //}
-
-        internal int NextArg()
+        public object Clone()
         {
-            if (CurrentArg >= Args.Length)
-            {
-                // Au lieu de lancer une exception, retourner 0 et logger => Valeur par défaut sûre
-                Debug.WriteLine($"[CGM] Tentative de lecture au-delà des arguments disponibles dans {GetType().Name} ({CurrentArg}/{Args.Length})");
-                return 0;
-            }
-            return Args[CurrentArg++];
-        }
-
-        internal void SkipBits()
-        {
-            //if (PosInArg % 8 != 0) //this.posInArg
-            if (PosInArg != 0)
-            {
-                // we read some bits from the current arg but aren't done, skip the rest
-                PosInArg = 0; //this.posInArg = 0;
-                CurrentArg++; // this.currentArg++;
-            }
-        }
-
-        /// <summary>
-        /// Réinitialise la position de lecture
-        /// </summary>
-        public void ResetPosition()
-        {
-            CurrentArg = 0;
-            PosInArg = 0;
-        }
-
-        /// <summary>
-        /// Vérifie s'il reste des arguments à lire
-        /// </summary>
-        public bool HasMoreArgs()
-        {
-            return CurrentArg < Args.Length;
-        }
-
-        /// <summary>
-        /// Nombre d'octets restants
-        /// </summary>
-        public int RemainingArgs()
-        {
-            return Args.Length - CurrentArg;
-        }
-
-        #region Logger
-        protected void ValidateArgumentsRead(string commandName)
-        {
-            if (CurrentArg != Args.Length)
-            {
-                Debug.WriteLine($"[CGM] Warning: {commandName} read {CurrentArg}/{Args.Length} arguments");
-            }
-        }
-
-        public override void LogCommandInfo()
-        {
-            Debug.WriteLine($"[CGM] Command {GetType().Name} - EC:{ElementClassInt} EID:{ElementCode} " +
-                     $"ArgsTotal:{Args?.Length ?? 0} CurrentArg:{CurrentArg} " +
-                     $"Remaining:{RemainingArgs()} HasMore:{HasMoreArgs()}");
+            return MemberwiseClone();
         }
         #endregion
     }

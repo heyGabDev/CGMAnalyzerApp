@@ -18,11 +18,25 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
         public PolyBezierCommand(int ec, int eid, CgmCommand command, ExtractedArgumentReader argReader)
             : base(ec, eid, command.Length)
         {
-            int pointCount = command.Args.Length / argReader.SizeOfPoint();
+            int pointSize = argReader.SizeOfPoint();
+            int pointCount = command.Args.Length / pointSize;
+
             for (int i = 0; i < pointCount; i++)
             {
+                if (!command.HasMoreArgs()) // Controle des dépassements
+                {
+                    Console.WriteLine("[CGM] Tentative d'accès hors des bornes évitée dans PolyBezierCommand.");
+                    break;
+                }
+
                 _controlPoints.Add(argReader.MakePoint(ec, eid));
-            }
+
+                //int pointCount = command.Args.Length / argReader.SizeOfPoint();
+                //for (int i = 0; i < pointCount; i++)
+                //{
+                //    _controlPoints.Add(argReader.MakePoint(ec, eid));
+                //}
+            }   
         }
 
         public override void Draw(Graphics g, Pen pen)

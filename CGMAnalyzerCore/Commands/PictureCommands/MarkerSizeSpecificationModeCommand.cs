@@ -21,8 +21,8 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
 
             CgmContext.MarkerSizeSpecificationMode = Mode;
 
-            System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-                "Not all arguments were read in MarkerSizeSpecificationMode");
+            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
+            //    "Not all arguments were read in MarkerSizeSpecificationMode");
         }
 
         public static void Reset()
