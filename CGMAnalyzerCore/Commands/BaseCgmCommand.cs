@@ -20,6 +20,9 @@ namespace CGMAnalyzerCore.Commands
         /// <summary>Position en bits dans l'octet actuel (pour lecture de bits)</summary>
         public int PosInArg { get; set; } = 0;
 
+        /// <summary>Indique si la commande a eu des erreurs de lecture</summary>
+        public bool HasReadErrors { get; protected set; } = false;
+
         protected BaseCgmCommand(int elementClass, int elementId, int length)
         {
             ElementClass = elementClass;
@@ -48,14 +51,60 @@ namespace CGMAnalyzerCore.Commands
         #region ===== MÉTHODES DE GESTION DES ARGUMENTS =====
         public int NextArg()
         {
+            if(Args == null)
+            {
+                Debug.WriteLine($"[CGM ERROR] {GetType().Name} : {ElementClass} - Args is null");
+                HasReadErrors = true;
+                return 0;
+            }
+
             if (CurrentArg >= Args.Length)
             {
                 // Au lieu de lancer une exception, retourner 0 et logger => Valeur par défaut sûre
-                Debug.WriteLine($"[CGM] Tentative de lecture au-delà des arguments disponibles dans {GetType().Name} ({CurrentArg}/{Args.Length})");
+                Debug.WriteLine($"[CGM] Tentative de lecture au-delà des arguments disponibles dans {GetType().Name} : {ElementClass}  ({CurrentArg}/{Args.Length})");
+                HasReadErrors = true;
                 return 0;
             }
             return Args[CurrentArg++];
         }
+
+        /// <summary>
+        /// Version sécurisée de NextArg qui retourne un bool au lieu de throw
+        /// </summary>
+        public bool TryNextArg(out int value)
+        {
+            if (Args == null || CurrentArg >= Args.Length)
+            {
+                value = 0;
+                HasReadErrors = true;
+                return false;
+            }
+
+            value = Args[CurrentArg++];
+            return true;
+        }
+
+        /// <summary>
+        /// Lit plusieurs arguments d'un coup avec validation
+        /// </summary>
+        public int[] ReadArgs(int count)
+        {
+            if (Args == null || CurrentArg + count > Args.Length)
+            {
+                Debug.WriteLine($"[CGM ERROR] {GetType().Name} - Impossible de lire {count} arguments. " +
+                               $"Disponible: {RemainingArgs()}");
+                HasReadErrors = true;
+                return new int[count]; // Retourne un tableau vide
+            }
+
+            var result = new int[count];
+            for (int i = 0; i < count; i++)
+            {
+                result[i] = Args[CurrentArg++];
+            }
+            return result;
+        }
+
 
         public void SkipBits()
         {
@@ -73,7 +122,7 @@ namespace CGMAnalyzerCore.Commands
         /// </summary>
         public bool HasMoreArgs()
         {
-            return CurrentArg < Args?.Length;
+            return Args != null && CurrentArg < Args?.Length;
         }
 
         /// <summary>
@@ -91,6 +140,7 @@ namespace CGMAnalyzerCore.Commands
         {
             CurrentArg = 0;
             PosInArg = 0;
+            HasReadErrors = false;
         }
 
         /// <summary>
@@ -103,30 +153,48 @@ namespace CGMAnalyzerCore.Commands
         /// <summary>
         /// Valide que la commande a suffisamment d'arguments.
         /// </summary>
-        protected bool ValidateArgumentCount(int required)
+        protected bool ValidateArgumentCount(int required, string context="")
         {
-            if (Args == null || Args.Length < required)
+            if (Args == null)
             {
-                Debug.WriteLine($"[CGM] {GetType().Name} - Arguments insuffisants: {Args?.Length ?? 0}/{required}");
+                Debug.WriteLine($"[CGM VALIDATION] {GetType().Name} {context} - Arguments est null");
+                HasReadErrors = true;
+                return false;
+            }
+
+            if (Args.Length < required)
+            {
+                Debug.WriteLine($"[CGM VALIDATION] {GetType().Name} {context} - Arguments insuffisants: {Args?.Length ?? 0}/{required} requis.");
+                HasReadErrors = true;
                 return false;
             }
             return true;
         }
 
         /// <summary>
+        /// Valide qu'il reste assez d'arguments pour une lecture future
+        /// </summary>
+        public bool ValidateRemainingArgs(int required, string context = "")
+        {
+            int remaining = RemainingArgs();
+            if (remaining < required)
+            {
+                Debug.WriteLine($"[CGM VALIDATION] {GetType().Name} {context} - " +
+                               $"Arguments restants insuffisants: {remaining}/{required} requis");
+                HasReadErrors = true;
+                return false;
+            }
+            return true;
+        }
+
+
+        /// <summary>
         /// Essaie de lire un argument de façon sûre
         /// </summary>
+        [Obsolete("Utiliser TryNextArg() à la place")]
         protected bool TryReadArg(out int value)
         {
-            if (HasMoreArgs())
-            {
-                value = NextArg();
-                return true;
-            }
-
-            Debug.WriteLine($"[CGM] {GetType().Name} tried to read past available args.");
-            value = 0;
-            return false;
+            return TryNextArg(out value);
         }
 
         /// <summary>
@@ -134,9 +202,21 @@ namespace CGMAnalyzerCore.Commands
         /// </summary>
         protected void ValidateArgumentsRead(string commandName)
         {
-            if (CurrentArg != Args.Length)
+            commandName??= GetType().Name;
+
+            if(Args== null) return;
+            
+            if (CurrentArg < Args.Length)
             {
-                Debug.WriteLine($"[CGM] Warning: {commandName} read {CurrentArg}/{Args.Length} arguments");
+                Debug.WriteLine($"[CGM] Warning: {commandName} " +
+                    $"Arguments non lus  {CurrentArg}/{Args.Length} " +
+                    $"({Args.Length - CurrentArg}  octects restants)");
+            }
+            else if (CurrentArg > Args.Length)
+            {
+                Debug.WriteLine($"[CGM ERROR] {commandName} " +
+                    $"Lecture au-delà des arguments {CurrentArg}/{Args.Length}");
+                HasReadErrors = true;
             }
         }
         #endregion
@@ -159,6 +239,7 @@ namespace CGMAnalyzerCore.Commands
         /// </summary>
         public virtual void LogCommandInfo()
        {
+            var errorFlag = HasReadErrors ? " [ERROR]" : "";
             Debug.WriteLine($"[CGM] Command {GetType().Name} - EC:{ElementClass} EID:{ElementId} " +
                      $"ArgsTotal:{Args?.Length ?? 0} CurrentArg:{CurrentArg} " +
                      $"Remaining:{RemainingArgs()} HasMore:{HasMoreArgs()}");
@@ -169,6 +250,11 @@ namespace CGMAnalyzerCore.Commands
                 var argsStr = string.Join(" ", Args.Select(a => $"{a:X2}"));
                 Debug.WriteLine($"Args: {argsStr}");
             }
+            else if (Args != null && Args.Length > 20)
+            {
+                var preview = string.Join(" ", Args.Take(10).Select(a => $"{a:X2}"));
+                Debug.WriteLine($"Args preview (10 / {Args.Length}) : {preview} ...");
+            }
         }
 
         /// <summary>
@@ -176,7 +262,8 @@ namespace CGMAnalyzerCore.Commands
         /// </summary>
         public override string ToString()
         {
-            return $"{GetType().Name} [EC={ElementClass}, EID={ElementId}, Length={Length}]";
+            var errorFlag = HasReadErrors ? " [ERROR]" : "";
+            return $"{GetType().Name} [EC={ElementClass}, EID={ElementId}, Length={Length}] {errorFlag}";
         }
         #endregion
        

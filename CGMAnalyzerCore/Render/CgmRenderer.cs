@@ -1,9 +1,13 @@
 ﻿using CGMAnalyzerCore.Commands;
 using CGMAnalyzerCore.Commands.DelimiterCommands;
 using CGMAnalyzerCore.Commands.GraphicCommands;
+using CGMAnalyzerCore.Commands.GraphicCommands.Control;
 using CGMAnalyzerCore.Commands.MetafileCommands;
+using CGMAnalyzerCore.Context;
 using CGMAnalyzerCore.Converter.Interface;
+using CGMAnalyzerCore.Enums.Colors;
 using CGMAnalyzerCore.Geometry;
+using CGMAnalyzerCore.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -43,6 +47,7 @@ namespace CGMAnalyzerCore.Render
             if (_disposed)
                 throw new ObjectDisposedException(nameof(CgmRenderer));
 
+            _context = new RenderContext(Options.Width, Options.Height);
             var bitmap = new Bitmap(Options.Width, Options.Height, PixelFormat.Format32bppArgb);
 
             try
@@ -108,7 +113,8 @@ namespace CGMAnalyzerCore.Render
                         break;
 
                     case MetafileVersionCommand versionCommand:
-                        _context.MetafileVersion = ExtractVersion(versionCommand);
+                        var version = ExtractVersion(versionCommand);
+                        System.Diagnostics.Debug.WriteLine($"CGM Metafile Version: {version}");
                         break;
                 }
             }
@@ -154,352 +160,89 @@ namespace CGMAnalyzerCore.Render
                 $"Errors: {renderStats.ErrorCommands}");
         }
 
-        private bool RenderCommand(Graphics graphics, BaseCgmCommand command)
+        private bool RenderCommand(Graphics g, BaseCgmCommand cmd)
         {
-            switch (command)
+            switch (cmd)
             {
-                // Commandes graphiques principales
-                case CircleCommand circleCommand:
-                    return RenderCircle(graphics, command);
+                // 1) PRIMITIVES GRAPHIQUES (EC = 4) — dessinent
+                // Lignes, polylignes, courbes, polygones
+                case LineCommand c: return Draw(g, c);
+                case PolylineCommand c: return Draw(g, c);
+                case DisjointPolylineCommand c: return Draw(g, c);
+                case PolyBezierCommand c: return Draw(g, c);
+                case PolygonCommand c: return Draw(g, c);
+                case PolygonSetCommand c: return Draw(g, c);
+                case RectangleCommand c: return Draw(g, c);
 
-                case CircularArc3PointCloseCommand circularArc3PointCloseCommand:
-                    return RenderCircularArc3PointCloseCommand(graphics, command);
+                // Cercles, ellipses, arcs
+                case CircleCommand c: return Draw(g, c);
+                case EllipseCommand c: return Draw(g, c);
+                case EllipticalArcCommand c: return Draw(g, c);
+                case EllipticalArcCloseCommand c: return Draw(g, c);
+                case CircularArc3PointCommand c: return Draw(g, c);
+                case CircularArc3PointCloseCommand c: return Draw(g, c);
+                case CircularArcCentreCommand c: return Draw(g, c);
+                case CircularArcCentreCloseCommand c: return Draw(g, c);
+                case CircularArcCentreReversedCommand c: return Draw(g, c);
 
-                case CircularArc3PointCommand circularArc3PointCommand:
-                    return RenderCircularArc3PointCommand(graphics, command);
+                // Points/markers, trames/tiles
+                case PolyMarkerCommand c: return Draw(g, c);
+                case CellArrayCommand c: return Draw(g, c);
+                case BitonalTileCommand c: return Draw(g, c);
+                case TileCommand c: return Draw(g, c);
 
-                //case CircularArcCentreCloseCommand circularArcCentreCloseCommand:
-                //    return RenderCircularArcCentreCloseCommand(graphics, command);
-
-                //case CircularArcCentreCommand circularArcCentreReversedCommand:
-                //    return RenderCircularArcCentreReversedCommand(graphics, command);
-
-                //case CircularArcCentreReversedCommand circularArcCentreReversedCommand:
-                //    return RenderCircularArcCentreReversedCommand(graphics, command);
-
-                //case DisjointPolylineCommand disjointPolylineCommand:
-                //    return RenderDisjointPolylineCommand(graphics, command);
-
-                //case EllipseCommand ellipseCommand:
-                //    return RenderEllipseCommand(graphics, command);
-
-                case PolyBezierCommand polyBezierCommand:
-                    return RenderPolyBezier(graphics, polyBezierCommand);
-
-                case PolygonCommand polygonCommand:
-                    return RenderPolygon(graphics, polygonCommand);
-
-                case LineCommand lineCommand:
-                    return RenderLine(graphics, lineCommand);
-
-                case PolylineCommand polylineCommand:
-                    return RenderPolyline(graphics, polylineCommand);
-
-                case DisjointPolylineCommand disjointPolylineCommand:
-                    return RenderDisjointPolyline(graphics, disjointPolylineCommand);
-
-                case EllipticalArcCommand ellipticalArcCommand:
-                    return RenderEllipticalArc(graphics, ellipticalArcCommand);
-
-                // Commandes de métadonnées (affectent le contexte)
-                case ColorModelCommand colourModelCommand:
-                    UpdateColourModel(colourModelCommand);
-                    return true;
-
-                case IntegerPrecisionCommand integerPrecisionCommand:
-                    UpdateIntegerPrecision(integerPrecisionCommand);
-                    return true;
-
-                case MaximumVdcExtentCommand maximumVdcExtentCommand:
-                    UpdateVdcExtent(maximumVdcExtentCommand);
-                    return true;
-
-                case MetafileDescriptionCommand descriptionCommand:
-                    // Pas de rendu visuel mais traiter si nécessaire
-                    return true;
-
-                case MetafileVersionCommand versionCommand:
-                    // Déjà traité dans le préprocessing
-                    return true;
-
-                // Commande non supportée
-                default:
-                    return false;
+                // Texte
+                case TextCommand c: return Draw(g, c);
+                case RestrictedTextCommand c: return Draw(g, c);
+                case AppendTextCommand c: return Draw(g, c);
             }
+
+            // 2) COMMANDES CONTEXTE/METAFILE — ne dessinent pas, mettent à jour l’état
+            switch (cmd)
+            {
+                // Descripteurs de métafile / VDC / précisions / couleurs
+                case MaximumVdcExtentCommand c: UpdateVdcExtent(c); return true;
+                case ColorModelCommand c: UpdateColourModel(c); return true;
+                case IntegerPrecisionCommand c: UpdateIntegerPrecision(c); return true;
+                case RealPrecisionCommand c: CgmContext.RealPrecision = c.GetPrecision(); return true;
+                case VDCTypeCommand c: CgmContext.SetVdcType(c.Type); return true;
+                case MetafileVersionCommand: return true;
+                case MetafileDescriptionCommand: return true;
+
+                // Délimiteurs (begin/end) – pilotent le flux mais ne dessinent pas
+                case BeginMetafileCommand: return true;
+                case EndMetafileCommand: return true;
+                case BeginPictureCommand: return true;
+                case BeginPictureBodyCommand: return true;
+                case EndPictureCommand: return true;
+
+                // Pas (encore) supporté : on ne dessine pas
+                //case UnsupportedCommand: return false;
+            }
+
+            // 3) Défaut : on ne sait pas rendre → ignorer (pas d’erreur)
+            return false;
         }
 
-        #region Méthodes de rendu spécifiques RenderXxx(...)
-        private bool RenderCircle(Graphics graphics, BaseCgmCommand command)
+        private bool Draw(Graphics g, BaseCgmCommand c)
         {
             using var pen = _context.CreatePen();
-
-            if (command is CircleCommand circle)
-            {
-                var center = TransformPoint2D(circle.Center);
-                var radius = circle.Radius;
-
-                var scaledRadiusX = (float)(radius * Options.Width / _context.VdcExtent.Width);
-                var scaledRadiusY = (float)(radius * Options.Height / _context.VdcExtent.Height);
-
-                var rect = new RectangleF(
-                    center.X - scaledRadiusX,
-                    center.Y - scaledRadiusY,
-                    scaledRadiusX * 2,
-                    scaledRadiusY * 2
-                );
-            }
-            command.Draw(graphics, pen);
+            c.Draw(g, pen);     // chaque commande gère sa propre transformation/traitement
             return true;
         }
-
-        private bool RenderCircularArc3PointCloseCommand(Graphics graphics, BaseCgmCommand command)
-        {
-            using var pen = _context.CreatePen();
-            command.Draw(graphics, pen);
-            return true;
-        }
-
-        private bool RenderCircularArc3PointCommand(Graphics graphics, BaseCgmCommand command)
-        {
-            using var pen = _context.CreatePen();
-            command.Draw(graphics, pen);
-            return true;
-        }
-
-        private bool RenderPolyBezier(Graphics graphics, PolyBezierCommand command)
-        {
-            try
-            {
-                // Obtenir les points de contrôle
-                var controlPoints = command.GetControlPoints();
-
-                if (controlPoints == null || controlPoints.Count < 4)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[RenderPolyBezier] Pas assez de points: {controlPoints?.Count ?? 0}");
-                    return false;
-                }
-
-                using var pen = _context.CreatePen();
-                using var path = new GraphicsPath();
-
-                // Transformer les Point2D en PointF
-                var transformedPoints = controlPoints
-                    .Select(p2d => TransformPoint2D(p2d))
-                    .ToList();
-
-                // Analyser le format des points pour déterminer la continuité
-                // Si (count - 4) % 3 == 0 : courbes continues
-                // Si count % 4 == 0 : courbes discontinues
-                bool isContinuous = (controlPoints.Count - 4) % 3 == 0;
-                bool isDiscontinuous = controlPoints.Count % 4 == 0;
-
-                if (isContinuous && !isDiscontinuous)
-                {
-                    // Format continu : 4 points puis 3 points par courbe
-                    BuildContinuousBezierPath(path, transformedPoints);
-                }
-                else if (isDiscontinuous)
-                {
-                    // Format discontinu : 4 points par courbe
-                    BuildDiscontinuousBezierPath(path, transformedPoints);
-                }
-                else
-                {
-                    // Format ambigu ou invalide - essayer le continu par défaut
-                    System.Diagnostics.Debug.WriteLine($"[RenderPolyBezier] Format ambigu, utilisation du mode continu");
-                    BuildContinuousBezierPath(path, transformedPoints);
-                }
-
-                // Remplir si nécessaire
-                if (_context.FillEnabled && _context.InteriorStyle != null && !_context.InteriorStyle.Equals("Empty"))
-                {
-                    using var brush = _context.CreateBrush();
-                    graphics.FillPath(brush, path);
-                }
-
-                // Dessiner le contour
-                if (_context.EdgeVisibility)
-                {
-                    graphics.DrawPath(pen, path);
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[RenderPolyBezier] Erreur: {ex.Message}");
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// A VOIR UTILITE
-        /// Méthode alternative : dessiner comme la méthode Draw originale
-        /// Utile pour comparer avec votre implémentation existante
-        /// </summary>
-        private bool RenderPolyBezierClassic(Graphics graphics, PolyBezierCommand command)
-        {
-            try
-            {
-                var controlPoints = command.GetControlPoints();
-                if (controlPoints.Count < 4) return false;
-
-                using var pen = _context.CreatePen();
-
-                // Dessiner des courbes de Bézier par groupes de 4 points
-                // (comme dans votre méthode Draw originale)
-                for (int i = 0; i <= controlPoints.Count - 4; i += 3)
-                {
-                    if (i + 3 < controlPoints.Count)
-                    {
-                        var p0 = TransformPoint2D(controlPoints[i]);
-                        var p1 = TransformPoint2D(controlPoints[i + 1]);
-                        var p2 = TransformPoint2D(controlPoints[i + 2]);
-                        var p3 = TransformPoint2D(controlPoints[i + 3]);
-
-                        graphics.DrawBezier(pen, p0, p1, p2, p3);
-                    }
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[RenderPolyBezierClassic] Erreur: {ex.Message}");
-                return false;
-            }
-        }
-
-        private bool RenderPolygon(Graphics graphics, PolygonCommand command)
-        {
-            using var pen = _context.CreatePen();
-            using var brush = _context.CreateBrush();
-
-            var points = command.GetPoints()?.Select(TransformPoint).ToArray();
-            if (points?.Length >= 3)
-            {
-                graphics.FillPolygon(brush, points);
-                graphics.DrawPolygon(pen, points);
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool RenderLine(Graphics graphics, LineCommand command)
-        {
-            using var pen = _context.CreatePen();
-
-            // Extraire les points (adaptation selon ton implémentation)
-            var points = command.GetPoints(); // Méthode à implémenter dans LineCommand
-
-            if (points.Count >= 2)
-            {
-                for (int i = 0; i < points.Count - 1; i++)
-                {
-                    var p1 = TransformPoint(points[i]);
-                    var p2 = TransformPoint(points[i + 1]);
-                    graphics.DrawLine(pen, p1, p2);
-                }
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool RenderPolyline(Graphics graphics, PolylineCommand command)
-        {
-            using var pen = _context.CreatePen();
-
-            var points = command.GetPoints()?.Select(TransformPoint).ToArray();
-
-            if (points?.Length >= 2)
-            {
-                graphics.DrawLines(pen, points);
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool RenderDisjointPolyline(Graphics graphics, DisjointPolylineCommand command)
-        {
-            using var pen = _context.CreatePen();
-
-            var pointSets = command.GetPointSets(); // Méthode à implémenter
-
-            if (pointSets?.Any() == true)
-            {
-                foreach (var pointSet in pointSets)
-                {
-                    var transformedPoints = pointSet.Select(TransformPoint).ToArray();
-                    if (transformedPoints.Length >= 2)
-                    {
-                        graphics.DrawLines(pen, transformedPoints);
-                    }
-                }
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool RenderEllipticalArc(Graphics graphics, EllipticalArcCommand command)
-        {
-            using var pen = _context.CreatePen();
-
-            // Implémentation simplifiée - à adapter selon tes besoins
-            var bounds = command.GetBounds(); // Méthode à implémenter
-            var startAngle = command.GetStartAngle(); // Méthode à implémenter  
-            var sweepAngle = command.GetSweepAngle(); // Méthode à implémenter
-
-            if (bounds.HasValue)
-            {
-                var rect = TransformRectangle(bounds.Value);
-                graphics.DrawArc(pen, rect, startAngle, sweepAngle);
-                return true;
-            }
-
-            return false;
-        }
-        #endregion
 
         #region Méthodes de transformation et contexte
-        /// <summary>
-        /// Transformation d'un Point2D en coordonnées écran avec précision maximale
-        /// </summary>
-        private PointF TransformPoint2D(Point2D point2d)
-        {
-            // Calculs en double précision pour conserver la précision
-            double x = (point2d.X - _context.VdcExtent.Left) * Options.Width / _context.VdcExtent.Width;
-            double y = (point2d.Y - _context.VdcExtent.Top) * Options.Height / _context.VdcExtent.Height;
-
-            // Conversion en float uniquement pour GDI+
-            return new PointF((float)x, (float)y);
-        }
-
         private PointF TransformPoint(System.Drawing.Point point)
         {
             // Transformation VDC vers coordonnées écran
-            var x = (float)((point.X - _context.VdcExtent.Left) * Options.Width / _context.VdcExtent.Width);
-            var y = (float)((point.Y - _context.VdcExtent.Top) * Options.Height / _context.VdcExtent.Height);
+            var VdcExtent = CgmContext.VdcExtent;
+            var x = (float)((point.X - _context.VdcExtent.Left) * Options.Width / VdcExtent.Width);
+            var y = (float)((point.Y - _context.VdcExtent.Top) * Options.Height / VdcExtent.Height);
 
             return new PointF(x, y);
         }
 
-        private RectangleF TransformRectangle(Rectangle rect)
-        {
-            var topLeft = TransformPoint(new System.Drawing.Point(rect.Left, rect.Top));
-            var bottomRight = TransformPoint(new System.Drawing.Point(rect.Right, rect.Bottom));
-
-            return new RectangleF(
-                topLeft.X,
-                topLeft.Y,
-                bottomRight.X - topLeft.X,
-                bottomRight.Y - topLeft.Y
-            );
-        }
-
+        // A deplacer dans RenderContext
         private SizeF TransformSize(double vdcWidth, double vdcHeight)
         {
             return new SizeF(
@@ -512,18 +255,27 @@ namespace CGMAnalyzerCore.Render
 
         private void UpdateColourModel(ColorModelCommand command)
         {
-            // Mettre à jour le modèle de couleur du contexte
-            _context.ColourModel = command.GetColourModel();
+            var modelValue = command.ColourModel;
+            var model = (ColorModelEnum)modelValue;
+            //var model = modelValue switch
+            //{
+            //    0 => CgmContext.ColorModelEnum.Indexed,
+            //    1 => CgmContext.ColorModelEnum.RGB,
+            //    2 => CgmContext.ColorModelEnum.CMYK,
+            //    _ => CgmContext.ColorModelEnum.Indexed
+            //};
+            CgmContext.SetColourModel(model);
         }
 
         private void UpdateIntegerPrecision(IntegerPrecisionCommand command)
         {
-            _context.IntegerPrecision = command.GetPrecision();
+            CgmContext.SetIntegerPrecision(command.GetPrecision());
+            //_context.IntegerPrecision = command.GetPrecision();
         }
 
         private void UpdateVdcExtent(MaximumVdcExtentCommand command)
         {
-            _context.VdcExtent = command.GetExtent();
+            CgmContext.SetVdcExtent(command.Point1, command.Point2);
         }
 
         private void UpdateRenderDimensions(MaximumVdcExtentCommand vdcCommand)
@@ -618,7 +370,6 @@ namespace CGMAnalyzerCore.Render
                 );
             }
         }
-
         #endregion
 
         public void Dispose()
@@ -628,8 +379,6 @@ namespace CGMAnalyzerCore.Render
                 _context?.Dispose();
                 _disposed = true;
             }
-
         }
-
     }
 }

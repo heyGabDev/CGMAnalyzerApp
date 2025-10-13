@@ -35,6 +35,22 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
             }
         }
 
+        /// <summary>
+        /// Retourne la précision sous forme d'entier pour CgmContext.RealPrecision
+        /// </summary>
+        public int GetPrecision()
+        {
+            return (int)Precision;
+        }
+
+        /// <summary>
+        /// Retourne la précision statique courante
+        /// </summary>
+        public static int GetCurrentPrecision()
+        {
+            return (int)Precision;
+        }
+
         public override void Draw(Graphics g, Pen pen)
         {
             // Pas de rendu graphique requis

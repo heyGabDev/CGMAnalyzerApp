@@ -1,19 +1,12 @@
 ﻿using CGMAnalyzerCore.Commands;
-using CGMAnalyzerCore.Commands.GraphicCommands;
-using CGMAnalyzerCore.Commands.GraphicCommands.Control;
 using CGMAnalyzerCore.Context;
 using CGMAnalyzerCore.Enums.Colors;
 using CGMAnalyzerCore.Enums.Precision;
 using CGMAnalyzerCore.Geometry;
 using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
-using System.Linq;
+using System.Drawing;
 using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using static CGMAnalyzerCore.Geometry.Point2D;
 
 namespace CGMAnalyzerCore.Parser
 {
@@ -25,12 +18,514 @@ namespace CGMAnalyzerCore.Parser
     {
         private readonly CgmCommand _command;
 
-
         public ExtractedArgumentReader(CgmCommand command)
         {
             _command = command ?? throw new ArgumentNullException(nameof(command));
         }
 
+
+        public int NextArg()
+        {
+            return _command.TryNextArg(out int value) ? value : 0;
+        }
+
+        public void SkipBits()
+        {
+            _command.SkipBits();
+        }
+
+        #region ===== LECTURE D'ENTIERS NON SIGNÉS =====
+        /// <summary>
+        /// Lit un octet (8 bits) / Validation incluse dans NextArg()
+        /// </summary>
+        /// <returns></returns>
+        public byte MakeByte()
+        {
+            return (byte)NextArg();
+        }
+
+
+        #endregion
+
+        #region MÉTHODES BASIQUES (basées sur makeUInt*)
+        public int MakeUInt8()
+        {
+            SkipBits();
+
+            if (!_command.ValidateRemainingArgs(1, "MakeUInt8"))
+            {
+                return 0;
+            }
+
+            return NextArg() & 0xFF;
+        }
+
+        /// <summary>
+        /// Lit un UInt16 non signé (2 octets non signés)
+        /// </summary>
+        /// <returns></returns>
+        public int MakeUInt16()
+        {
+            SkipBits();
+
+            if (!_command.ValidateRemainingArgs(2, "MakeUInt16"))
+            {
+                // Fallback : si un seul octet disponible, le retourner
+                if (_command.ValidateRemainingArgs(1, "MakeUInt16 fallback"))
+                {
+                    return NextArg();
+                }
+
+                return 0;
+            }
+
+            return (NextArg() << 8) | NextArg();
+        }
+
+        /// <summary>
+        /// Lit un UInt24 non signé (3 octets non signés)
+        /// </summary>
+        /// <returns></returns>
+        public int MakeUInt24()
+        {
+            SkipBits();
+            if (!_command.ValidateRemainingArgs(3, "MakeUInt24"))
+            {
+                return 0;
+            }
+            
+            return (NextArg() << 16) | (NextArg() << 8) | NextArg();
+        }
+
+        /// <summary>
+        /// Lit un UInt32 non signé (4 octets non signés)
+        /// </summary>
+        /// <returns></returns>
+        public int MakeUInt32()
+        {
+            SkipBits();
+            if (!_command.ValidateRemainingArgs(4, "MakeUInt32"))
+            {
+                return 0;
+            }
+
+            return (NextArg() << 24) | (NextArg() << 16) | (NextArg() << 8) | NextArg();
+        }
+
+        #endregion
+
+        #region MÉTHODES SIGNÉES (basées sur makeSignedInt*)
+        /// <summary>
+        /// Lit un Int8 signé (1 octet)
+        /// </summary>
+        /// <returns></returns>
+        public int MakeSignedInt8()
+        {
+            if(!_command.ValidateRemainingArgs(1, "MakeSignedInt8"))
+            {
+                return 0;
+            }
+            int value = NextArg();
+
+            // Étendre le signe
+            if ((value & 0x80) != 0) // Si le bit de signe est défini
+            {
+                value |= unchecked((int)0xFFFFFF00); // Étendre le signe pour 32 bits
+            }
+            return value;
+        }
+
+        /// <summary>
+        /// Lit un Int16 signé (2 octets)
+        /// </summary>
+        /// <returns></returns>
+        public int MakeSignedInt16()
+        {
+           if(!_command.ValidateRemainingArgs(2, "MakeSignedInt16"))
+           {
+                return 0;
+           }
+
+           int value = (NextArg() << 8) | NextArg();
+           if((value & 0x8000) != 0) // Si le bit de signe est défini
+           {
+                value |= unchecked((int)0xFFFF0000); // Étendre le signe pour 32 bits
+           }
+           return value;
+        }
+
+        /// <summary>
+        /// lit un Int24 signé (3 octets)
+        /// </summary>
+        /// <returns></returns>
+        public int MakeSignedInt24()
+        {
+           if(!_command.ValidateRemainingArgs(3, "MakeSignedInt24"))
+           {
+                return 0;
+           }
+
+           int value = (NextArg() << 16) | (NextArg() << 8) | NextArg();
+
+           if((value & 0x800000) != 0) // Si le bit de signe est défini
+           {
+                value |= unchecked((int)0xFF000000); // Étendre le signe pour 32 bits
+           }
+           return value;
+        }
+
+        /// <summary>
+        /// Lit un Int32 signé (4 octets)
+        /// </summary>
+        /// <returns></returns>
+        public int MakeSignedInt32()
+        {
+           if(!_command.ValidateRemainingArgs(4, "MakeSignedInt32"))
+           {
+                return 0;
+           }
+
+           int value = (NextArg() << 24) | (NextArg() << 16) | (NextArg() << 8) | NextArg();
+           return value;
+        }
+        #endregion
+
+        #region MÉTHODES SPÉCIALISÉES (basées sur make*) 
+
+        public char MakeChar()
+        {
+            SkipBits();
+            return (char)NextArg();
+        }
+
+        /// <summary>
+        /// Lit un entier avec la précision définie dans le contexte CGM.
+        /// Usage commandes
+        /// </summary>
+        /// <returns></returns>
+        public int MakeInt()
+        {
+            int precision = CgmContext.IntegerPrecision; // Obtenir depuis le contexte
+            return MakeInt(precision);
+        }
+
+        /// <summary>
+        /// Lit un entier avec la précision spécifiée (8, 16, 24, 32 bits).
+        /// Usage interne au fichier
+        /// </summary>
+        /// <param name="precision"></param>
+        /// <returns></returns>
+        public int MakeInt(int precision)
+        {
+           int bytesNeeded = precision / 8;
+
+            if (!_command.ValidateRemainingArgs(bytesNeeded,$"MakeInt({precision}")) {
+                return 0;
+            }
+
+            SkipBits();
+
+            return precision switch
+            {
+                8 => MakeSignedInt8(),
+                16 => MakeSignedInt16(),
+                24 => MakeSignedInt24(),
+                32 => MakeSignedInt32(),
+                _ =>  0
+            };
+        }
+
+        public int MakeIndex()
+        {
+            int precision = CgmContext.IndexPrecision;
+            return MakeInt(precision);
+        }
+
+        public int MakeName()
+        {
+            int precision = CgmContext.NamePrecision;
+            return MakeInt(precision);
+        }
+
+        public int MakeEnum()
+        {
+            return MakeSignedInt16();
+        }
+        public int MakeInt16()
+        {
+            return MakeSignedInt16();
+        }
+
+        public int MakeInt32()
+        {
+            return MakeSignedInt32();
+        }
+
+        #endregion
+
+        #region MÉTHODES POINTS ET VDC 
+        public Point2D.Double MakePoint()
+        {
+            int bytesNeeded = CalculatePointSize();
+
+            if (!_command.ValidateRemainingArgs(bytesNeeded, "MakePoint"))
+            {
+                return new Point2D.Double(0, 0);
+            }
+
+            if(CgmContext.VdcType == VDCTypeEnum.Integer)
+            {
+                if(CgmContext.VdcIntegerPrecision == 16)
+                {
+                    var x = MakeSignedInt16();
+                    var y = MakeSignedInt16();
+                    return new Point2D.Double(x, y);
+                }
+                else if(CgmContext.VdcIntegerPrecision == 24)
+                {
+                    var x = MakeSignedInt24();
+                    var y = MakeSignedInt24();
+                    return new Point2D.Double(x, y);
+                }
+                else if(CgmContext.VdcIntegerPrecision == 32)
+                {
+                    var x = MakeSignedInt32();
+                    var y = MakeSignedInt32();
+                    return new Point2D.Double(x, y);
+                }
+            }
+            else // VDC Real
+            {
+                var x = MakeReal();
+                var y = MakeReal();
+                return new Point2D.Double(x, y);
+            }
+
+            throw new NotSupportedException($"VDC precision non supportée : {CgmContext.VdcIntegerPrecision}");
+        }
+
+        /// <summary>
+        /// Lit un Point2D avec des arguments EC/EID pour le debug.
+        /// </summary>
+        /// <param name="ec"></param>
+        /// <param name="eid"></param>
+        /// <returns></returns>
+        public Point2D.Double MakePoint(int ec, int eid)
+        {
+            int bytesNeeded = CalculatePointSize();
+            if (!_command.ValidateRemainingArgs(bytesNeeded, $"MakePoint(ec={ec},eid={eid})"))
+            {
+                return new Point2D.Double(0, 0);
+            }
+            return new Point2D.Double(MakeVdc(), MakeVdc());
+        }
+
+        /// <summary>
+        /// Lit une coordonnée VDC ((Virtual Device Coordinate))
+        /// (X ou Y) en fonction du type et de la précision définis dans le contexte CGM.
+        /// </summary>
+        /// <returns></returns>
+        public double MakeVdc()
+        {
+            if (CgmContext.VdcType == VDCTypeEnum.Real)
+            {
+                var precision = CgmContext.VdcRealPrecision;
+                return precision switch
+                {
+                    VDCRealPrecisionEnum.FixedPoint32 => MakeFixedPoint32(),
+                    VDCRealPrecisionEnum.FixedPoint64 => MakeFixedPoint64(),
+                    VDCRealPrecisionEnum.FloatingPoint32 => MakeFloatingPoint32(),
+                    VDCRealPrecisionEnum.FloatingPoint64 => MakeFloatingPoint64(),
+                    _ => MakeFixedPoint32()
+                };
+            }
+
+            // Integer VDC
+            int intPrecision = CgmContext.VdcIntegerPrecision;
+            return intPrecision switch
+            {
+                16 => MakeSignedInt16(),
+                24 => MakeSignedInt24(),
+                32 => MakeSignedInt32(),
+                _ => MakeSignedInt16()
+            };
+        }
+
+        /// <summary>
+        /// Device viewport coordinates - basé sur le mode de spécification.
+        /// </summary>
+        /// <returns></returns>
+        public double MakeVc()
+        {
+            return MakeReal(); // Simplified
+        }
+
+        /// <summary>
+        /// Calcule la taille d'un point en octets
+        /// </summary>
+        private int CalculatePointSize()
+        {
+            return 2 * SizeOfVdc(); // 2 coordonnées × taille VDC
+        }
+        #endregion
+
+        #region MÉTHODES NOMBRES RÉELS
+        public double MakeReal()
+        {
+            var precision = CgmContext.RealPrecision;
+            return precision switch
+            {
+                0 => MakeFixedPoint32(),      // Fixed32
+                1 => MakeFixedPoint64(),      // Fixed64
+                2 => MakeFloatingPoint32(),   // Floating32
+                3 => MakeFloatingPoint64(),   // Floating64
+                _ => MakeFixedPoint32()       // Default
+            };
+        }
+
+        public double MakeFixedPoint32()
+        {
+            if(!_command.ValidateRemainingArgs(4, "MakeFixedPoint32"))
+            {
+                return 0.0;
+            }
+
+            double wholePart = MakeSignedInt16();
+            double fractionPart = MakeUInt16();
+            return wholePart + (fractionPart / (1 << 16)); // Correction du calcul
+        }
+
+        public double MakeFixedPoint64()
+        {
+            if(!_command.ValidateRemainingArgs(8, "MakeFixedPoint64"))
+            {
+                return 0.0;
+            }
+
+            double wholePart = MakeSignedInt32();
+            double fractionPart = MakeUInt32();
+            return wholePart + (fractionPart / (1L << 32));
+        }
+
+        public double MakeFloatingPoint()
+        {
+            var precision = CgmContext.RealPrecision;
+            if (precision == 2) // FLOATING_32
+            {
+                return MakeFloatingPoint32();
+            }
+
+            if (precision == 3) // FLOATING_64
+            {
+                return MakeFloatingPoint64();
+            }
+
+            return MakeFloatingPoint32();
+        }
+        
+        public double MakeFloatingPoint32()
+        {
+            if(!_command.ValidateRemainingArgs(4, "MakeFloatingPoint32"))
+            {
+                return 0.0;
+            }
+
+            SkipBits();
+            int bits = 0;
+            for (int i = 0; i < 4; i++)
+            {
+                bits = (bits << 8) | NextArg();
+            }
+            return BitConverter.Int32BitsToSingle(bits);
+        }
+        
+        public double MakeFloatingPoint64()
+        {
+            if(!_command.ValidateRemainingArgs(8, "MakeFloatingPoint64"))
+            {
+                return 0.0;
+            }
+
+            SkipBits();
+            long bits = 0;
+            for (int i = 0; i < 8; i++)
+            {
+                bits = (bits << 8) | NextArg();
+            }
+            return BitConverter.Int64BitsToDouble(bits);
+        }
+
+        /// <summary>
+        /// Lit un float 32 bits
+        /// </summary>
+        public float MakeFloat32()
+        {
+            int bits = MakeSignedInt32();
+            return BitConverter.ToSingle(BitConverter.GetBytes(bits), 0);
+        }
+        #endregion
+
+        #region MÉTHODES COULEURS 
+        public object MakeColorValue()
+        {
+            // Pour les composants de couleur individuels
+            int precision = CgmContext.ColorPrecision;
+            return MakeUInt(precision);
+        }
+
+        public int MakeColorIndex()
+        {
+            int precision = CgmContext.ColorIndexPrecision;
+            return MakeUInt(precision);
+        }
+
+        public int MakeColorIndex(int precision)
+        {
+            return MakeUInt(precision);
+        }
+
+        public System.Drawing.Color MakeDirectColor()
+        {
+            int precision = CgmContext.ColorPrecision;
+            int bytesNeeded = 3 * (precision / 8);// RGB = 3 composants
+
+            if (!_command.ValidateRemainingArgs(bytesNeeded, "MakeDirectColor"))
+            {
+                return System.Drawing.Color.Black; // Couleur par défaut en cas d'erreur
+            }
+            var model = CgmContext.ColourModel;
+
+            if (model == ColorModelEnum.RGB)
+            {
+                int r = ScaleColorValueRGB(MakeUInt(precision));
+                int g = ScaleColorValueRGB(MakeUInt(precision));
+                int b = ScaleColorValueRGB(MakeUInt(precision));
+                return System.Drawing.Color.FromArgb(r, g, b);
+            }
+
+            // Autres modèles de couleur non implémentés
+            MakeUInt(precision); // Consommer les arguments
+            MakeUInt(precision);
+            MakeUInt(precision);
+            return System.Drawing.Color.Cyan;
+        }
+
+        private int ScaleColorValueRGB(int value)
+        {
+            // Simplification - scaling basé sur les extents de couleur
+            var min = CgmContext.MinimumColorValueRGB;
+            var max = CgmContext.MaximumColorValueRGB;
+
+            if (min != null && max != null && max[0] != min[0])
+            {
+                return 255 * (value - min[0]) / (max[0] - min[0]);
+            }
+
+            return Math.Min(255, Math.Max(0, value));
+        }
+        #endregion
+
+        #region MÉTHODES CHAÎNES 
         public string ReadString()
         {
             if (_command.AllArgumentsRead)
@@ -50,7 +545,8 @@ namespace CGMAnalyzerCore.Parser
             }
 
             // 2. Vérifier qu'il y a assez d'arguments restants
-            if (_command.CurrentArg + length > _command.Args.Length)
+            //if (_command.CurrentArg + length > _command.Args.Length)
+            if (_command.RemainingArgs() < length)
             {
                 Debug.WriteLine($"[ReadString] Pas assez d'octets: besoin de {length}, reste {_command.Args.Length - _command.CurrentArg}");
                 return string.Empty;
@@ -84,353 +580,6 @@ namespace CGMAnalyzerCore.Parser
             return result;
         }
 
-        public int NextArg()
-        {
-            return _command.NextArg();
-        }
-
-        public void SkipBits()
-        {
-            _command.SkipBits();
-        }
-
-        #region MÉTHODES BASIQUES (basées sur makeUInt*)
-        public int MakeUInt8()
-        {
-            SkipBits();
-            return NextArg() & 0xFF;
-        }
-
-        public int MakeUInt16()
-        {
-            SkipBits();
-
-            if (_command.CurrentArg + 1 < _command.Args.Length)
-            {
-                return (NextArg() << 8) | NextArg();
-            }
-            else if (_command.CurrentArg < _command.Args.Length)
-            {
-                // Fallback comme dans le Java original
-                return NextArg();
-            }
-
-            return 0; // Comme assert false dans Java
-        }
-
-        public int MakeUInt24()
-        {
-            SkipBits();
-            return (NextArg() << 16) | (NextArg() << 8) | NextArg();
-        }
-
-        public int MakeUInt32()
-        {
-            SkipBits();
-            return (NextArg() << 24) | (NextArg() << 16) | (NextArg() << 8) | NextArg();
-        }
-
-        public int MakeUInt(int precision)
-        {
-            return precision switch
-            {
-                1 => MakeUInt1(),
-                2 => MakeUInt2(),
-                4 => MakeUInt4(),
-                8 => MakeUInt8(),
-                16 => MakeUInt16(),
-                24 => MakeUInt24(),
-                32 => MakeUInt32(),
-                _ => MakeUInt8() // default comme dans Java
-            };
-        }
-        #endregion
-
-        #region MÉTHODES SIGNÉES (basées sur makeSignedInt*)
-        public int MakeSignedInt8()
-        {
-            SkipBits();
-            return (sbyte)NextArg();
-        }
-
-        public int MakeSignedInt16()
-        {
-            SkipBits();
-            return (short)((NextArg() << 8) | NextArg());
-        }
-
-        public int MakeSignedInt24()
-        {
-            SkipBits();
-            return (NextArg() << 16) | (NextArg() << 8) | NextArg();
-        }
-
-        public int MakeSignedInt32()
-        {
-            SkipBits();
-            return (NextArg() << 24) | (NextArg() << 16) | (NextArg() << 8) | NextArg();
-        }
-        #endregion
-
-        #region MÉTHODES SPÉCIALISÉES (basées sur make*) 
-        public byte MakeByte()
-        {
-            SkipBits();
-            return (byte)NextArg();
-        }
-
-        public char MakeChar()
-        {
-            SkipBits();
-            return (char)NextArg();
-        }
-
-        public int MakeInt()
-        {
-            int precision = CgmContext.IntegerPrecision; // Obtenir depuis le contexte
-            return MakeInt(precision);
-        }
-
-        public int MakeInt(int precision)
-        {
-            SkipBits();
-            return precision switch
-            {
-                8 => MakeSignedInt8(),
-                16 => MakeSignedInt16(),
-                24 => MakeSignedInt24(),
-                32 => MakeSignedInt32(),
-                _ => MakeSignedInt16() // default
-            };
-        }
-
-        public int MakeIndex()
-        {
-            int precision = CgmContext.IndexPrecision;
-            return MakeInt(precision);
-        }
-
-        public int MakeName()
-        {
-            int precision = CgmContext.NamePrecision;
-            return MakeInt(precision);
-        }
-
-        public int MakeEnum()
-        {
-            return MakeSignedInt16();
-        }
-        #endregion
-
-        #region MÉTHODES POINTS ET VDC 
-        public Point2D.Double MakePoint()
-        {
-            //TEST
-            // Dépend de VDCType et VDCPrecision
-            if (CgmContext.VdcType == VDCTypeEnum.Integer)
-            {
-                if (CgmContext.VdcIntegerPrecision == 16)
-                {
-                    var x = MakeSignedInt16();
-                    var y = MakeSignedInt16();
-                    return new Point2D.Double(x, y);
-                }
-                else if (CgmContext.VdcIntegerPrecision == 32)
-                {
-                    var x = MakeSignedInt32();
-                    var y = MakeSignedInt32();
-                    return new Point2D.Double(x, y);
-                }
-            }
-            else // VDC Real
-            {
-                var x = MakeReal();
-                var y = MakeReal();
-                return new Point2D.Double(x, y);
-            }
-
-            throw new NotSupportedException($"VDC precision non supportée");
-
-            //return new Point2D.Double(MakeVdc(), MakeVdc());
-        }
-
-        public Point2D.Double MakePoint(int ec, int eid)
-        {
-            return new Point2D.Double(MakeVdc(), MakeVdc());
-        }
-
-        public double MakeVdc()
-        {
-            if (CgmContext.VdcType == VDCTypeEnum.Real)
-            {
-                var precision = CgmContext.VdcRealPrecision;
-                return precision switch
-                {
-                    VDCRealPrecisionEnum.FixedPoint32 => MakeFixedPoint32(),
-                    VDCRealPrecisionEnum.FixedPoint64 => MakeFixedPoint64(),
-                    VDCRealPrecisionEnum.FloatingPoint32 => MakeFloatingPoint32(),
-                    VDCRealPrecisionEnum.FloatingPoint64 => MakeFloatingPoint64(),
-                    _ => MakeFixedPoint32()
-                };
-            }
-
-            // Integer VDC
-            int intPrecision = CgmContext.VdcIntegerPrecision;
-            return intPrecision switch
-            {
-                16 => MakeSignedInt16(),
-                24 => MakeSignedInt24(),
-                32 => MakeSignedInt32(),
-                _ => MakeSignedInt16()
-            };
-        }
-
-        public double MakeVc()
-        {
-            // Device viewport coordinates - based on specification mode
-            return MakeReal(); // Simplified
-        }
-        #endregion
-
-        #region MÉTHODES NOMBRES RÉELS
-        public double MakeReal()
-        {
-            var precision = CgmContext.RealPrecision;
-            return precision switch
-            {
-                0 => MakeFixedPoint32(),      // Fixed32
-                1 => MakeFixedPoint64(),      // Fixed64
-                2 => MakeFloatingPoint32(),   // Floating32
-                3 => MakeFloatingPoint64(),   // Floating64
-                _ => MakeFixedPoint32()       // Default
-            };
-        }
-
-        public double MakeFixedPoint32()
-        {
-            double wholePart = MakeSignedInt16();
-            double fractionPart = MakeUInt16();
-            return wholePart + (fractionPart / (1 << 16)); // Correction du calcul
-        }
-
-        public double MakeFixedPoint64()
-        {
-            double wholePart = MakeSignedInt32();
-            double fractionPart = MakeUInt32();
-            return wholePart + (fractionPart / (1L << 32));
-        }
-
-        public double MakeFloatingPoint()
-        {
-            var precision = CgmContext.RealPrecision;
-            if (precision == 2) // FLOATING_32
-            {
-                return MakeFloatingPoint32();
-            }
-            if (precision == 3) // FLOATING_64
-            {
-                return MakeFloatingPoint64();
-            }
-            return MakeFloatingPoint32();
-        }
-
-        public double MakeFloatingPoint32()
-        {
-            SkipBits();
-            int bits = 0;
-            for (int i = 0; i < 4; i++)
-            {
-                bits = (bits << 8) | MakeChar();
-            }
-            return BitConverter.Int32BitsToSingle(bits);
-        }
-
-        public double MakeFloatingPoint64()
-        {
-            SkipBits();
-            long bits = 0;
-            for (int i = 0; i < 8; i++)
-            {
-                bits = (bits << 8) | MakeChar();
-            }
-            return BitConverter.Int64BitsToDouble(bits);
-        }
-
-        public int MakeInt16()
-        {
-            return MakeSignedInt16();
-        }
-
-        public int MakeInt32()
-        {
-            return MakeSignedInt32();
-        }
-
-        // <summary>
-        /// Lit un float 32 bits
-        /// </summary>
-        public float MakeFloat32()
-        {
-            int bits = MakeSignedInt32();
-            return BitConverter.ToSingle(BitConverter.GetBytes(bits), 0);
-        }
-        #endregion
-
-        #region MÉTHODES COULEURS 
-        public object MakeColorValue()
-        {
-            // Pour les composants de couleur individuels
-            int precision = CgmContext.ColorPrecision;
-            return MakeUInt(precision);
-        }
-
-        public int MakeColorIndex()
-        {
-            int precision = CgmContext.ColorIndexPrecision;
-            return MakeUInt(precision);
-        }
-
-        public int MakeColorIndex(int precision)
-        {
-            return MakeUInt(precision);
-        }
-
-        public System.Drawing.Color MakeDirectColor()
-        {
-            int precision = CgmContext.ColorPrecision;
-            var model = CgmContext.ColourModel;
-
-            if (model == ColorModelEnum.RGB)
-            {
-                int r = ScaleColorValueRGB(MakeUInt(precision));
-                int g = ScaleColorValueRGB(MakeUInt(precision));
-                int b = ScaleColorValueRGB(MakeUInt(precision));
-                return System.Drawing.Color.FromArgb(r, g, b);
-            }
-
-            // Autres modèles de couleur non implémentés
-            MakeUInt(precision); // Consommer les arguments
-            MakeUInt(precision);
-            MakeUInt(precision);
-            return System.Drawing.Color.Cyan;
-        }
-
-        private int ScaleColorValueRGB(int value)
-        {
-            // Simplification - scaling basé sur les extents de couleur
-            var min = CgmContext.MinimumColorValueRGB;
-            var max = CgmContext.MaximumColorValueRGB;
-
-            if (min != null && max != null && max[0] != min[0])
-            {
-                return 255 * (value - min[0]) / (max[0] - min[0]);
-            }
-
-            return Math.Min(255, Math.Max(0, value)); // Clamp par défaut
-        }
-        #endregion
-
-        #region MÉTHODES CHAÎNES 
         public string MakeString()
         {
             // TEST
@@ -440,6 +589,11 @@ namespace CGMAnalyzerCore.Parser
                 length = MakeUInt16();
             }
 
+            if(!_command.ValidateRemainingArgs(length, "MakeString"))
+            {
+                return string.Empty;
+            }
+
             byte[] bytes = new byte[length];
             for (int i = 0; i < length; i++)
             {
@@ -447,27 +601,17 @@ namespace CGMAnalyzerCore.Parser
             }
 
             return System.Text.Encoding.GetEncoding("ISO-8859-1").GetString(bytes);
-
-            //int length = GetStringCount();
-            //byte[] bytes = new byte[length];
-            //for (int i = 0; i < length; i++)
-            //{
-            //    bytes[i] = MakeByte();
-            //}
-
-            //try
-            //{
-            //    return Encoding.GetEncoding("ISO-8859-1").GetString(bytes);
-            //}
-            //catch
-            //{
-            //    return Encoding.Default.GetString(bytes);
-            //}
         }
 
         public string MakeFixedString()
         {
             int length = GetStringCount();
+
+            if (!_command.ValidateRemainingArgs(length, "MakeFixedString"))
+            {
+                return string.Empty;
+            }
+
             char[] chars = new char[length];
             for (int i = 0; i < length; i++)
             {
@@ -531,6 +675,21 @@ namespace CGMAnalyzerCore.Parser
         #endregion
 
         #region MÉTHODES BIT
+
+        public int MakeUInt(int precision)
+        {
+            return precision switch
+            {
+                1 => MakeUInt1(),
+                2 => MakeUInt2(),
+                4 => MakeUInt4(),
+                8 => MakeUInt8(),
+                16 => MakeUInt16(),
+                24 => MakeUInt24(),
+                32 => MakeUInt32(),
+                _ => MakeUInt8() // default comme dans Java
+            };
+        }
 
         private int MakeUInt1()
         {

@@ -34,6 +34,7 @@ namespace CGMAnalyzerCore.Enums.Core
         NonUniformBSpline = 24,
         NonUniformRationalBSpline = 25,
         PolyBezier = 26,
+        PolySymbol = 27,
         BitonalTile = 28,
         Tile = 29
     }

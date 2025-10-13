@@ -83,15 +83,20 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
             double tileSizeInLineDirection = boundingBoxSizeInLineDirection / NTilesInLineDirection;
 
             var tileInfo = new TileArrayInfo(
-                startPosition,
-                NTilesInPathDirection,
-                NCellsPerTileInPathDirection,
-                NCellsPerTileInLineDirection,
-                tileSizeInPathDirection,
-                tileSizeInLineDirection
+            startPosition: new Point2D.Double(0, 0),
+            tilesInPathDirection: 5,
+            cellsPerTileInPathDirection: 8,
+            cellsPerTileInLineDirection: 8,
+            tileSizeInPathDirection: 100,
+            tileSizeInLineDirection: 100,
+            width: 40,  // 5 tuiles × 8 cellules
+            height: 8,
+            cellWidth: 12.5f,
+            cellHeight: 12.5f
             );
 
             display.SetTileArrayInfo(tileInfo);
+            display.DrawTileArray();
         }
 
         public override string ToString()
@@ -104,6 +109,5 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
                    $"ImageOffsetInPathDirection={ImageOffsetInPathDirection}, ImageOffsetInLineDirection={ImageOffsetInLineDirection}, " +
                    $"NCellsInPathDirection={NCellsInPathDirection}, NCellsInLineDirection={NCellsInLineDirection}]";
         }
-
     }
 }

@@ -206,7 +206,7 @@ namespace CGMAnalyzerCore.Commands
         }
         #endregion
 
-        #region ===== ReadElementElement function =====
+        #region ===== EC [0,9] ReadElementElement function =====
         public static BaseCgmCommand ReadCommand(BinaryReader reader, int ec, int eid, int l)
         {
             var element = (ElementEnums)ec;
@@ -251,7 +251,7 @@ namespace CGMAnalyzerCore.Commands
         }
         #endregion
 
-        #region ===== ReadElementClass function =====
+        #region ===== EID [0,63] ReadElementClass function =====
         // Class: 0 
         private static BaseCgmCommand ReadDelimiterElements(BinaryReader reader, int ec, int eid, int l)
         {
@@ -412,9 +412,13 @@ namespace CGMAnalyzerCore.Commands
 
             return element switch
             {
+                // 3, 1
                 ControlElement.VdcIntegerPrecision => new VDCIntegerPrecisionCommand(ec, eid, l, command, argumentReader),
+                // 3, 2
                 ControlElement.VdcRealPrecision => new VDCRealPrecisionCommand(ec, eid, l, command, argumentReader),
+                // 3, 5
                 ControlElement.ClipRectangle => new ClipRectangleCommand(ec, eid, l, command, argumentReader),
+                // 3, 6
                 ControlElement.ClipIndicator => new ClipIndicatorCommand(ec, eid, l, command, argumentReader),
 
                 _ => UnsupportedCommand.Unsupported(ec, eid, l, reader)
@@ -482,6 +486,8 @@ namespace CGMAnalyzerCore.Commands
                 GraphicalPrimitiveElement.NonUniformRationalBSpline => UnsupportedCommand.Unsupported(ec, eid, l, reader),
                 // 26
                 GraphicalPrimitiveElement.PolyBezier => new PolyBezierCommand(ec, eid, command, argumentReader),
+                // 27
+                GraphicalPrimitiveElement.PolySymbol => UnsupportedCommand.Unsupported(ec, eid, l, reader),
                 // 28
                 GraphicalPrimitiveElement.BitonalTile => new BitonalTileCommand(ec, eid, command, argumentReader),
                 // 29
@@ -500,7 +506,7 @@ namespace CGMAnalyzerCore.Commands
             return element switch
             {
                 // 1 - Bundle indices (pas d'implémentation spécifique)
-                AttributeElement.LineBundleIndex or
+                AttributeElement.LineBundleIndex or // 1
                 AttributeElement.MarkerBundleIndex or // 5
                 AttributeElement.TextBundleIndex or // 9
                 AttributeElement.FillBundleIndex or // 21
