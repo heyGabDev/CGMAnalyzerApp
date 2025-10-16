@@ -7,17 +7,15 @@ using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.DelimiterCommands
 {    //Commande de structure
-    public class BeginPictureCommand : CgmCommand
+    public class BeginPictureCommand : BaseCgmCommand
     {
 
-        public BeginPictureCommand(int ec, int eid, int l, CgmCommand baseCommand)
-            : base(baseCommand, ec, eid, l)
+        public BeginPictureCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
             // Pas d'arguments selon le Java original
-
+            Args = command.Args;
             ValidateArgumentsRead("BeginPicture");
-            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-            //    "Not all arguments were read in BeginPicture");
         }
 
         public override void Draw(Graphics g, Pen pen)
@@ -25,14 +23,15 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
             // No drawing
         }
 
-        // TO DELETE : Géré par CgmCommand
-        // public override void ReadArguments(BinaryReader reader)
-        //{
-        //    throw new NotImplementedException();
-        //}
         public override string ToString()
         {
-            return $"BeginPicture";
+            return $"BEGIN_PICTURE";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

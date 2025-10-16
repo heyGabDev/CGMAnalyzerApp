@@ -7,16 +7,14 @@ using System.Threading.Tasks;
 namespace CGMAnalyzerCore.Commands.DelimiterCommands
 {
     //Commande de structure
-    public class EndMetafileCommand : CgmCommand
+    public class EndMetafileCommand : BaseCgmCommand
     {
-        public EndMetafileCommand(int ec, int eid, int l, CgmCommand baseCommand)
-            : base(baseCommand, ec, eid, l)
+        public EndMetafileCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
             // Pas d'arguments selon le Java original
-
+            Args = command.Args;
             ValidateArgumentsRead("EndMetafile");
-            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-            //"Not all arguments were read in EndMetafile");
         }
 
         public override void Draw(Graphics g, Pen pen)
@@ -24,14 +22,15 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
             // No drawing
         }
 
-        //public override void ReadArguments(BinaryReader reader)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
         public override string ToString()
         {
-            return "EndMetafile";
+            return $"END_METAFILE";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

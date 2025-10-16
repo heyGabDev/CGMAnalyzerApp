@@ -1,15 +1,16 @@
 ﻿using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
-    public class CharacterCodingAnnouncerCommand : CgmCommand
+    public class CharacterCodingAnnouncerCommand : BaseCgmCommand
     {
-        public enum CodingType
+        public enum CharacterCodingType
         {
             Basic7Bit = 0,
             Basic8Bit = 1,
@@ -17,28 +18,52 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
             Extended8Bit = 3
         }
 
-        public CodingType Type { get; private set; }
+        public CharacterCodingType Type { get; private set; }
 
-        public CharacterCodingAnnouncerCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        public CharacterCodingAnnouncerCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            int typ = argReader.MakeEnum();
-            Type = typ switch
-            {
-                0 => CodingType.Basic7Bit,
-                1 => CodingType.Basic8Bit,
-                2 => CodingType.Extended7Bit,
-                3 => CodingType.Extended8Bit,
-                _ => CodingType.Basic7Bit
-            };
+            Args = command.Args;
+            Debug.WriteLine($"[CharacterCodingAnnouncerCommand] ArgsLength={Args?.Length ?? 0}");
 
-            System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-                "Not all arguments were read in CharacterCodingAnnouncer");
+            try
+            {
+                var argReader = new ExtractedArgumentReader(command);
+                int type = argReader.MakeEnum();
+
+                Type = type switch
+                {
+                    0 => CharacterCodingType.Basic7Bit,
+                    1 => CharacterCodingType.Basic8Bit,
+                    2 => CharacterCodingType.Extended7Bit,
+                    3 => CharacterCodingType.Extended8Bit,
+                    _ => throw new NotSupportedException($"Unsupported character coding type: {type}")
+                };
+
+                Debug.WriteLine($"[CharacterCodingAnnouncerCommand] Type={Type}");
+                ValidateArgumentsRead("CharacterCodingAnnouncerCommand");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[CharacterCodingAnnouncerCommand ERROR] {ex.Message}");
+                HasReadErrors = true;
+            }
+        }
+
+        public override void Draw(Graphics g, Pen pen)
+        {
+            // No drawing
         }
 
         public override string ToString()
         {
-            return $"CharacterCodingAnnouncer type={Type}";
+            return $"CHARACTERE_CODING_ANNOUNCER : type={Type}";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

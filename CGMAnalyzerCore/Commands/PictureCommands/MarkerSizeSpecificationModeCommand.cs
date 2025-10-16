@@ -3,36 +3,57 @@ using CGMAnalyzerCore.Enums.Precision;
 using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.PictureCommands
 {
-    public class MarkerSizeSpecificationModeCommand : CgmCommand
+    public class MarkerSizeSpecificationModeCommand : BaseCgmCommand
     {
         public SpecificationMode Mode { get; private set; }
 
-        public MarkerSizeSpecificationModeCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        public MarkerSizeSpecificationModeCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            int mode = argReader.MakeEnum();
-            Mode = SpecificationModeExtensions.GetMode(mode);
+            Args = command.Args;
+            Debug.WriteLine($"[MarkerSizeSpecificationModeCommand] ArgsLength={Args?.Length ?? 0}");
 
-            CgmContext.MarkerSizeSpecificationMode = Mode;
+            try
+            {
+                var argReader = new ExtractedArgumentReader(command);
+                int mode = argReader.MakeEnum();
+                Mode = SpecificationModeExtensions.GetMode(mode);
+                CgmContext.MarkerSizeSpecificationMode = Mode;
 
-            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-            //    "Not all arguments were read in MarkerSizeSpecificationMode");
+                Debug.WriteLine($"[MarkerSizeSpecificationModeCommand] Mode={Mode}");
+                ValidateArgumentsRead("MarkerSizeSpecificationModeCommand");
+
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[MarkerSizeSpecificationModeCommand ERROR] {ex.Message}");
+                Mode = SpecificationMode.ABSOLUTE; // Valeur par défaut
+                CgmContext.MarkerSizeSpecificationMode = Mode;
+                HasReadErrors = true;
+            }
         }
 
-        public static void Reset()
+        public override void Draw(Graphics g, Pen pen)
         {
-            CgmContext.MarkerSizeSpecificationMode = SpecificationMode.ABSOLUTE;
+            // No drawing
         }
 
         public override string ToString()
         {
-            return $"MarkerSizeSpecificationMode {Mode}";
+            return $"MARKER_SIZE_SPECIFICATION_MODE : {Mode}";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

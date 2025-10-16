@@ -2,6 +2,7 @@
 using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,29 +11,44 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
     public class MaximumVdcExtentCommand : BaseCgmCommand
     {
-        public Point2D.Double Point1 { get; }
-        public Point2D.Double Point2 { get; }
+        public Point2D.Double Point1 { get; private set; } = new Point2D.Double(0, 0);
+        public Point2D.Double Point2 { get; private set; } = new Point2D.Double(0, 0);
 
-        public MaximumVdcExtentCommand(int ec, int eid, int l, ExtractedArgumentReader argReader)
+        public MaximumVdcExtentCommand(int ec, int eid, int l, CgmCommand command)
             : base(ec, eid, l)
         {
-            Point1 = argReader.MakePoint(ec, eid);
-            Point2 = argReader.MakePoint(ec, eid);
+            Args = command.Args;
+            Debug.WriteLine($"[MaximumVdcExtentCommand] ArgsLength={Args?.Length ?? 0}");
+
+            try
+            {
+                var argReader = new ExtractedArgumentReader(command);
+                Point1 = argReader.MakePoint(ec, eid);
+                Point2 = argReader.MakePoint(ec, eid);
+                Debug.WriteLine($"[MaximumVdcExtentCommand] Point1=({Point1.X}, {Point1.Y}), Point2=({Point2.X}, {Point2.Y})");
+                ValidateArgumentsRead("MaximumVdcExtentCommand");   
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[MaximumVdcExtentCommand ERROR] {ex.Message}");
+                HasReadErrors = true;
+            }
         }
 
         public override void Draw(Graphics g, Pen pen)
         {
-            throw new NotImplementedException();
-        }
-
-        public override void ReadArguments(BinaryReader reader)
-        {
-            throw new NotImplementedException();
+            // No drawing
         }
 
         public override string ToString()
         {
-            return $"MaximumVdcExtentCommand: P1({Point1.X}, {Point1.Y}) P2({Point2.X}, {Point2.Y})";
+            return $"MAXIMUM_VDC_EXTENT : P1({Point1.X}, {Point1.Y}) P2({Point2.X}, {Point2.Y})";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

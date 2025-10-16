@@ -7,30 +7,29 @@ using System.Threading.Tasks;
 namespace CGMAnalyzerCore.Commands.DelimiterCommands
 {
     //Commande de structure
-    public class BeginPictureBodyCommand : CgmCommand
+    public class BeginPictureBodyCommand : BaseCgmCommand
     {
-        public BeginPictureBodyCommand(int ec, int eid, int l, CgmCommand baseCommand)
-            : base(baseCommand, ec, eid, l)
+        public BeginPictureBodyCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
+            // Pas d'arguments selon le Java original
+            Args = command.Args;
             ValidateArgumentsRead("BeginPictureBody");
-            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-            //"Not all arguments were read in BeginPictureBody");
         }
-
         public override void Draw(Graphics g, Pen pen)
         {
-            // Pas d'effet graphique direct, utilisé comme délimiteur logique.
+            // No drawing
         }
-
-        // TO DELETE : Géré par CgmCommand
-        //public override void ReadArguments(BinaryReader reader)
-        //{
-        //    throw new NotImplementedException();
-        //}
 
         public override string ToString()
         {
-            return "BEGIN_PICTURE_BODY";
+            return $"BEGIN_PICTURE_BODY";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

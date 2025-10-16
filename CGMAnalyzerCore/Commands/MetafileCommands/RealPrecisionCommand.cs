@@ -1,13 +1,15 @@
-﻿using CGMAnalyzerCore.Parser;
+﻿using CGMAnalyzerCore.Context;
+using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
-    public class RealPrecisionCommand : CgmCommand
+    public class RealPrecisionCommand : BaseCgmCommand
     {
         public enum PrecisionType
         {
@@ -15,24 +17,43 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
             FloatingPoint64Bit = 2
         }
 
-        public static PrecisionType Precision { get; private set; }
+        public PrecisionType Precision { get; private set; }
 
-        public RealPrecisionCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        public RealPrecisionCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            int p1 = argReader.MakeInt();
+            Args = command.Args;
+            Debug.WriteLine($"[RealPrecisionCommand] ArgsLength={Args?.Length ?? 0}");
 
-            switch (p1)
+            try
             {
-                case 1:
-                    Precision = PrecisionType.FloatingPoint32Bit;
-                    break;
-                case 2:
-                    Precision = PrecisionType.FloatingPoint64Bit;
-                    break;
-                default:
-                    throw new NotSupportedException($"Unsupported REAL precision value: {p1}");
+                var argReader = new ExtractedArgumentReader(command);
+                int p1 = argReader.MakeInt();
+                switch (p1)
+                {
+                    case 1:
+                        Precision = PrecisionType.FloatingPoint32Bit;
+                        break;
+                    case 2:
+                        Precision = PrecisionType.FloatingPoint64Bit;
+                        break;
+                    default:
+                        throw new NotSupportedException($"Unsupported REAL precision value: {p1}");
+                }
+
+                CgmContext.RealPrecision = (int)Precision;
+                Debug.WriteLine($"[RealPrecisionCommand] Precision={Precision}");
+                ValidateArgumentsRead("RealPrecisionCommand");
+
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[RealPrecisionCommand ERROR] {ex.Message}");
+                Precision = PrecisionType.FloatingPoint32Bit;// Valeur par défaut en cas d'erreur
+                CgmContext.RealPrecision = (int)Precision;
+                HasReadErrors = true;
+            }
+
         }
 
         /// <summary>
@@ -43,27 +64,21 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
             return (int)Precision;
         }
 
-        /// <summary>
-        /// Retourne la précision statique courante
-        /// </summary>
-        public static int GetCurrentPrecision()
-        {
-            return (int)Precision;
-        }
-
         public override void Draw(Graphics g, Pen pen)
         {
-            // Pas de rendu graphique requis
-        }
-
-        public override void ReadArguments(BinaryReader reader)
-        {
-            throw new NotImplementedException();
+            // No drawing
         }
 
         public override string ToString()
         {
-            return $"RealPrecision: {Precision}";
+            return $"REAL_PRECISION : {Precision}";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
+
         }
     }
 }

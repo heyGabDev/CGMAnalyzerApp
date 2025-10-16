@@ -9,52 +9,67 @@ using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.DelimiterCommands
 {
-    public class BeginApplicationStructureCommand : CgmCommand
+    public class BeginApplicationStructureCommand : BaseCgmCommand
     {
+       // public string BeginApplicationStructure { get; private set; } = "";
         public string Id { get; private set; }
         public string Type { get; private set; }
 
-        public BeginApplicationStructureCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        public BeginApplicationStructureCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
+            Args = command.Args;
+            Debug.WriteLine($"[BeginApplicationStructure] ArgsLength={Args?.Length ?? 0}");
+
             try
             {
-                if (baseCommand.Args != null && baseCommand.Args.Length > 0)
+                var argReader = new ExtractedArgumentReader(command);
+                if (Args != null && Args.Length > 0)
                 {
-                    // Lire les arguments avec validation
-                    Type = argReader.ReadString();
+                    // Lire les deux chaînes dans l'ordre
+                    Id = argReader.MakeString();
+                    Type = argReader.MakeString();
+                    Debug.WriteLine($"[BeginApplicationStructure] Id='{Id}' Type='{Type}'");
+
+                    // Logic from Java original
+                    if (Type.Equals("LAYER", StringComparison.OrdinalIgnoreCase))
+                    {
+                        CgmContext.CurrentLayerId++;
+                        Debug.WriteLine($"[BeginApplicationStructure] Layer ID incrémenté: {CgmContext.CurrentLayerId}");
+                    }
+
+                    ValidateArgumentsRead("BeginApplicationStructure");
                 }
                 else
                 {
+                    Id = "Unknown";
                     Type = "Default";
-                    ErrorCommand = true;
-                }            
-                
-                Id = argReader.MakeString();
-                Type = argReader.MakeString();
-
-            // Logic from Java original
-            if (Type.Equals("LAYER", StringComparison.OrdinalIgnoreCase))
-            {
-                LayerId++;
-                CgmContext.CurrentLayerId++;
-            }
+                    Debug.WriteLine("[BeginApplicationStructure] Aucun argument, valeurs par défaut");
+                }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[CGM] Erreur lecture BeginApplicationStructure: {ex.Message}");
+                Debug.WriteLine($"[BeginApplicationStructure ERROR] {ex.Message}");
+                Id = "Error";
                 Type = "Error";
-                ErrorCommand = true;
+                HasReadErrors = true;
             }
+        }
 
-            ValidateArgumentsRead("BeginApplicationStructure");
-            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-            //    "Not all arguments were read in BeginApplicationStructure");
+        public override void Draw(Graphics g, Pen pen)
+        {
+            // No drawing
         }
 
         public override string ToString()
         {
-            return $"BeginApplicationStructure : {Id} - {Type}";
+            return $"BEGIN_APPLICATION_STRUCTURE : ID ={Id} - TYPE ={Type}";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 

@@ -211,7 +211,6 @@ namespace CGMAnalyzerCore.Commands
         {
             var element = (ElementEnums)ec;
             var command = new CgmCommand(ec, eid, l, reader);
-            var argReader = new ExtractedArgumentReader(command);
 
             switch (element)
             {
@@ -257,14 +256,13 @@ namespace CGMAnalyzerCore.Commands
         {
             var element = (DelimiterElement)eid;
             var command = new CgmCommand(ec, eid, l, reader);
-            var argumentReader = new ExtractedArgumentReader(command);
 
             return element switch
             {
                 // 0, 0
                 DelimiterElement.NoOp => command,
                 // 0, 1
-                DelimiterElement.BeginMetafile => new BeginMetafileCommand(ec, eid, l, command, argumentReader),
+                DelimiterElement.BeginMetafile => new BeginMetafileCommand(ec, eid, l, command),
                 // 0, 2 ok
                 DelimiterElement.EndMetafile => new EndMetafileCommand(ec, eid, l, command),
                 // 0, 3 ok
@@ -288,9 +286,9 @@ namespace CGMAnalyzerCore.Commands
                 // 0,18
                 DelimiterElement.EndCompoundTextPath => UnsupportedCommand.Unsupported(ec, eid, l, reader),
                 // 0,19 ok
-                DelimiterElement.BeginTileArray => new BeginTileArrayCommand(ec, eid, l, command, argumentReader),
+                DelimiterElement.BeginTileArray => new BeginTileArrayCommand(ec, eid, l, command),
                 DelimiterElement.EndTileArray => new EndTileArrayCommand(ec, eid, l, command),
-                DelimiterElement.BeginApplicationStructure => new BeginApplicationStructureCommand(ec, eid, l, command, argumentReader),
+                DelimiterElement.BeginApplicationStructure => new BeginApplicationStructureCommand(ec, eid, l, command),
                 // 0,22 ok
                 DelimiterElement.BeginApplicationStructureBody => new BeginApplicationStructureBodyCommand(ec, eid, l, command),
                 DelimiterElement.EndApplicationStructure => new EndApplicationStructureCommand(ec, eid, l, command),
@@ -304,48 +302,47 @@ namespace CGMAnalyzerCore.Commands
         {
             var element = (MetafileDescriptorElement)eid;
             var command = new CgmCommand(ec, eid, l, reader);
-            var argumentReader = new ExtractedArgumentReader(command);
 
             return element switch
             {
                 // 1, 1
-                MetafileDescriptorElement.MetafileVersion => new MetafileVersionCommand(ec, eid, l, command, argumentReader),
+                MetafileDescriptorElement.MetafileVersion => new MetafileVersionCommand(ec, eid, l, command),
                 // 1, 2
-                MetafileDescriptorElement.MetafileDescription => new MetafileDescriptionCommand(ec, eid, l, command, argumentReader),
+                MetafileDescriptorElement.MetafileDescription => new MetafileDescriptionCommand(ec, eid, l, command),
                 // 1, 3
-                MetafileDescriptorElement.VdcType => new VDCTypeCommand(ec, eid, l, command, argumentReader),
+                MetafileDescriptorElement.VdcType => new VDCTypeCommand(ec, eid, l, command),
                 // 1, 4
-                MetafileDescriptorElement.IntegerPrecision => new IntegerPrecisionCommand(ec, eid, l, command, argumentReader),
+                MetafileDescriptorElement.IntegerPrecision => new IntegerPrecisionCommand(ec, eid, l, command),
                 // 1, 5
-                MetafileDescriptorElement.RealPrecision => new RealPrecisionCommand(ec, eid, l, command, argumentReader),
+                MetafileDescriptorElement.RealPrecision => new RealPrecisionCommand(ec, eid, l, command),
                 // 1, 6
-                MetafileDescriptorElement.IndexPrecision => new IndexPrecisionCommand(ec, eid, l, command, argumentReader),
+                MetafileDescriptorElement.IndexPrecision => new IndexPrecisionCommand(ec, eid, l, command),
                 // 1, 7
-                MetafileDescriptorElement.ColorPrecision => new ColorPrecisionCommand(ec, eid, l, command, argumentReader),
+                MetafileDescriptorElement.ColorPrecision => new ColorPrecisionCommand(ec, eid, l, command),
                 // 1, 8
-                MetafileDescriptorElement.ColorIndexPrecision => new ColorIndexPrecisionCommand(ec, eid, l, command, argumentReader),
+                MetafileDescriptorElement.ColorIndexPrecision => new ColorIndexPrecisionCommand(ec, eid, l, command),
                 // 1, 9
-                MetafileDescriptorElement.MaximumColorIndex => new MaximumColorIndexCommand(ec, eid, l, command, argumentReader),
+                MetafileDescriptorElement.MaximumColorIndex => new MaximumColorIndexCommand(ec, eid, l, command),
                 // 1, 10
-                MetafileDescriptorElement.ColorValueExtent => new ColorValueExtentCommand(ec, eid, l, command, argumentReader),
+                MetafileDescriptorElement.ColorValueExtent => new ColorValueExtentCommand(ec, eid, l, command),
                 // 1, 11
-                MetafileDescriptorElement.MetafileElementList => new MetafileElementListCommand(ec, eid, l, command, argumentReader),
+                MetafileDescriptorElement.MetafileElementList => new MetafileElementListCommand(ec, eid, l, command),
                 // 1, 12
-                MetafileDescriptorElement.MetafileDefaultsReplacement => new MetafileDefaultsReplacementCommand(ec, eid, l, command, argumentReader),
+                MetafileDescriptorElement.MetafileDefaultsReplacement => new MetafileDefaultsReplacementCommand(ec, eid, l, command),
                 // 1, 13
-                MetafileDescriptorElement.FontList => new FontListCommand(ec, eid, l, command, argumentReader),
+                MetafileDescriptorElement.FontList => new FontListCommand(ec, eid, l, command),
                 // 1, 14
-                MetafileDescriptorElement.CharacterSetList => new CharacterSetListCommand(ec, eid, l, command, argumentReader),
+                MetafileDescriptorElement.CharacterSetList => new CharacterSetListCommand(ec, eid, l, command),
                 // 1, 15
-                MetafileDescriptorElement.CharacterCodingAnnouncer => new CharacterCodingAnnouncerCommand(ec, eid, l, command, argumentReader),
+                MetafileDescriptorElement.CharacterCodingAnnouncer => new CharacterCodingAnnouncerCommand(ec, eid, l, command),
                 // 1, 16
-                MetafileDescriptorElement.NamePrecision => new NamePrecisionCommand(ec, eid, l, command, argumentReader),
+                MetafileDescriptorElement.NamePrecision => new NamePrecisionCommand(ec, eid, l, command),
                 // 1, 17
-                MetafileDescriptorElement.MaximumVdcExtent => new MaximumVdcExtentCommand(ec, eid, l, argumentReader),
+                MetafileDescriptorElement.MaximumVdcExtent => new MaximumVdcExtentCommand(ec, eid, l, command),
                 // 1, 18
                 MetafileDescriptorElement.SegmentPriorityExtent => UnsupportedCommand.Unsupported(ec, eid, l, reader),
                 // 1, 19
-                MetafileDescriptorElement.ColorModel => new ColorModelCommand(ec, eid, l, argumentReader),
+                MetafileDescriptorElement.ColorModel => new ColorModelCommand(ec, eid, l, command),
 
                 // 1, 20 - 24
                 MetafileDescriptorElement.FontProperties or
@@ -361,28 +358,27 @@ namespace CGMAnalyzerCore.Commands
         {
             var element = (PictureDescriptorElement)eid;
             var command = new CgmCommand(ec, eid, l, reader);
-            var argumentReader = new ExtractedArgumentReader(command);
 
             return element switch
             {
                 // 2, 1
-                PictureDescriptorElement.ScalingMode => new ScalingModeCommand(ec, eid, l, command, argumentReader),
+                PictureDescriptorElement.ScalingMode => new ScalingModeCommand(ec, eid, l, command),
                 // 2, 2
-                PictureDescriptorElement.ColorSelectionMode => new ColourSelectionModeCommand(ec, eid, l, command, argumentReader),
+                PictureDescriptorElement.ColorSelectionMode => new ColorSelectionModeCommand(ec, eid, l, command),
                 // 2, 3
-                PictureDescriptorElement.LineWidthSpecificationMode => new LineWidthSpecificationModeCommand(ec, eid, l, command, argumentReader),
+                PictureDescriptorElement.LineWidthSpecificationMode => new LineWidthSpecificationModeCommand(ec, eid, l, command),
                 // 2, 4
-                PictureDescriptorElement.MarkerSizeSpecificationMode => new MarkerSizeSpecificationModeCommand(ec, eid, l, command, argumentReader),
+                PictureDescriptorElement.MarkerSizeSpecificationMode => new MarkerSizeSpecificationModeCommand(ec, eid, l, command),
                 // 2, 5
-                PictureDescriptorElement.EdgeWidthSpecificationMode => new EdgeWidthSpecificationModeCommand(ec, eid, l, command, argumentReader),
+                PictureDescriptorElement.EdgeWidthSpecificationMode => new EdgeWidthSpecificationModeCommand(ec, eid, l, command),
                 // 2, 6
-                PictureDescriptorElement.VdcExtent => new VDCExtentCommand(ec, eid, l, command, argumentReader),
+                PictureDescriptorElement.VdcExtent => new VDCExtentCommand(ec, eid, l, command),
                 // 2, 7
-                PictureDescriptorElement.BackgroundColor => new BackgroundColorCommand(ec, eid, l, command, argumentReader),
+                PictureDescriptorElement.BackgroundColor => new BackgroundColorCommand(ec, eid, l, command),
                 // 2, 8
                 PictureDescriptorElement.DeviceViewport => UnsupportedCommand.Unsupported(ec, eid, l, reader),
                 // 2, 9
-                PictureDescriptorElement.DeviceViewportSpecificationMode => new DeviceViewportSpecificationModeCommand(ec, eid, l, command, argumentReader),
+                PictureDescriptorElement.DeviceViewportSpecificationMode => new DeviceViewportSpecificationModeCommand(ec, eid, l, command),
                 // 2, 10-15
                 PictureDescriptorElement.DeviceViewportMapping or
                 PictureDescriptorElement.LineRepresentation or
@@ -391,9 +387,9 @@ namespace CGMAnalyzerCore.Commands
                 PictureDescriptorElement.FillRepresentation or
                 PictureDescriptorElement.EdgeRepresentation => UnsupportedCommand.Unsupported(ec, eid, l, reader),
                 // 2, 16
-                PictureDescriptorElement.InteriorStyleSpecificationMode => new InteriorStyleSpecificationModeCommand(ec, eid, l, command, argumentReader),
+                PictureDescriptorElement.InteriorStyleSpecificationMode => new InteriorStyleSpecificationModeCommand(ec, eid, l, command),
                 // 2, 17
-                PictureDescriptorElement.LineAndEdgeTypeDefinition => new LineAndEdgeTypeDefinitionCommand(ec, eid, l, command, argumentReader),
+                PictureDescriptorElement.LineAndEdgeTypeDefinition => new LineAndEdgeTypeDefinitionCommand(ec, eid, l, command),
                 // 2, 18-20
                 PictureDescriptorElement.HatchStyleDefinition or
                 PictureDescriptorElement.GeometricPatternDefinition or
@@ -617,7 +613,7 @@ namespace CGMAnalyzerCore.Commands
         private static BaseCgmCommand ReadApplicationStructureElements(BinaryReader reader, int ec, int eid, int l)
         {
             var command = new CgmCommand(ec, eid, l, reader);
-            return new ApplicationStructureCommand(command, ec, eid);
+            return new ApplicationStructureCommand(command, ec, eid,l);
         }
         #endregion
 

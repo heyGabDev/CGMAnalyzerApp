@@ -5,7 +5,6 @@ using CGMAnalyzerCore.Commands.GraphicCommands.Control;
 using CGMAnalyzerCore.Commands.MetafileCommands;
 using CGMAnalyzerCore.Context;
 using CGMAnalyzerCore.Converter.Interface;
-using CGMAnalyzerCore.Enums.Colors;
 using CGMAnalyzerCore.Geometry;
 using CGMAnalyzerCore.Rendering;
 using System;
@@ -13,6 +12,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using static CGMAnalyzerCore.Commands.MetafileCommands.ColorModelCommand;
 
 namespace CGMAnalyzerCore.Render
 {
@@ -255,7 +255,7 @@ namespace CGMAnalyzerCore.Render
 
         private void UpdateColourModel(ColorModelCommand command)
         {
-            var modelValue = command.ColourModel;
+            var modelValue = command.ColorModel;
             var model = (ColorModelEnum)modelValue;
             //var model = modelValue switch
             //{
@@ -264,7 +264,7 @@ namespace CGMAnalyzerCore.Render
             //    2 => CgmContext.ColorModelEnum.CMYK,
             //    _ => CgmContext.ColorModelEnum.Indexed
             //};
-            CgmContext.SetColourModel(model);
+            CgmContext.SetColorModel(model);
         }
 
         private void UpdateIntegerPrecision(IntegerPrecisionCommand command)

@@ -2,6 +2,7 @@
 using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,61 +13,48 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
     /// Class=1, Element=8
     /// Colour Index Precision Command
     /// </summary>
-    public class ColorIndexPrecisionCommand : CgmCommand
+    public class ColorIndexPrecisionCommand : BaseCgmCommand
     {
         public int Precision { get; private set; }
+        private const int DEFAULT_PRECISION = 8;
 
-        public ColorIndexPrecisionCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        public ColorIndexPrecisionCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            Precision = argReader.MakeInt();
-            CgmContext.ColorIndexPrecision = Precision;
+            Args = command.Args;
+            Debug.WriteLine($"[ColorIndexPrecisionCommand] ArgsLength={Args?.Length ?? 0}");
 
-            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-            //    "Not all arguments were read in ColourIndexPrecision");
+            try
+            {
+                var argReader = new ExtractedArgumentReader(command);
+                Precision = argReader.MakeInt();
+                CgmContext.ColorIndexPrecision = Precision;
+                Debug.WriteLine($"[ColorIndexPrecisionCommand] Precision={Precision}");
+                ValidateArgumentsRead("ColorIndexPrecisionCommand");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[ColorIndexPrecisionCommand ERROR]  {ex.Message}");
+                Precision = DEFAULT_PRECISION;
+                CgmContext.ColorIndexPrecision = Precision;
+                HasReadErrors = true;
+            }
         }
 
-        public static void Reset()
+        public override void Draw(Graphics g, Pen pen)
         {
-            CgmContext.ColorIndexPrecision = 8;
+            // No drawing
         }
 
         public override string ToString()
         {
-            return $"ColourIndexPrecision {Precision}";
+            return $"COLOR_INDEX_PRECISION : {Precision}";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
-
-    // TO DELETE : OLD VERSION KEPT FOR REFERENCE
-    //public class ColourIndexPrecision : CgmCommand
-    //{
-    //    public int Precision { get; private set; }
-
-    //    public ColourIndexPrecision(CgmCommand baseCommand, int ec, int eid)
-    //        : base(ec, eid, baseCommand.Args.Length, null)
-    //    {
-    //        Args = baseCommand.Args;
-    //        var argReader = new ExtractedArgumentReader(this);
-
-    //        // Lire la précision des index de couleur
-    //        Precision = argReader.MakeInt();
-
-    //        // Mettre à jour le contexte global
-    //        CgmContext.ColorPrecision = Precision;
-
-    //        // Vérifier que tous les arguments ont été lus
-    //        System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-    //            "Not all arguments were read in ColourIndexPrecision");
-    //    }
-
-    //    public static void Reset()
-    //    {
-    //        CgmContext.ColorPrecision = 8; // Valeur par défaut
-    //    }
-
-    //    public override string ToString()
-    //    {
-    //        return $"ColourIndexPrecision {Precision}";
-    //    }
-    //}
 }

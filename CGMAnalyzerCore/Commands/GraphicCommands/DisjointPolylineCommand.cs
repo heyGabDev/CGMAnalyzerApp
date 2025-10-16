@@ -4,6 +4,7 @@ using CGMAnalyzerCore.Parser;
 using CGMAnalyzerCore.Render;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
@@ -11,7 +12,7 @@ using System.IO;
 namespace CGMAnalyzerCore.Commands.GraphicCommands
 {
     // <summary>
-    /// POLYGON (case 2) 
+    /// DISJOINT POLYLINE (case 2) - Dessine des segments de lignes séparés (paires de points)
     /// </summary>
     public class DisjointPolylineCommand : BaseCgmCommand
     {
@@ -19,52 +20,65 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
 
         public IReadOnlyList<(Point2D Start, Point2D End)> Lines => _lines;
 
-        public DisjointPolylineCommand(int ec, int eid, CgmCommand command, ExtractedArgumentReader argRerader)
+        public DisjointPolylineCommand(int ec, int eid, CgmCommand command, ExtractedArgumentReader argReader)
             : base(ec, eid, command.Length)
         {
             Args = command.Args;
             command.ResetPosition();
 
-            int pointCount = command.Args.Length / argRerader.SizeOfPoint(); // SizeOfPoint();
-            if (pointCount % 2 != 0)
-                throw new InvalidDataException("DisjointPolyline must have an even number of points");
+            int pointSize = argReader.SizeOfPoint();
+            int availableBytes = command.RemainingArgs();
+            int pointCount = availableBytes / pointSize;
 
+            if (pointCount % 2 != 0) // Controle pair avant lecture
+            {
+                Debug.WriteLine($"[DisjointPolyline WARNING] Nombre de points impair: {pointCount}, ignoré le dernier");
+                pointCount = (pointCount / 2) * 2; // Arrondir au nombre pair inférieur
+            }
+
+            // Lire les paires de points
             for (int i = 0; i < pointCount / 2; i++)
             {
-                Point2D start = argRerader.MakePoint(ec, eid);
-                Point2D end = argRerader.MakePoint(ec, eid);
+                Point2D start = argReader.MakePoint(ec, eid);
+                Point2D end = argReader.MakePoint(ec, eid);
                 _lines.Add((start, end));
+
+                Debug.WriteLine($"[DisjointPolyline] Ligne {i}: ({start.X},{start.Y}) -> ({end.X},{end.Y})");
             }
+
+            ValidateArgumentsRead("DisjointPolylineCommand");
+
         }
 
         public override void Draw(Graphics g, Pen pen)
         {
+            Debug.WriteLine($"[DisjointPolyline] Dessin de {_lines.Count} lignes"); 
+
             foreach (var line in _lines)
             {
                 g.DrawLine(pen,
                     line.Start.ToPointF(),
                     line.End.ToPointF());
-                //g.DrawLine(pen,
-                            //new PointF((float)line.Start.X, (float)line.Start.Y),
-                            //new PointF((float)line.End.X, (float)line.End.Y));
             }
         }
 
         public override string ToString()
         {
-            var sb = new System.Text.StringBuilder();
-            sb.Append("DisjointPolyline [");
-            foreach (var line in _lines)
-            {
-                sb.AppendFormat("({0},{1},{2},{3})", line.Start.X, line.Start.Y, line.End.X, line.End.Y);
-            }
-            sb.Append("]");
-            return sb.ToString();
+            return $"DisjointPolyline [{_lines.Count} segments]";
+            //var sb = new System.Text.StringBuilder();
+            //sb.Append("DisjointPolyline [");
+            //foreach (var line in _lines)
+            //{
+            //    sb.AppendFormat("({0},{1},{2},{3})", line.Start.X, line.Start.Y, line.End.X, line.End.Y);
+            //}
+            //sb.Append("]");
+            //return sb.ToString();
         }
 
         public override void ReadArguments(BinaryReader reader)
         {
-            throw new NotImplementedException();
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

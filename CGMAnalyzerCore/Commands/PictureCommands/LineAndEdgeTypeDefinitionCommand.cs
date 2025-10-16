@@ -1,36 +1,65 @@
 ﻿using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.PictureCommands
 {
-    public class LineAndEdgeTypeDefinitionCommand : CgmCommand
+    public class LineAndEdgeTypeDefinitionCommand : BaseCgmCommand
     {
         public int LineType { get; private set; }
-        public List<double> DashPattern { get; private set; }
+        public List<double> DashPattern { get; private set; } = new List<double>();
 
-        public LineAndEdgeTypeDefinitionCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        public LineAndEdgeTypeDefinitionCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            LineType = argReader.MakeIndex();
-            DashPattern = new List<double>();
+            Args = command.Args;
+            Debug.WriteLine($"[LineAndEdgeTypeDefinitionCommand] ArgsLength={Args?.Length ?? 0}");
 
-            // Lire le pattern de tirets (simplifié)
-            while (CurrentArg < Args.Length)
+            try
             {
-                DashPattern.Add(argReader.MakeReal());
-            }
+                var argReader = new ExtractedArgumentReader(command);
+                LineType = argReader.MakeIndex();
+                DashPattern = new List<double>();
 
-            System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-                "Not all arguments were read in LineAndEdgeTypeDefinition");
+                // Lire le pattern de tirets (simplifié)
+                if (Args != null)
+                {
+                    while (CurrentArg < Args.Length)
+                    {
+                        DashPattern.Add(argReader.MakeReal());
+                    }
+                }
+                Debug.WriteLine($"[LineAndEdgeTypeDefinitionCommand] LineType={LineType}, DashPattern=[{string.Join(",", DashPattern)}]");
+                ValidateArgumentsRead("LineAndEdgeTypeDefinitionCommand");
+
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[LineAndEdgeTypeDefinitionCommand ERROR] {ex.Message}");
+                LineType = 1; // Valeur par défaut
+                DashPattern = new List<double>();
+                HasReadErrors = true;
+            }
+        }
+
+        public override void Draw(Graphics g, Pen pen)
+        {
+            // No drawing
         }
 
         public override string ToString()
         {
-            return $"LineAndEdgeTypeDefinition type={LineType} pattern=[{string.Join(",", DashPattern)}]";
+            return $"LINE_AND_EDGE_TYPE_DEFINITION : type={LineType} pattern=[{string.Join(",", DashPattern)}]";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

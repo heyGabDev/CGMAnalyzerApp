@@ -9,38 +9,55 @@ using System.Threading.Tasks;
 namespace CGMAnalyzerCore.Commands.DelimiterCommands
 {
     //Commande de structure
-    public class BeginMetafileCommand : CgmCommand
+    public class BeginMetafileCommand : BaseCgmCommand
     {
         public string MetafileName { get; private set; } = "";
 
-        public BeginMetafileCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argumentReader)
-            : base(baseCommand,ec, eid, l)
-        {    
-                if (baseCommand.Args != null && baseCommand.Args.Length > 0)
+        public BeginMetafileCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
+        {
+            Args = command.Args;
+            var argReader = new ExtractedArgumentReader(command);
+
+            Debug.WriteLine($"[BeginMetafileCommand] ArgsLength={Args?.Length ?? 0}");
+
+            if (Args != null && Args.Length > 0)
+            {
+                try
                 {
-                    try
-                    {
-                    // Lire les arguments avec validation
-                    MetafileName = argumentReader.ReadString();
-                    ValidateArgumentsRead("BeginMetafileCommand");
-                    }
-                    catch (Exception ex)
-                        {
-                            Debug.WriteLine($"[CGM] Erreur lecture BeginMetafile: {ex.Message}");
-                            MetafileName = "Error";
-                            ErrorCommand = true;
-                        }
+                // Lire les arguments avec validation
+                MetafileName = argReader.MakeString();
+                Debug.WriteLine($"[BeginMetafileCommand] MetafileName='{MetafileName}'");
+                ValidateArgumentsRead("BeginMetafileCommand");
                 }
-                else
+                catch (Exception ex)
                 {
-                    MetafileName = "Default";
-                    ErrorCommand = true;
+                        Debug.WriteLine($"[BeginMetafileCommand ERROR]: {ex.Message}");
+                        MetafileName = "Error";
+                        HasReadErrors = true;
                 }
+            }
+            else
+            {
+                MetafileName = "Default";
+                Debug.WriteLine("[BeginMetafileCommand] Aucun argument, nom par défaut");
+            }
+        }
+
+        public override void Draw(Graphics g, Pen pen)
+        {
+            // No drawing
         }
 
         public override string ToString()
         {
             return $"BEGIN_METAFILE \"{MetafileName}\"";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

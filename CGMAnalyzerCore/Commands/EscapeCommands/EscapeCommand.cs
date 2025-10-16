@@ -1,31 +1,60 @@
-﻿using CGMAnalyzerCore.Parser;
+﻿using CGMAnalyzerCore.Context;
+using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.EscapeCommands
 {
-    public class EscapeCommand : CgmCommand
+    public class EscapeCommand : BaseCgmCommand
     {
         public int Identifier { get; private set; }
         public string DataRecord { get; private set; }
 
-        public EscapeCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        public EscapeCommand(int ec, int eid, int l, CgmCommand command, ExtractedArgumentReader argReader)
+            : base(ec, eid, l)
         {
-            Identifier = argReader.MakeInt();
-            DataRecord = argReader.MakeString();
+            Args = command.Args;
+            Debug.WriteLine($"[EscapeCommand] ArgsLength={Args?.Length ?? 0}");
 
-            ValidateArgumentsRead("Escape");
+            try
+            {
+                Identifier = argReader.MakeInt();
+                DataRecord = argReader.MakeString();
+
+                CgmContext.LastEscapeIdentifier = Identifier;
+                CgmContext.LastEscapeDataRecord = DataRecord;
+
+                Debug.WriteLine($"[EscapeCommand] Identifier={Identifier} DataRecord={DataRecord}");
+                ValidateArgumentsRead("Escape");
+            }
+            catch (Exception)
+            {
+                Identifier = -1; // Valeur par défaut en cas d'erreur
+                DataRecord = string.Empty;
+                HasReadErrors = true;
+            }
+
+        }
+
+        public override void Draw(Graphics g, Pen pen)
+        {
+            // No drawing
         }
 
         public override string ToString()
         {
-            return $"Escape identifier={Identifier}";
-            // Note: DataRecord commenté dans le Java original
-            // return $"Escape identifier={Identifier} dataRecord={DataRecord}";
+            return $"ESCAPE : identifier={Identifier} dataRecord={DataRecord}";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
+
         }
     }
 }

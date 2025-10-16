@@ -1,26 +1,36 @@
-﻿using System;
+﻿using CGMAnalyzerCore.Parser;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.DelimiterCommands
 {
-    public class EndApplicationStructureCommand : CgmCommand
+    public class EndApplicationStructureCommand : BaseCgmCommand
     {
-        public EndApplicationStructureCommand(int ec, int eid, int l, CgmCommand baseCommand)
-            : base(baseCommand, ec, eid, l)
+        public EndApplicationStructureCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
             // Pas d'arguments selon le Java original
+            Args = command.Args;
+            Debug.WriteLine($"[EndApplicationStructureCommand] ArgsLength={Args?.Length ?? 0}");
+        }
 
-            ValidateArgumentsRead("EndApplicationStructure");
-            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-            //    "Not all arguments were read in EndApplicationStructure");
+        public override void Draw(Graphics g, Pen pen)
+        {
+            // No drawing
         }
 
         public override string ToString()
         {
-            return "EndApplicationStructure";
+            return $"END_APPLICATION_STRUCTURE";
+        }
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

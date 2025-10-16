@@ -2,36 +2,55 @@
 using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
-    public class NamePrecisionCommand : CgmCommand
+    public class NamePrecisionCommand : BaseCgmCommand
     {
-        public int Precision { get; private set; }
+        public int Precision { get; private set; } = 16;
+        private const int DEFAULT_PRECISION = 16;
 
-        public NamePrecisionCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        public NamePrecisionCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            Precision = argReader.MakeInt();
-            CgmContext.NamePrecision = Precision;
+            Args = command.Args;
+            Debug.WriteLine($"[NamePrecisionCommand] ArgsLength={Args?.Length ?? 0}");
 
-            //System.Diagnostics.Debug.Assert(Precision == 8 || Precision == 16 || Precision == 24 || Precision == 32,
-            //    "Invalid name precision");
-            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-            //    "Not all arguments were read in NamePrecision");
+            try
+            {
+                var argReader = new ExtractedArgumentReader(command);
+                Precision = argReader.MakeInt();
+                CgmContext.NamePrecision = Precision;
+                Debug.WriteLine($"[NamePrecisionCommand] Precision={Precision}");
+                ValidateArgumentsRead("NamePrecisionCommand");
+            }
+            catch (Exception ex)
+            {
+                Precision = DEFAULT_PRECISION;
+                CgmContext.NamePrecision = Precision;
+                Debug.WriteLine($"[NamePrecisionCommand ERROR] {ex.Message}");
+                HasReadErrors = true;
+            }
         }
 
-        public static void Reset()
+        public override void Draw(Graphics g, Pen pen)
         {
-            CgmContext.NamePrecision = 16;
+            // No drawing
         }
 
         public override string ToString()
         {
-            return $"NamePrecision {Precision}";
+            return $"NAME_PRECISION {Precision}";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

@@ -2,36 +2,54 @@
 using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
-    public class IndexPrecisionCommand : CgmCommand
+    public class IndexPrecisionCommand : BaseCgmCommand
     {
         public int Precision { get; private set; }
-
-        public IndexPrecisionCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        private const int DEFAULT_PRECISION = 16;
+        public IndexPrecisionCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            Precision = argReader.MakeInt();
-            CgmContext.IndexPrecision = Precision;
+            Args = command.Args;
+            Debug.WriteLine($"[IndexPrecisionCommand] ArgsLength={Args?.Length ?? 0}");
 
-            //System.Diagnostics.Debug.Assert(Precision == 8 || Precision == 16 || Precision == 24 || Precision == 32,
-            //    "Invalid index precision");
-            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-            //    "Not all arguments were read in IndexPrecision");
+            try
+            {
+                var argReader = new ExtractedArgumentReader(command);
+                Precision = argReader.MakeInt();
+                CgmContext.IndexPrecision = Precision;
+                Debug.WriteLine($"[IndexPrecisionCommand] Precision={Precision}");
+                ValidateArgumentsRead("IndexPrecisionCommand");
+            }
+            catch (Exception ex)
+            { 
+                Debug.WriteLine($"[IndexPrecisionCommand ERROR] {ex.Message}");
+                Precision = DEFAULT_PRECISION; 
+                CgmContext.IndexPrecision = Precision;
+                HasReadErrors = true;
+            }
         }
 
-        public static void Reset()
+        public override void Draw(Graphics g, Pen pen)
         {
-            CgmContext.IndexPrecision = 16;
+            // No drawing
         }
 
         public override string ToString()
         {
-            return $"IndexPrecision {Precision}";
+            return $"INDEX_PRECISION : {Precision}";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

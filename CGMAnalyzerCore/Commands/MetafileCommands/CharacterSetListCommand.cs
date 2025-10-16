@@ -1,13 +1,14 @@
 ﻿using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
-    public class CharacterSetListCommand : CgmCommand
+    public class CharacterSetListCommand : BaseCgmCommand
     {
         public enum CharacterSetType
         {
@@ -20,30 +21,47 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 
         public Dictionary<CharacterSetType, string> CharacterSets { get; private set; }
 
-        public CharacterSetListCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        public CharacterSetListCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            CharacterSets = new Dictionary<CharacterSetType, string>();
+            Args = command.Args;
+            Debug.WriteLine($"[CharacterSetListCommand] ArgsLength={Args?.Length ?? 0}");
 
-            while (CurrentArg < Args.Length)
+            try
             {
-                int typ = argReader.MakeEnum();
-                CharacterSetType type = typ switch
+                var argReader = new ExtractedArgumentReader(command);
+                CharacterSets = new Dictionary<CharacterSetType, string>();
+
+                while (CurrentArg < Args?.Length)
                 {
-                    0 => CharacterSetType.Char94GSet,
-                    1 => CharacterSetType.Char96GSet,
-                    2 => CharacterSetType.Char94MByteGSet,
-                    3 => CharacterSetType.Char96MByteGSet,
-                    4 => CharacterSetType.CompleteCode,
-                    _ => CharacterSetType.CompleteCode
-                };
+                    int typ = argReader.MakeEnum();
+                    CharacterSetType type = typ switch
+                    {
+                        0 => CharacterSetType.Char94GSet,
+                        1 => CharacterSetType.Char96GSet,
+                        2 => CharacterSetType.Char94MByteGSet,
+                        3 => CharacterSetType.Char96MByteGSet,
+                        4 => CharacterSetType.CompleteCode,
+                        _ => CharacterSetType.CompleteCode
+                    };
 
-                string characterSetDesignation = argReader.MakeFixedString();
-                CharacterSets[type] = characterSetDesignation;
+                    string characterSetDesignation = argReader.MakeFixedString();
+                    CharacterSets[type] = characterSetDesignation;
+                }
+                Debug.WriteLine($"[CharacterSetListCommand] CharacterSets: " +
+                                $"{string.Join(", ", CharacterSets.Select(kvp => $"[{kvp.Key},{kvp.Value}]"))}");
+                ValidateArgumentsRead("CharacterSetListCommand");
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[CharacterSetListCommand ERROR] {ex.Message}");
+                HasReadErrors = true;
+            }
+        }
 
-            System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-                "Not all arguments were read in CharacterSetList");
+        public override void Draw(Graphics g, Pen pen)
+        {
+            // No drawing
         }
 
         public override string ToString()
@@ -55,6 +73,12 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
                 sb.Append($"[{kvp.Key},{kvp.Value}]");
             }
             return sb.ToString();
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 

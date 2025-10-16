@@ -3,36 +3,56 @@ using CGMAnalyzerCore.Enums.Precision;
 using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.PictureCommands
 {
-    public class LineWidthSpecificationModeCommand : CgmCommand
+    public class LineWidthSpecificationModeCommand : BaseCgmCommand
     {
         public SpecificationMode Mode { get; private set; }
 
-        public LineWidthSpecificationModeCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        public LineWidthSpecificationModeCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            int mode = argReader.MakeEnum();
-            Mode = SpecificationModeExtensions.GetMode(mode);
+            Args = command.Args;
+            Debug.WriteLine($"[LineWidthSpecificationModeCommand] ArgsLength={Args?.Length ?? 0}");
 
-            CgmContext.LineWidthSpecificationMode = Mode;
+            try
+            {
+                var argReader = new ExtractedArgumentReader(command);
+                int mode = argReader.MakeEnum();
+                Mode = SpecificationModeExtensions.GetMode(mode);
+                CgmContext.LineWidthSpecificationMode = Mode;
 
-            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-            //    "Not all arguments were read in LineWidthSpecificationMode");
+                Debug.WriteLine($"[LineWidthSpecificationModeCommand] Mode={Mode}");
+                ValidateArgumentsRead("LineWidthSpecificationModeCommand");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[LineWidthSpecificationModeCommand ERROR] {ex.Message}");
+                Mode = SpecificationMode.ABSOLUTE; // Valeur par défaut
+                CgmContext.LineWidthSpecificationMode = Mode;
+                HasReadErrors = true;
+            }
         }
 
-        public static void Reset()
+        public override void Draw(Graphics g, Pen pen)
         {
-            CgmContext.LineWidthSpecificationMode = SpecificationMode.ABSOLUTE;
+            // No drawing
         }
 
         public override string ToString()
         {
-            return $"LineWidthSpecificationMode {Mode}";
+            return $"LINE_WIDTH_SPECIFICATION_MODE : {Mode}";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

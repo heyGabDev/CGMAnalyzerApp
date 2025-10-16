@@ -2,34 +2,58 @@
 using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
-    public class ColorPrecisionCommand : CgmCommand
+    public class ColorPrecisionCommand : BaseCgmCommand
     {
         public int Precision { get; private set; }
 
-        public ColorPrecisionCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        public ColorPrecisionCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            Precision = argReader.MakeInt();
-            CgmContext.ColorPrecision = Precision;
+            Args = command.Args;
+            Debug.WriteLine($"[ColorPrecisionCommand] ArgsLength={Args?.Length ?? 0}");
 
-            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-            //    "Not all arguments were read in ColourPrecision");
+            try
+            {
+                var argReader = new ExtractedArgumentReader(command);
+                Precision = argReader.MakeInt();
+                CgmContext.ColorPrecision = Precision;
+                Debug.WriteLine($"[ColorPrecisionCommand] Precision={Precision}");
+                ValidateArgumentsRead("ColorPrecisionCommand");
+            }
+            catch (Exception)
+            {
+                Precision = 8; // Valeur par défaut en cas d'erreur
+                CgmContext.ColorPrecision = Precision;
+                HasReadErrors = true;
+            }
         }
 
-        public static void Reset()
+        public override void Draw(Graphics g, Pen pen)
         {
-            CgmContext.ColorPrecision = 8;
+            // No drawing
         }
 
         public override string ToString()
         {
-            return $"ColourPrecision {Precision}";
+            return $"COLOR_PRECISION : {Precision}";
         }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
+        }
+
+        //public static void Reset()
+        //{
+        //    CgmContext.ColorPrecision = 8;
+        //}
     }
 }

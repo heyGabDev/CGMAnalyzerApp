@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Drawing;
 using CGMAnalyzerCore.Commands.PictureCommands;
-using CGMAnalyzerCore.Enums.Colors;
 using CGMAnalyzerCore.Enums.Precision;
 using CGMAnalyzerCore.Geometry;
+using static CGMAnalyzerCore.Commands.MetafileCommands.ColorModelCommand;
 
 namespace CGMAnalyzerCore.Context
 {
@@ -17,8 +17,8 @@ namespace CGMAnalyzerCore.Context
         // --------------------------------------------------------------------
         // VDC / Précisions (pilotés par VDCType, IntegerPrecision, RealPrecision)
         // --------------------------------------------------------------------
-        public static VDCTypeEnum VdcType { get; set; } = VDCTypeEnum.Integer;       // Integer ou Real
-        public static int VdcIntegerPrecision { get; set; } = 16;                    // bits (8/16/24/32)
+        public static VDCTypeEnum VdcType { get; set; } = VDCTypeEnum.Integer;
+        public static int VdcIntegerPrecision { get; set; } = 16;
         public static VDCRealPrecisionEnum VdcRealPrecision { get; set; } = VDCRealPrecisionEnum.FixedPoint32;
 
         public static int IntegerPrecision { get; set; } = 16;
@@ -34,9 +34,15 @@ namespace CGMAnalyzerCore.Context
         // --------------------------------------------------------------------
         // Couleurs / Modèle de couleur
         // --------------------------------------------------------------------
-        public static ColorModelEnum ColourModel { get; set; } = ColorModelEnum.RGB;
+
+        /// <summary>
+        /// Modèle de couleur utilisé (RGB, CMYK, CIELAB, etc.)
+        /// </summary>
+        public static ColorModelEnum ColorModel { get; set; } = ColorModelEnum.RGB;
+
         public static int ColorIndexPrecision { get; set; } = 8;
         public static int ColorPrecision { get; set; } = 8;
+        public static int MaximumColorIndex { get; set; } = 255;
         public static int[] MinimumColorValueRGB { get; set; } = new[] { 0, 0, 0 };
         public static int[] MaximumColorValueRGB { get; set; } = new[] { 255, 255, 255 };
 
@@ -67,8 +73,8 @@ namespace CGMAnalyzerCore.Context
             public double Width => Right - Left;
 
             /// <summary>
-            /// Hauteur logique. En CGM l’axe Y croît vers le HAUT.
-            /// On expose Height = Top - Bottom (Top &gt; Bottom en coordonnées CGM classiques).
+            /// Hauteur logique. En CGM l'axe Y croît vers le HAUT.
+            /// On expose Height = Top - Bottom (Top > Bottom en coordonnées CGM classiques).
             /// </summary>
             public double Height => Top - Bottom;
 
@@ -88,24 +94,39 @@ namespace CGMAnalyzerCore.Context
         public static VdcExtentRect VdcExtent { get; private set; } = new VdcExtentRect(0, 1, 1, 0);
 
         // --------------------------------------------------------------------
-        // Divers parsing
+        // Modes de spécification et autres paramètres
         // --------------------------------------------------------------------
         public static int CurrentLayerId { get; set; } = 0;
-        public static ColourSelectionModeCommand.ColorSelectionType ColorSelectionMode { get; internal set; }
-        public static SpecificationMode EdgeWidthSpecificationMode { get; internal set; }
-        public static SpecificationMode LineWidthSpecificationMode { get; internal set; }
-        public static SpecificationMode MarkerSizeSpecificationMode { get; internal set; }
-        public static DeviceViewportSpecificationModeCommand.DeviceViewportMode DeviceViewportSpecificationMode { get; internal set; }
+        public static ColorSelectionModeCommand.ColorSelectionType ColorSelectionMode { get; set; }
+        public static SpecificationMode EdgeWidthSpecificationMode { get; set; }
+        public static SpecificationMode LineWidthSpecificationMode { get; set; }
+        public static SpecificationMode MarkerSizeSpecificationMode { get; set; }
+        public static DeviceViewportSpecificationModeCommand.DeviceViewportMode DeviceViewportSpecificationMode { get; set; }
+
+        // Escape command data
+        public static int LastEscapeIdentifier { get; set; }
+        public static string LastEscapeDataRecord { get; set; } = "";
+        public static Color BackgroundColor { get; internal set; }
+        public static SpecificationMode InteriorStyleSpecificationMode { get; internal set; }
 
         // --------------------------------------------------------------------
         // Helpers de mise à jour (appelés par le renderer quand il croise des commandes "contexte")
         // --------------------------------------------------------------------
 
-        /// <summary>Met à jour l’extent VDC à partir de deux points CGM (min/max).</summary>
+        /// <summary>
+        /// Met à jour l'extent VDC à partir de deux points CGM (min/max).
+        /// </summary>
         public static void SetVdcExtent(Point2D.Double p1, Point2D.Double p2)
             => VdcExtent = VdcExtentRect.FromPoints(p1, p2);
 
-        public static void SetColourModel(ColorModelEnum model) => ColourModel = model;
+        /// <summary>
+        /// Définit le modèle de couleur utilisé.
+        /// Méthode helper pour cohérence avec le reste de l'API.
+        /// </summary>
+        public static void SetColorModel(ColorModelEnum model)
+        {
+            ColorModel = model;
+        }
 
         public static void SetIntegerPrecision(int bits) => IntegerPrecision = bits;
 
@@ -114,7 +135,7 @@ namespace CGMAnalyzerCore.Context
         public static void SetVdcRealPrecision(VDCRealPrecisionEnum precision) => VdcRealPrecision = precision;
 
         /// <summary>
-        /// Crée un <see cref="Pen"/> conforme à l’état courant (couleur/épaisseur).
+        /// Crée un <see cref="Pen"/> conforme à l'état courant (couleur/épaisseur).
         /// </summary>
         public static Pen CreatePen()
         {
@@ -138,9 +159,10 @@ namespace CGMAnalyzerCore.Context
             NamePrecision = 16;
             RealPrecision = 0;
 
-            ColourModel = ColorModelEnum.RGB;
+            ColorModel = ColorModelEnum.RGB;
             ColorIndexPrecision = 8;
             ColorPrecision = 8;
+            MaximumColorIndex = 255;
             MinimumColorValueRGB = new[] { 0, 0, 0 };
             MaximumColorValueRGB = new[] { 255, 255, 255 };
 
@@ -150,6 +172,15 @@ namespace CGMAnalyzerCore.Context
 
             // Extent par défaut [0..1]
             VdcExtent = new VdcExtentRect(0, 1, 1, 0);
+
+            // Reset des modes
+            ColorSelectionMode = ColorSelectionModeCommand.ColorSelectionType.INDEXED;
+            EdgeWidthSpecificationMode = SpecificationMode.ABSOLUTE;
+            LineWidthSpecificationMode = SpecificationMode.ABSOLUTE;
+            MarkerSizeSpecificationMode = SpecificationMode.ABSOLUTE;
+
+            LastEscapeIdentifier = 0;
+            LastEscapeDataRecord = "";
         }
     }
 }

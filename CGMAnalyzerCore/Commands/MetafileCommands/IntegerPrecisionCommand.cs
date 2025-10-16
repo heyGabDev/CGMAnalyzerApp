@@ -2,37 +2,56 @@
 using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
-    public class IntegerPrecisionCommand : CgmCommand
+    public class IntegerPrecisionCommand : BaseCgmCommand
     {
         public int Precision { get; }
 
-        public IntegerPrecisionCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        public IntegerPrecisionCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            Precision = argReader.NextArg();
-            CgmContext.VdcIntegerPrecision = Precision;
+            Args = command.Args;
+            Debug.WriteLine($"[IntegerPrecisionCommand] ArgsLength={Args?.Length ?? 0}");
+
+            try
+            {
+                var argReader = new ExtractedArgumentReader(command);
+                Precision = argReader.MakeInt();
+
+                // Mettre à jour le contexte CGM
+                CgmContext.VdcIntegerPrecision = Precision;
+
+                Debug.WriteLine($"[IntegerPrecisionCommand] Precision={Precision}");
+                ValidateArgumentsRead("IntegerPrecisionCommand");
+            }
+            catch (Exception)
+            {
+                Precision = 16; // Valeur par défaut en cas d'erreur
+                CgmContext.SetIntegerPrecision(Precision);
+                HasReadErrors = true;
+            }
         }
 
-        public override void ReadArguments(BinaryReader reader)
+        public override void Draw(Graphics g, Pen pen)
         {
-            throw new NotImplementedException();
-        }
-
-        public override void Draw(System.Drawing.Graphics g, System.Drawing.Pen pen)
-        {
-            // Aucun dessin nécessaire
+            // No drawing
         }
 
         public override string ToString()
         {
-            return $"IntegerPrecisionCommand: Precision = {Precision}";
+            return $"INTERGER_PRECISION : {Precision}";
         }
 
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
+        }
     }
 }

@@ -2,43 +2,68 @@
 using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.PictureCommands
 {
-    public partial class ColourSelectionModeCommand : CgmCommand
+    public partial class ColorSelectionModeCommand : BaseCgmCommand
     {
-
-        public ColorSelectionType Type { get; private set; }
-
-        public ColourSelectionModeCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        public enum ColorSelectionType
         {
-            int e = argReader.MakeEnum();
-            Type = e switch
-            {
-                0 => ColorSelectionType.INDEXED,
-                1 => ColorSelectionType.DIRECT,
-                _ => ColorSelectionType.INDEXED
-            };
-
-            // Mettre à jour le contexte global si nécessaire
-            CgmContext.ColorSelectionMode = Type;
-
-            System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-                "Not all arguments were read in ColourSelectionMode");
+            INDEXED = 0,
+            DIRECT = 1
         }
 
-        public static void Reset()
+        public ColorSelectionType Type { get; private set; } = ColorSelectionType.INDEXED;
+
+        public ColorSelectionModeCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            CgmContext.ColorSelectionMode = ColorSelectionType.INDEXED;
+            Args = command.Args;
+            Debug.WriteLine($"[ColorSelectionModeCommand] ArgsLength={Args?.Length ?? 0}");
+
+            try
+            {
+               var argReader = new ExtractedArgumentReader(command);
+                int e = argReader.MakeEnum();
+                Type = e switch
+                {
+                    0 => ColorSelectionType.INDEXED,
+                    1 => ColorSelectionType.DIRECT,
+                    _ => ColorSelectionType.INDEXED
+                };
+
+                // Mettre à jour le contexte global si nécessaire
+                CgmContext.ColorSelectionMode = Type;
+                Debug.WriteLine($"[ColorSelectionModeCommand] Type={Type}");
+                ValidateArgumentsRead("ColorSelectionModeCommand"); 
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[ColorSelectionModeCommand ERROR] {ex.Message}");
+                Type = ColorSelectionType.INDEXED; // Valeur par défaut
+                CgmContext.ColorSelectionMode = Type;
+                HasReadErrors = true;
+            }
+        }
+
+        public override void Draw(Graphics g, Pen pen)
+        {
+            // No drawing
         }
 
         public override string ToString()
         {
-            return $"ColourSelectionMode {Type}";
+            return $"COLOR_SELECTION_MODE : {Type}";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 

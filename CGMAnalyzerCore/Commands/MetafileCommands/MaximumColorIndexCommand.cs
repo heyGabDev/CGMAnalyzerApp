@@ -1,35 +1,56 @@
-﻿using CGMAnalyzerCore.Parser;
+﻿using CGMAnalyzerCore.Context;
+using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
-    public class MaximumColorIndexCommand : CgmCommand
+    public class MaximumColorIndexCommand : BaseCgmCommand
     {
         public int MaxColorIndex { get; private set; }
+        private const int DEFAULT_MAX_COLOR_INDEX = 255;
 
-        public MaximumColorIndexCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        public MaximumColorIndexCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            MaxColorIndex = argReader.MakeColorIndex();
+            Args = command.Args;
+            Debug.WriteLine($"[MaximumColorIndexCommand] ArgsLength={Args?.Length ?? 0}");
 
-            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-            //    "Not all arguments were read in MaximumColourIndex");
+            try
+            {
+                var argReader = new ExtractedArgumentReader(command);
+                MaxColorIndex = argReader.MakeColorIndex();
+                CgmContext.MaximumColorIndex = MaxColorIndex;
+                Debug.WriteLine($"[MaximumColorIndexCommand] MaxColorIndex={MaxColorIndex}");
+                ValidateArgumentsRead("MaximumColorIndexCommand");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[MaximumColorIndexCommand ERROR]  {ex.Message}");
+                MaxColorIndex = DEFAULT_MAX_COLOR_INDEX;
+                CgmContext.MaximumColorIndex = MaxColorIndex;
+                HasReadErrors = true;
+            }
+        }
+
+        public override void Draw(System.Drawing.Graphics g, System.Drawing.Pen pen)
+        {
+            // No drawing
         }
 
         public override string ToString()
         {
-            return $"MaximumColourIndex {MaxColorIndex}";
+            return $"MAXIMUM_COLOR_INDEX : {MaxColorIndex}";
         }
 
-        // Méthode paint équivalente du Java (à adapter selon votre architecture de display)
-        public void ApplyToDisplay(object display)
+        public override void ReadArguments(BinaryReader reader)
         {
-            // Dans le Java original : d.setMaximumColorIndex(this.maxColorIndex);
-            // À implémenter selon votre architecture de rendu
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

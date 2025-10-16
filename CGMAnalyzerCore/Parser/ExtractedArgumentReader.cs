@@ -1,12 +1,12 @@
 ﻿using CGMAnalyzerCore.Commands;
 using CGMAnalyzerCore.Context;
-using CGMAnalyzerCore.Enums.Colors;
 using CGMAnalyzerCore.Enums.Precision;
 using CGMAnalyzerCore.Geometry;
 using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Text;
+using static CGMAnalyzerCore.Commands.MetafileCommands.ColorModelCommand;
 
 namespace CGMAnalyzerCore.Parser
 {
@@ -23,7 +23,6 @@ namespace CGMAnalyzerCore.Parser
             _command = command ?? throw new ArgumentNullException(nameof(command));
         }
 
-
         public int NextArg()
         {
             return _command.TryNextArg(out int value) ? value : 0;
@@ -35,6 +34,8 @@ namespace CGMAnalyzerCore.Parser
         }
 
         #region ===== LECTURE D'ENTIERS NON SIGNÉS =====
+        //MÉTHODES BASIQUES (basées sur makeUInt*)
+
         /// <summary>
         /// Lit un octet (8 bits) / Validation incluse dans NextArg()
         /// </summary>
@@ -44,10 +45,9 @@ namespace CGMAnalyzerCore.Parser
             return (byte)NextArg();
         }
 
-
-        #endregion
-
-        #region MÉTHODES BASIQUES (basées sur makeUInt*)
+        // <summary>
+        /// Lit un UInt8 non signé (1 octet)
+        /// </summary>
         public int MakeUInt8()
         {
             SkipBits();
@@ -93,7 +93,7 @@ namespace CGMAnalyzerCore.Parser
             {
                 return 0;
             }
-            
+
             return (NextArg() << 16) | (NextArg() << 8) | NextArg();
         }
 
@@ -112,11 +112,29 @@ namespace CGMAnalyzerCore.Parser
             return (NextArg() << 24) | (NextArg() << 16) | (NextArg() << 8) | NextArg();
         }
 
+        /// <summary>
+        /// Lit un UInt avec précision variable (1, 2, 4, 8, 16, 24, 32 bits)
+        /// </summary>
+        public int MakeUInt(int precision)
+        {
+            return precision switch
+            {
+                1 => MakeUInt1(),
+                2 => MakeUInt2(),
+                4 => MakeUInt4(),
+                8 => MakeUInt8(),
+                16 => MakeUInt16(),
+                24 => MakeUInt24(),
+                32 => MakeUInt32(),
+                _ => MakeUInt8() // default comme dans Java
+            };
+        }
         #endregion
 
-        #region MÉTHODES SIGNÉES (basées sur makeSignedInt*)
+        #region ===== LECTURE D'ENTIERS SIGNÉS =====
         /// <summary>
         /// Lit un Int8 signé (1 octet)
+        /// Pas de SkipBits() : appelé depuis MakeInt() qui le fait déjà
         /// </summary>
         /// <returns></returns>
         public int MakeSignedInt8()
@@ -137,6 +155,7 @@ namespace CGMAnalyzerCore.Parser
 
         /// <summary>
         /// Lit un Int16 signé (2 octets)
+        /// Pas de SkipBits() : appelé depuis MakeInt() qui le fait déjà
         /// </summary>
         /// <returns></returns>
         public int MakeSignedInt16()
@@ -155,7 +174,8 @@ namespace CGMAnalyzerCore.Parser
         }
 
         /// <summary>
-        /// lit un Int24 signé (3 octets)
+        /// Lit un Int24 signé (3 octets)
+        /// Pas de SkipBits() : appelé depuis MakeInt() qui le fait déjà
         /// </summary>
         /// <returns></returns>
         public int MakeSignedInt24()
@@ -167,15 +187,16 @@ namespace CGMAnalyzerCore.Parser
 
            int value = (NextArg() << 16) | (NextArg() << 8) | NextArg();
 
-           if((value & 0x800000) != 0) // Si le bit de signe est défini
+           if((value & 0x800000) != 0)
            {
-                value |= unchecked((int)0xFF000000); // Étendre le signe pour 32 bits
+                value |= unchecked((int)0xFF000000); 
            }
            return value;
         }
 
         /// <summary>
         /// Lit un Int32 signé (4 octets)
+        /// Pas de SkipBits() : appelé depuis MakeInt() qui le fait déjà
         /// </summary>
         /// <returns></returns>
         public int MakeSignedInt32()
@@ -190,7 +211,7 @@ namespace CGMAnalyzerCore.Parser
         }
         #endregion
 
-        #region MÉTHODES SPÉCIALISÉES (basées sur make*) 
+        #region ===== MÉTHODES SPÉCIALISÉES (basées sur make*) ===== 
 
         public char MakeChar()
         {
@@ -219,7 +240,8 @@ namespace CGMAnalyzerCore.Parser
         {
            int bytesNeeded = precision / 8;
 
-            if (!_command.ValidateRemainingArgs(bytesNeeded,$"MakeInt({precision}")) {
+            if (!_command.ValidateRemainingArgs(bytesNeeded,$"MakeInt({precision}")) 
+            {
                 return 0;
             }
 
@@ -251,6 +273,7 @@ namespace CGMAnalyzerCore.Parser
         {
             return MakeSignedInt16();
         }
+        
         public int MakeInt16()
         {
             return MakeSignedInt16();
@@ -260,10 +283,12 @@ namespace CGMAnalyzerCore.Parser
         {
             return MakeSignedInt32();
         }
-
         #endregion
 
-        #region MÉTHODES POINTS ET VDC 
+        #region ===== MÉTHODES POINTS ET VDC ===== 
+        /// <summary>
+        /// Lit un Point2D simple (sans paramètres ec/eid)
+        /// </summary>
         public Point2D.Double MakePoint()
         {
             int bytesNeeded = CalculatePointSize();
@@ -281,12 +306,12 @@ namespace CGMAnalyzerCore.Parser
                     var y = MakeSignedInt16();
                     return new Point2D.Double(x, y);
                 }
-                else if(CgmContext.VdcIntegerPrecision == 24)
-                {
-                    var x = MakeSignedInt24();
-                    var y = MakeSignedInt24();
-                    return new Point2D.Double(x, y);
-                }
+                //else if(CgmContext.VdcIntegerPrecision == 24)
+                //{
+                //    var x = MakeSignedInt24();
+                //    var y = MakeSignedInt24();
+                //    return new Point2D.Double(x, y);
+                //}
                 else if(CgmContext.VdcIntegerPrecision == 32)
                 {
                     var x = MakeSignedInt32();
@@ -357,7 +382,7 @@ namespace CGMAnalyzerCore.Parser
         /// <returns></returns>
         public double MakeVc()
         {
-            return MakeReal(); // Simplified
+            return MakeReal();
         }
 
         /// <summary>
@@ -369,7 +394,7 @@ namespace CGMAnalyzerCore.Parser
         }
         #endregion
 
-        #region MÉTHODES NOMBRES RÉELS
+        #region ===== MÉTHODES NOMBRES RÉELS ===== 
         public double MakeReal()
         {
             var precision = CgmContext.RealPrecision;
@@ -392,7 +417,7 @@ namespace CGMAnalyzerCore.Parser
 
             double wholePart = MakeSignedInt16();
             double fractionPart = MakeUInt16();
-            return wholePart + (fractionPart / (1 << 16)); // Correction du calcul
+            return wholePart + (fractionPart / 65536.0); // 2^16
         }
 
         public double MakeFixedPoint64()
@@ -404,7 +429,7 @@ namespace CGMAnalyzerCore.Parser
 
             double wholePart = MakeSignedInt32();
             double fractionPart = MakeUInt32();
-            return wholePart + (fractionPart / (1L << 32));
+            return wholePart + (fractionPart / 4294967296.0); // 2^32
         }
 
         public double MakeFloatingPoint()
@@ -465,7 +490,7 @@ namespace CGMAnalyzerCore.Parser
         }
         #endregion
 
-        #region MÉTHODES COULEURS 
+        #region ===== MÉTHODES COULEURS ===== 
         public object MakeColorValue()
         {
             // Pour les composants de couleur individuels
@@ -487,13 +512,13 @@ namespace CGMAnalyzerCore.Parser
         public System.Drawing.Color MakeDirectColor()
         {
             int precision = CgmContext.ColorPrecision;
-            int bytesNeeded = 3 * (precision / 8);// RGB = 3 composants
+            int bytesNeeded = (precision / 8) * 3;// RGB = 3 composants
 
             if (!_command.ValidateRemainingArgs(bytesNeeded, "MakeDirectColor"))
             {
                 return System.Drawing.Color.Black; // Couleur par défaut en cas d'erreur
             }
-            var model = CgmContext.ColourModel;
+            var model = CgmContext.ColorModel;
 
             if (model == ColorModelEnum.RGB)
             {
@@ -525,7 +550,7 @@ namespace CGMAnalyzerCore.Parser
         }
         #endregion
 
-        #region MÉTHODES CHAÎNES 
+        #region ===== MÉTHODES CHAÎNES ===== 
         public string ReadString()
         {
             if (_command.AllArgumentsRead)
@@ -545,7 +570,6 @@ namespace CGMAnalyzerCore.Parser
             }
 
             // 2. Vérifier qu'il y a assez d'arguments restants
-            //if (_command.CurrentArg + length > _command.Args.Length)
             if (_command.RemainingArgs() < length)
             {
                 Debug.WriteLine($"[ReadString] Pas assez d'octets: besoin de {length}, reste {_command.Args.Length - _command.CurrentArg}");
@@ -582,7 +606,6 @@ namespace CGMAnalyzerCore.Parser
 
         public string MakeString()
         {
-            // TEST
             int length = MakeByte();
             if (length == 255)
             {
@@ -635,7 +658,7 @@ namespace CGMAnalyzerCore.Parser
         }
         #endregion
 
-        #region MÉTHODES DE TAILLE
+        #region ===== MÉTHODES DE TAILLE ===== 
         public int SizeOfPoint()
         {
             return 2 * SizeOfVdc();
@@ -674,23 +697,7 @@ namespace CGMAnalyzerCore.Parser
         }
         #endregion
 
-        #region MÉTHODES BIT
-
-        public int MakeUInt(int precision)
-        {
-            return precision switch
-            {
-                1 => MakeUInt1(),
-                2 => MakeUInt2(),
-                4 => MakeUInt4(),
-                8 => MakeUInt8(),
-                16 => MakeUInt16(),
-                24 => MakeUInt24(),
-                32 => MakeUInt32(),
-                _ => MakeUInt8() // default comme dans Java
-            };
-        }
-
+        #region ===== MÉTHODES BIT ===== 
         private int MakeUInt1()
         {
             return MakeUIntBit(1);
@@ -727,7 +734,7 @@ namespace CGMAnalyzerCore.Parser
 
         #endregion
 
-        #region MÉTHODES NON IMPLÉMENTÉES (placeholder)
+        #region ===== MÉTHODES NON IMPLÉMENTÉES (placeholder) ===== 
         public object MakeBitStream()
         {
             // Implémentation complexe - placeholder

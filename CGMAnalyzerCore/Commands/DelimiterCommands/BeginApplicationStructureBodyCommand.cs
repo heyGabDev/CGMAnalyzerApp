@@ -6,21 +6,30 @@ using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.DelimiterCommands
 {
-    public class BeginApplicationStructureBodyCommand : CgmCommand
+    public class BeginApplicationStructureBodyCommand : BaseCgmCommand
     {
-        public BeginApplicationStructureBodyCommand(int ec, int eid, int l, CgmCommand baseCommand)
-            : base(baseCommand, ec, eid, l)
+        public BeginApplicationStructureBodyCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
             // Pas d'arguments selon le Java original
-
+            Args = command.Args;
             ValidateArgumentsRead("BeginApplicationStructureBody");
-            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-            //    "Not all arguments were read in BeginApplicationStructureBody");
+        }
+
+        public override void Draw(Graphics g, Pen pen)
+        {
+            // No drawing
         }
 
         public override string ToString()
         {
-            return "BeginApplicationStructureBody";
+            return $"BEGIN_APPLICATION_STRUCTURE_BODY";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

@@ -1,57 +1,65 @@
 ﻿using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
-    public class FontListCommand : CgmCommand
+    public class FontListCommand : BaseCgmCommand
     {
         public string[] FontNames { get; private set; }
 
-        public FontListCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        public FontListCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            // Comptage du nombre de polices
-            int count = 0, i = 0;
-            while (i < Args.Length)
-            {
-                count++;
-                i += Args[i] + 1;
-            }
+            Args = command.Args;
+            Debug.WriteLine($"[FontListCommand] ArgsLength={Args?.Length ?? 0}");
 
-            FontNames = new string[count];
-            count = 0;
-            i = 0;
-
-            while (i < Args.Length)
+            try
             {
-                char[] chars = new char[Args[i]];
-                for (int j = 0; j < Args[i]; j++)
+                var argReader = new ExtractedArgumentReader(command);
+                var fontList = new List<string>();
+
+                // Lire les chaînes jusqu'à épuisement des arguments
+                while (command.CurrentArg < Args?.Length)
                 {
-                    chars[j] = (char)Args[i + j + 1];
+                    string fontName = argReader.MakeString();
+                    fontList.Add(fontName);
+                    Debug.WriteLine($"[FontListCommand] Font[{fontList.Count - 1}]: {fontName}");
                 }
-                FontNames[count] = new string(chars);
-                count++;
-                i += Args[i] + 1;
+
+                FontNames = fontList.ToArray();
+                Debug.WriteLine($"[FontListCommand] Total fonts: {FontNames.Length}");
+                ValidateArgumentsRead("FontListCommand");
+
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[FontListCommand ERROR] {ex.Message}");
+                HasReadErrors = true;
+            }
+        }
+
+        public override void Draw(Graphics g, Pen pen)
+        {
+            // No drawing
         }
 
         public override string ToString()
         {
-            var sb = new StringBuilder();
-            sb.Append("FontList ");
-            for (int i = 0; i < FontNames.Length - 1; i++)
-            {
-                sb.Append(FontNames[i]).Append(", ");
-            }
-            if (FontNames.Length > 0)
-            {
-                sb.Append(FontNames[FontNames.Length - 1]);
-            }
-            return sb.ToString();
+            if (FontNames == null || FontNames.Length == 0)
+                return "FONT_LIST: (empty)";
+
+            return $"FONT_LIST: {string.Join(", ", FontNames)}";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

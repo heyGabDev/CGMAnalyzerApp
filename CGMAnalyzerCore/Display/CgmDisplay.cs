@@ -288,5 +288,247 @@ namespace CGMAnalyzerCore.Display
             // Fallback
             return PointF.Empty;
         }
+
+        #region ===== DEFAULT VALUES MANAGEMENT =====
+
+        // Propriétés pour stocker les valeurs par défaut
+        private double? DefaultLineWidth { get; set; }
+        private Color? DefaultLineColor { get; set; }
+        private int? DefaultLineType { get; set; }
+        private Color? DefaultFillColor { get; set; }
+        private Color? DefaultTextColor { get; set; }
+        private double? DefaultEdgeWidth { get; set; }
+        private Color? DefaultEdgeColor { get; set; }
+        private int? DefaultEdgeType { get; set; }
+        private bool? DefaultEdgeVisibility { get; set; }
+        private int? DefaultTextFontIndex { get; set; }
+        private double? DefaultCharacterHeight { get; set; }
+        private int? DefaultLineWidthSpecMode { get; set; }
+        private int? DefaultEdgeWidthSpecMode { get; set; }
+
+        /// <summary>
+        /// Applique une commande comme valeur par défaut pour les commandes futures.
+        /// Utilisé par MetafileDefaultsReplacement pour définir des defaults globaux.
+        /// </summary>
+        /// <param name="command">La commande à appliquer comme défaut</param>
+        public void ApplyAsDefault(BaseCgmCommand command)
+        {
+            if (command == null)
+            {
+                LogMessage("[ApplyAsDefault] WARNING: Null command provided");
+                return;
+            }
+
+            LogMessage($"[ApplyAsDefault] Applying {command.GetType().Name} as default");
+
+            try
+            {
+                // Utiliser pattern matching pour identifier le type de commande
+                var commandTypeName = command.GetType().Name;
+
+                // Line attributes
+                if (commandTypeName.Contains("LineWidth"))
+                {
+                    // Extraire la valeur via reflection ou propriété publique
+                    var prop = command.GetType().GetProperty("LineWidth");
+                    if (prop != null)
+                    {
+                        DefaultLineWidth = (double?)prop.GetValue(command);
+                        LogMessage($"  → DefaultLineWidth = {DefaultLineWidth}");
+                    }
+                }
+                else if (commandTypeName.Contains("LineColor") || commandTypeName.Contains("LineColour"))
+                {
+                    var prop = command.GetType().GetProperty("Color") ?? command.GetType().GetProperty("Colour");
+                    if (prop != null)
+                    {
+                        DefaultLineColor = (Color?)prop.GetValue(command);
+                        LogMessage($"  → DefaultLineColor = {DefaultLineColor}");
+                    }
+                }
+                else if (commandTypeName.Contains("LineType"))
+                {
+                    var prop = command.GetType().GetProperty("LineType");
+                    if (prop != null)
+                    {
+                        DefaultLineType = (int?)prop.GetValue(command);
+                        LogMessage($"  → DefaultLineType = {DefaultLineType}");
+                    }
+                }
+                // Fill attributes
+                else if (commandTypeName.Contains("FillColor") || commandTypeName.Contains("FillColour"))
+                {
+                    var prop = command.GetType().GetProperty("Color") ?? command.GetType().GetProperty("Colour");
+                    if (prop != null)
+                    {
+                        DefaultFillColor = (Color?)prop.GetValue(command);
+                        LogMessage($"  → DefaultFillColor = {DefaultFillColor}");
+                    }
+                }
+                // Text attributes
+                else if (commandTypeName.Contains("TextColor") || commandTypeName.Contains("TextColour"))
+                {
+                    var prop = command.GetType().GetProperty("Color") ?? command.GetType().GetProperty("Colour");
+                    if (prop != null)
+                    {
+                        DefaultTextColor = (Color?)prop.GetValue(command);
+                        LogMessage($"  → DefaultTextColor = {DefaultTextColor}");
+                    }
+                }
+                else if (commandTypeName.Contains("TextFontIndex"))
+                {
+                    var prop = command.GetType().GetProperty("FontIndex");
+                    if (prop != null)
+                    {
+                        DefaultTextFontIndex = (int?)prop.GetValue(command);
+                        LogMessage($"  → DefaultTextFontIndex = {DefaultTextFontIndex}");
+                    }
+                }
+                else if (commandTypeName.Contains("CharacterHeight"))
+                {
+                    var prop = command.GetType().GetProperty("Height");
+                    if (prop != null)
+                    {
+                        DefaultCharacterHeight = (double?)prop.GetValue(command);
+                        LogMessage($"  → DefaultCharacterHeight = {DefaultCharacterHeight}");
+                    }
+                }
+                // Edge attributes
+                else if (commandTypeName.Contains("EdgeWidth"))
+                {
+                    var prop = command.GetType().GetProperty("EdgeWidth");
+                    if (prop != null)
+                    {
+                        DefaultEdgeWidth = (double?)prop.GetValue(command);
+                        LogMessage($"  → DefaultEdgeWidth = {DefaultEdgeWidth}");
+                    }
+                }
+                else if (commandTypeName.Contains("EdgeColor") || commandTypeName.Contains("EdgeColour"))
+                {
+                    var prop = command.GetType().GetProperty("Color") ?? command.GetType().GetProperty("Colour");
+                    if (prop != null)
+                    {
+                        DefaultEdgeColor = (Color?)prop.GetValue(command);
+                        LogMessage($"  → DefaultEdgeColor = {DefaultEdgeColor}");
+                    }
+                }
+                else if (commandTypeName.Contains("EdgeType"))
+                {
+                    var prop = command.GetType().GetProperty("EdgeType");
+                    if (prop != null)
+                    {
+                        DefaultEdgeType = (int?)prop.GetValue(command);
+                        LogMessage($"  → DefaultEdgeType = {DefaultEdgeType}");
+                    }
+                }
+                else if (commandTypeName.Contains("EdgeVisibility"))
+                {
+                    var prop = command.GetType().GetProperty("IsVisible") ?? command.GetType().GetProperty("Visible");
+                    if (prop != null)
+                    {
+                        DefaultEdgeVisibility = (bool?)prop.GetValue(command);
+                        LogMessage($"  → DefaultEdgeVisibility = {DefaultEdgeVisibility}");
+                    }
+                }
+                // Specification modes
+                else if (commandTypeName.Contains("LineWidthSpecificationMode"))
+                {
+                    var prop = command.GetType().GetProperty("SpecificationMode") ?? command.GetType().GetProperty("Mode");
+                    if (prop != null)
+                    {
+                        DefaultLineWidthSpecMode = (int?)prop.GetValue(command);
+                        LogMessage($"  → DefaultLineWidthSpecMode = {DefaultLineWidthSpecMode}");
+                    }
+                }
+                else if (commandTypeName.Contains("EdgeWidthSpecificationMode"))
+                {
+                    var prop = command.GetType().GetProperty("SpecificationMode") ?? command.GetType().GetProperty("Mode");
+                    if (prop != null)
+                    {
+                        DefaultEdgeWidthSpecMode = (int?)prop.GetValue(command);
+                        LogMessage($"  → DefaultEdgeWidthSpecMode = {DefaultEdgeWidthSpecMode}");
+                    }
+                }
+                else
+                {
+                    LogMessage($"[ApplyAsDefault] No default handler for {commandTypeName}");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"[ApplyAsDefault ERROR] Failed to apply default for {command.GetType().Name}: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Réinitialise tous les defaults à null
+        /// </summary>
+        public void ResetDefaults()
+        {
+            DefaultLineWidth = null;
+            DefaultLineColor = null;
+            DefaultLineType = null;
+            DefaultFillColor = null;
+            DefaultTextColor = null;
+            DefaultEdgeWidth = null;
+            DefaultEdgeColor = null;
+            DefaultEdgeType = null;
+            DefaultEdgeVisibility = null;
+            DefaultTextFontIndex = null;
+            DefaultCharacterHeight = null;
+            DefaultLineWidthSpecMode = null;
+            DefaultEdgeWidthSpecMode = null;
+
+            LogMessage("[ResetDefaults] All default values have been reset");
+        }
+
+        /// <summary>
+        /// Vérifie si des valeurs par défaut sont définies
+        /// </summary>
+        public bool HasDefaults()
+        {
+            return DefaultLineWidth.HasValue ||
+                   DefaultLineColor.HasValue ||
+                   DefaultLineType.HasValue ||
+                   DefaultFillColor.HasValue ||
+                   DefaultTextColor.HasValue ||
+                   DefaultEdgeWidth.HasValue ||
+                   DefaultEdgeColor.HasValue ||
+                   DefaultEdgeType.HasValue ||
+                   DefaultEdgeVisibility.HasValue ||
+                   DefaultTextFontIndex.HasValue ||
+                   DefaultCharacterHeight.HasValue ||
+                   DefaultLineWidthSpecMode.HasValue ||
+                   DefaultEdgeWidthSpecMode.HasValue;
+        }
+
+        /// <summary>
+        /// Retourne un résumé des valeurs par défaut définies
+        /// </summary>
+        public string GetDefaultsSummary()
+        {
+            if (!HasDefaults())
+                return "No defaults set";
+
+            var summary = new StringBuilder("Active defaults:\n");
+
+            if (DefaultLineWidth.HasValue) summary.AppendLine($"  LineWidth: {DefaultLineWidth}");
+            if (DefaultLineColor.HasValue) summary.AppendLine($"  LineColor: {DefaultLineColor}");
+            if (DefaultLineType.HasValue) summary.AppendLine($"  LineType: {DefaultLineType}");
+            if (DefaultFillColor.HasValue) summary.AppendLine($"  FillColor: {DefaultFillColor}");
+            if (DefaultTextColor.HasValue) summary.AppendLine($"  TextColor: {DefaultTextColor}");
+            if (DefaultEdgeWidth.HasValue) summary.AppendLine($"  EdgeWidth: {DefaultEdgeWidth}");
+            if (DefaultEdgeColor.HasValue) summary.AppendLine($"  EdgeColor: {DefaultEdgeColor}");
+            if (DefaultEdgeType.HasValue) summary.AppendLine($"  EdgeType: {DefaultEdgeType}");
+            if (DefaultEdgeVisibility.HasValue) summary.AppendLine($"  EdgeVisibility: {DefaultEdgeVisibility}");
+            if (DefaultTextFontIndex.HasValue) summary.AppendLine($"  TextFontIndex: {DefaultTextFontIndex}");
+            if (DefaultCharacterHeight.HasValue) summary.AppendLine($"  CharacterHeight: {DefaultCharacterHeight}");
+            if (DefaultLineWidthSpecMode.HasValue) summary.AppendLine($"  LineWidthSpecMode: {DefaultLineWidthSpecMode}");
+            if (DefaultEdgeWidthSpecMode.HasValue) summary.AppendLine($"  EdgeWidthSpecMode: {DefaultEdgeWidthSpecMode}");
+
+            return summary.ToString();
+        }
+
+        #endregion
     }
 }

@@ -31,9 +31,9 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
         /// <summary>
         /// Extension pour TES PolylineCommand qui ont une propriété Points
         /// </summary>
-        public static List<Point> GetPoints(this PolylineCommand command)
+        public static List<Point2D.Double> GetPoints(this PolylineCommand command)
         {
-            return command.Points ?? new List<Point>();
+            return command.Points ?? new List<Point2D.Double>();
         }
 
         //RenderPolygon

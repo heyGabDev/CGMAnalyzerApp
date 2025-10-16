@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.DelimiterCommands
 {
-    public class BeginTileArrayCommand : CgmCommand
+    public class BeginTileArrayCommand : BaseCgmCommand
     {
-        public Point2D Position { get; }
+        public Point2D Position { get; } = new Point2D.Double(0, 0);
         public int CellPathDirection { get; }
         public int LineProgressionDirection { get; }
         public int NTilesInPathDirection { get; }
@@ -27,46 +27,54 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
         public int NCellsInLineDirection { get; }
         public string BeginTileArray { get; private set; } = "";
 
-        public BeginTileArrayCommand(int ec, int eid, int l, CgmCommand baseCommand,ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        public BeginTileArrayCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            Position = argReader.MakePoint();
-            CellPathDirection = argReader.MakeEnum();
-            LineProgressionDirection = argReader.MakeEnum();
-            NTilesInPathDirection = argReader.MakeInt();
-            NTilesInLineDirection = argReader.MakeInt();
-            NCellsPerTileInPathDirection = argReader.MakeInt();
-            NCellsPerTileInLineDirection = argReader.MakeInt();
-            CellSizeInPathDirection = argReader.MakeReal();
-            CellSizeInLineDirection = argReader.MakeReal();
-            ImageOffsetInPathDirection = argReader.MakeInt();
-            ImageOffsetInLineDirection = argReader.MakeInt();
-            NCellsInPathDirection = argReader.MakeInt();
-            NCellsInLineDirection = argReader.MakeInt();
+            Args = command.Args;
+            Debug.WriteLine($"[BeginTileArrayCommand] ArgsLength={Args?.Length ?? 0}");
+
+            var argReader = new ExtractedArgumentReader(command);
 
             try
             {
-                if (baseCommand.Args != null && baseCommand.Args.Length > 0)
+                if (Args != null && Args.Length > 0)
                 {
                     // Lire les arguments avec validation
                     BeginTileArray = argReader.ReadString();
+                    Position = argReader.MakePoint();
+                    CellPathDirection = argReader.MakeEnum();
+                    LineProgressionDirection = argReader.MakeEnum();
+                    NTilesInPathDirection = argReader.MakeInt();
+                    NTilesInLineDirection = argReader.MakeInt();
+                    NCellsPerTileInPathDirection = argReader.MakeInt();
+                    NCellsPerTileInLineDirection = argReader.MakeInt();
+                    CellSizeInPathDirection = argReader.MakeReal();
+                    CellSizeInLineDirection = argReader.MakeReal();
+                    ImageOffsetInPathDirection = argReader.MakeInt();
+                    ImageOffsetInLineDirection = argReader.MakeInt();
+                    NCellsInPathDirection = argReader.MakeInt();
+                    NCellsInLineDirection = argReader.MakeInt();
+
+                    Debug.WriteLine($"[BeginTileArrayCommand] BeginTileArray={BeginTileArray}, Position=({Position.X}, {Position.Y}), " +
+                        $"CellPathDirection={CellPathDirection}, LineProgressionDirection={LineProgressionDirection}, " +
+                        $"NTilesInPathDirection={NTilesInPathDirection}, NTilesInLineDirection={NTilesInLineDirection}, " +
+                        $"NCellsPerTileInPathDirection={NCellsPerTileInPathDirection}, NCellsPerTileInLineDirection={NCellsPerTileInLineDirection}, " +
+                        $"CellSizeInPathDirection={CellSizeInPathDirection}, CellSizeInLineDirection={CellSizeInLineDirection}, " +
+                        $"ImageOffsetInPathDirection={ImageOffsetInPathDirection}, ImageOffsetInLineDirection={ImageOffsetInLineDirection}, " +
+                        $"NCellsInPathDirection={NCellsInPathDirection}, NCellsInLineDirection={NCellsInLineDirection}");
+                    ValidateArgumentsRead("BeginTileArrayCommand");
                 }
                 else
                 {
                     BeginTileArray = "Default";
-                    ErrorCommand = true;
+                    Debug.WriteLine($"[BeginTileArrayCommand] No arguments provided, using default values.");
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"[CGM] Erreur lecture BeginTileArray: {ex.Message}");
                 BeginTileArray = "Error";
-                ErrorCommand = true;
             }
-
-            ValidateArgumentsRead("BeginTileArray");
-            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-            //    "Not all arguments were read in BeginTileArray");
         }
 
         public void ApplyToDisplay(CgmDisplay display)
@@ -83,20 +91,25 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
             double tileSizeInLineDirection = boundingBoxSizeInLineDirection / NTilesInLineDirection;
 
             var tileInfo = new TileArrayInfo(
-            startPosition: new Point2D.Double(0, 0),
-            tilesInPathDirection: 5,
-            cellsPerTileInPathDirection: 8,
-            cellsPerTileInLineDirection: 8,
-            tileSizeInPathDirection: 100,
-            tileSizeInLineDirection: 100,
-            width: 40,  // 5 tuiles × 8 cellules
-            height: 8,
-            cellWidth: 12.5f,
-            cellHeight: 12.5f
+                    startPosition: startPosition,
+                    tilesInPathDirection: NTilesInPathDirection,
+                    cellsPerTileInPathDirection: NCellsPerTileInPathDirection,
+                    cellsPerTileInLineDirection: NCellsPerTileInLineDirection,
+                    tileSizeInPathDirection: tileSizeInPathDirection,
+                    tileSizeInLineDirection: tileSizeInLineDirection,
+                    width: NCellsInPathDirection,
+                    height: NCellsInLineDirection,
+                    cellWidth: (float)CellSizeInPathDirection,
+                    cellHeight: (float)CellSizeInLineDirection
             );
 
             display.SetTileArrayInfo(tileInfo);
             display.DrawTileArray();
+        }
+
+        public override void Draw(Graphics g, Pen pen)
+        {
+            // No drawing
         }
 
         public override string ToString()
@@ -108,6 +121,13 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
                    $"CellSizeInPathDirection={CellSizeInPathDirection}, CellSizeInLineDirection={CellSizeInLineDirection}, " +
                    $"ImageOffsetInPathDirection={ImageOffsetInPathDirection}, ImageOffsetInLineDirection={ImageOffsetInLineDirection}, " +
                    $"NCellsInPathDirection={NCellsInPathDirection}, NCellsInLineDirection={NCellsInLineDirection}]";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
+
         }
     }
 }
