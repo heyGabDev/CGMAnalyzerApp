@@ -1,6 +1,9 @@
 ﻿using CGMAnalyzerCore.Geometry;
 using CGMAnalyzerCore.Parser;
 using System;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,43 +13,81 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
 {
     public class BitonalTileCommand : BaseCgmCommand
     {
-        public Point2D Position { get; private set; }
-        public byte[] TileData { get; private set; }
+        public Point2D Position { get; private set; } = new Point2D(0, 0);
+        public byte[] TileData { get; private set; } = Array.Empty<byte>();
 
-        public BitonalTileCommand(int ec, int eid, CgmCommand command, ExtractedArgumentReader argReader)
-            : base(ec, eid, command.Length)
+        public BitonalTileCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            Position = argReader.MakePoint(ec, eid);
+            Args = command.Args;
+            Debug.WriteLine($"[BitonalTileCommand] ArgsLength={Args?.Length ?? 0}");
 
-            var remainingArgs = command.Args.Length - argReader.SizeOfPoint();
-            TileData = new byte[remainingArgs];
-            for (int i = 0; i < remainingArgs; i++)
+            try
             {
-                TileData[i] = (byte)argReader.MakeUInt8();
+                var argReader = new ExtractedArgumentReader(this);
+                Position = argReader.MakePoint();
+                Debug.WriteLine($"[BitonalTileCommand] Read Position=({Position.X}, {Position.Y})");
+
+                var remainingArgs = command.Args.Length - argReader.SizeOfPoint();
+                TileData = new byte[remainingArgs];
+                for (int i = 0; i < remainingArgs; i++)
+                {
+                    TileData[i] = (byte)argReader.MakeUInt8();
+                }
+                Debug.WriteLine($"[BitonalTileCommand] Read TileData Length={TileData.Length}");
+                ValidateArgumentsRead("BitonalTileCommand");
+
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[BitonalTileCommand ERROR] {ex.Message}");
+                Position = new Point2D(0, 0);
+                TileData = Array.Empty<byte>();
+                HasReadErrors = true;
             }
         }
 
         public override void Draw(Graphics g, Pen pen)
         {
-            // Dessiner une image monochrome simple
-            const int tileSize = 8;
-            using var brush = new SolidBrush(pen.Color);
-
-            for (int i = 0; i < Math.Min(TileData.Length, 64); i++)
+            if (TileData == null || TileData.Length == 0)
             {
-                var x = Position.X + (i % tileSize);
-                var y = Position.Y + (i / tileSize);
+                Debug.WriteLine("[BitonalTileCommand] No tile data to draw.");
+                return;
+            }
 
-                if (TileData[i] > 0)
+            try
+            {
+                // Dessiner une image monochrome simple
+                const int tileSize = 8;
+                using var brush = new SolidBrush(pen.Color);
+
+                for (int i = 0; i < Math.Min(TileData.Length, 64); i++)
                 {
-                    g.FillRectangle(brush, (float)x, (float)y, 1, 1);
+                    var x = Position.X + (i % tileSize);
+                    var y = Position.Y + (i / tileSize);
+
+                    if (TileData[i] > 0)
+                    {
+                        g.FillRectangle(brush, (float)x, (float)y, 1, 1);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[BitonalTileCommand ERROR] Error during drawing: {ex.Message}");
+                HasReadErrors = true;
             }
         }
 
-        public override void ReadArguments(BinaryReader reader)
-            => throw new NotImplementedException("Utiliser le constructeur avec ExtractedArgumentReader");
+        public override string ToString()
+        {
+            return $"BITONAL_TILE at {Position}";
+        }
 
-        public override string ToString() => $"BITONAL_TILE at {Position}";
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
+        }
     }
 }

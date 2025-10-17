@@ -1,6 +1,7 @@
 ﻿using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,17 +10,48 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
 {
     public class GeneralizedDrawingPrimitiveCommand : BaseCgmCommand
     {
-        public GeneralizedDrawingPrimitiveCommand(int ec, int eid, CgmCommand command, ExtractedArgumentReader argReader)
-            : base(ec, eid, command.Length) { }
+        public GeneralizedDrawingPrimitiveCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l) 
+        {
+            Args = command.Args;
+            Debug.WriteLine($"[GeneralizedDrawingPrimitiveCommand] ArgsLength={Args?.Length ?? 0}");
+
+            try
+            {
+                var argReader = new ExtractedArgumentReader(this);
+
+               // Consommation explicite
+               // Consommer tous les arguments sans les interpréter
+               int remaining = this.RemainingArgs();
+               for (int i = 0; i < remaining; i++)
+               {
+                   argReader.MakeUInt8(); // Jeter les données
+               }
+
+                Debug.WriteLine("[GeneralizedDrawingPrimitiveCommand] Commande non supportée - arguments ignorés");
+                ValidateArgumentsRead("GeneralizedDrawingPrimitiveCommand");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[GeneralizedDrawingPrimitiveCommand ERROR] {ex.Message}");
+                HasReadErrors = true;
+            }
+        }
 
         public override void Draw(Graphics g, Pen pen)
         {
-            // GDP - commande personnalisée, implémentation dépend du contexte
+            // No drawing
+        }
+
+        public override string ToString()
+        {
+            return $"GENERALIZED_DRAWING_PRIMITIVE";
         }
 
         public override void ReadArguments(BinaryReader reader)
-            => throw new NotImplementedException("Utiliser le constructeur avec ExtractedArgumentReader");
-
-        public override string ToString() => "GENERALIZED_DRAWING_PRIMITIVE";
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
+        }
     }
 }

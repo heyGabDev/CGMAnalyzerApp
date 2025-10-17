@@ -64,28 +64,6 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
                 Lines = new List<(Point2D Start, Point2D End)>(); 
                 HasReadErrors = true;
             }
-
-            //int pointSize = argReader.SizeOfPoint();
-            //int availableBytes = command.RemainingArgs();
-            //int pointCount = availableBytes / pointSize;
-
-            //if (pointCount % 2 != 0) // Controle pair avant lecture
-            //{
-            //    Debug.WriteLine($"[DisjointPolyline WARNING] Nombre de points impair: {pointCount}, ignoré le dernier");
-            //    pointCount = (pointCount / 2) * 2; // Arrondir au nombre pair inférieur
-            //}
-
-            //// Lire les paires de points
-            //for (int i = 0; i < pointCount / 2; i++)
-            //{
-            //    Point2D start = argReader.MakePoint(ec, eid);
-            //    Point2D end = argReader.MakePoint(ec, eid);
-            //    Lines.Add((start, end));
-
-            //    Debug.WriteLine($"[DisjointPolyline] Ligne {i}: ({start.X},{start.Y}) -> ({end.X},{end.Y})");
-            //}
-
-            //ValidateArgumentsRead("DisjointPolylineCommand");
         }
 
         public override void Draw(Graphics g, Pen pen)
@@ -110,6 +88,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             catch (Exception ex)
             {
                 Debug.WriteLine($"[DisjointPolyline Draw ERROR] {ex.Message}");
+                HasReadErrors = true;
             }
         }
 

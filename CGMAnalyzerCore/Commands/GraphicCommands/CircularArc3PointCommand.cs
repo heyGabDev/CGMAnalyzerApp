@@ -2,6 +2,7 @@
 using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,43 +14,79 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
     /// </summary>
     public class CircularArc3PointCommand : BaseCgmCommand
     {
-        public Point2D StartPoint { get; private set; }
-        public Point2D IntermediatePoint { get; private set; }
-        public Point2D EndPoint { get; private set; }
+        public Point2D StartPoint { get; private set; } = new Point2D(0, 0);
+        public Point2D IntermediatePoint { get; private set; } = new Point2D(0, 0);
+        public Point2D EndPoint { get; private set; } = new Point2D(0, 0);
 
-        public CircularArc3PointCommand(int ec, int eid, CgmCommand command, ExtractedArgumentReader argReader)
-            : base(ec, eid, command.Length)
+        public CircularArc3PointCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            StartPoint = argReader.MakePoint(ec, eid);
-            IntermediatePoint = argReader.MakePoint(ec, eid);
-            EndPoint = argReader.MakePoint(ec, eid);
+            Args = command.Args;
+            Debug.WriteLine($"[CircularArc3PointCommand] ArgsLength={Args?.Length ?? 0}");
+
+            try
+            {
+                var argReader = new ExtractedArgumentReader(this);
+                StartPoint = argReader.MakePoint();
+                Debug.WriteLine($"[CircularArc3PointCommand] Read StartPoint=({StartPoint.X}, {StartPoint.Y})");
+
+                IntermediatePoint = argReader.MakePoint();
+                Debug.WriteLine($"[CircularArc3PointCommand] Read IntermediatePoint=({IntermediatePoint.X}, {IntermediatePoint.Y})");
+
+                EndPoint = argReader.MakePoint();
+                Debug.WriteLine($"[CircularArc3PointCommand] Read EndPoint=({EndPoint.X}, {EndPoint.Y})");
+                ValidateArgumentsRead("CircularArc3PointCommand");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[CircularArc3PointCommand ERROR] {ex.Message}");
+                StartPoint = new Point2D(0, 0);
+                IntermediatePoint = new Point2D(0, 0);
+                EndPoint = new Point2D(0, 0);
+                HasReadErrors = true;
+            }
         }
 
         public override void Draw(Graphics g, Pen pen)
         {
-            // Calculer le centre et le rayon de l'arc à partir des 3 points
-            var center = CalculateCircleCenter(StartPoint, IntermediatePoint, EndPoint);
-            if (center == null) return; // Points colinéaires
+            if (StartPoint == null || IntermediatePoint == null || EndPoint == null)
+            {
+                Debug.WriteLine("[CircularArc3PointCommand] Points invalides, dessin ignoré");
+                return;
+            }
 
-            var radius = Math.Sqrt(Math.Pow(center.X - StartPoint.X, 2) + Math.Pow(center.Y - StartPoint.Y, 2));
+            try
+            {
+                // Calculer le centre et le rayon de l'arc à partir des 3 points
+                var center = CalculateCircleCenter(StartPoint, IntermediatePoint, EndPoint);
+                if (center == null) return; // Points colinéaires
 
-            // Calculer les angles
-            
-            var startAngle = CalculateAngle(center.X, center.Y, StartPoint);
-            var endAngle = CalculateAngle(center.X, center.Y, EndPoint);
+                var radius = Math.Sqrt(Math.Pow(center.X - StartPoint.X, 2) + Math.Pow(center.Y - StartPoint.Y, 2));
 
-            // S'assurer que l'arc passe par le point intermédiaire
-            var sweepAngle = CalculateSweepAngle(startAngle, endAngle, CalculateAngle(center.X, center.Y, IntermediatePoint));
+                // Calculer les angles
 
-            // Dessiner l'arc
-            var rect = new RectangleF(
-                (float)(center.X - radius),
-                (float)(center.Y - radius),
-                (float)(radius * 2),
-                (float)(radius * 2)
-            );
+                var startAngle = CalculateAngle(center.X, center.Y, StartPoint);
+                var endAngle = CalculateAngle(center.X, center.Y, EndPoint);
 
-            g.DrawArc(pen, rect, (float)startAngle, (float)sweepAngle);
+                // S'assurer que l'arc passe par le point intermédiaire
+                var sweepAngle = CalculateSweepAngle(startAngle, endAngle, CalculateAngle(center.X, center.Y, IntermediatePoint));
+
+                // Dessiner l'arc
+                var rect = new RectangleF(
+                    (float)(center.X - radius),
+                    (float)(center.Y - radius),
+                    (float)(radius * 2),
+                    (float)(radius * 2)
+                );
+
+                g.DrawArc(pen, rect, (float)startAngle, (float)sweepAngle);
+
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[CircularArc3PointCommand ERROR] Erreur lors du dessin : {ex.Message}");
+                HasReadErrors = true;
+            }
         }
 
         private Point2D? CalculateCircleCenter(Point2D p1, Point2D p2, Point2D p3)
@@ -97,14 +134,15 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             return sweep;
         }
 
-        public override void ReadArguments(BinaryReader reader)
-        {
-            throw new NotImplementedException("Utiliser le constructeur avec ExtractedArgumentReader");
-        }
-
         public override string ToString()
         {
             return $"CIRCULAR_ARC_3_POINT {StartPoint} -> {IntermediatePoint} -> {EndPoint}";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

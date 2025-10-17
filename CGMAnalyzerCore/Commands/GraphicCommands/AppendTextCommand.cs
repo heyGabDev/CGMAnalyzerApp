@@ -1,6 +1,9 @@
 ﻿using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,23 +12,46 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
 {
     public class AppendTextCommand : BaseCgmCommand
     {
-        public string Text { get; private set; } = string.Empty;
+        public string Text { get; private set; } = "";
 
-        public AppendTextCommand(int ec, int eid, CgmCommand command, ExtractedArgumentReader argReader)
-            : base(ec, eid, command.Length)
+        public AppendTextCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            Text = argReader.MakeString();
+            Args = command.Args;
+            Debug.WriteLine($"[AppendTextCommand] ArgsLength={Args?.Length ?? 0}");
+
+            try
+            {
+                var argReader = new ExtractedArgumentReader(this);
+                // Le texte à ajouter
+                Text = argReader.MakeString();
+                Debug.WriteLine($"[AppendTextCommand] Text=\"{Text}\"");
+                ValidateArgumentsRead("AppendText");
+
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AppendTextCommand ERROR] {ex.Message}");
+                Text = "";
+                HasReadErrors = true;
+            }
         }
 
         public override void Draw(Graphics g, Pen pen)
         {
-            // Cette commande ajoute du texte à la position courante
-            // Implémentation basique - peut être améliorée selon le contexte
+            // No drawing
+        }
+
+        public override string ToString()
+        {
+            return $"APPEND_TEXT: \"{Text}\"";
         }
 
         public override void ReadArguments(BinaryReader reader)
-            => throw new NotImplementedException("Utiliser le constructeur avec ExtractedArgumentReader");
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
 
-        public override string ToString() => $"APPEND_TEXT: \"{Text}\"";
+        }
     }
 }

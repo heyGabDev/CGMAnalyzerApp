@@ -426,7 +426,6 @@ namespace CGMAnalyzerCore.Commands
         {
             var element = (GraphicalPrimitiveElement)eid;
             var command = new CgmCommand(ec, eid, l, reader);
-            var argumentReader = new ExtractedArgumentReader(command);
 
             return element switch
             {
@@ -435,39 +434,39 @@ namespace CGMAnalyzerCore.Commands
                 // 2
                 GraphicalPrimitiveElement.DisjointPolyline => new DisjointPolylineCommand(ec, eid, l, command),
                 // 3
-                GraphicalPrimitiveElement.PolyMarker => new PolyMarkerCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.PolyMarker => new PolyMarkerCommand(ec, eid, l, command),
                 // 4
-                GraphicalPrimitiveElement.Text => new TextCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.Text => new TextCommand(ec, eid, l, command),
                 // 5
-                GraphicalPrimitiveElement.RestrictedText => new RestrictedTextCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.RestrictedText => new RestrictedTextCommand(ec, eid, l, command),
                 // 6
-                GraphicalPrimitiveElement.AppendText => new AppendTextCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.AppendText => new AppendTextCommand(ec, eid, l, command),
                 // 7
-                GraphicalPrimitiveElement.Polygon => new PolygonCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.Polygon => new PolygonCommand(ec, eid, l, command),
                 // 8 
-                GraphicalPrimitiveElement.PolygonSet => new PolygonSetCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.PolygonSet => new PolygonSetCommand(ec, eid, l, command),
                 // 9
-                GraphicalPrimitiveElement.CellArray => new CellArrayCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.CellArray => new CellArrayCommand(ec, eid, l, command),
                 // 10
-                GraphicalPrimitiveElement.GeneralizedDrawingPrimitive => new GeneralizedDrawingPrimitiveCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.GeneralizedDrawingPrimitive => new GeneralizedDrawingPrimitiveCommand(ec, eid, l, command),
                 // 11
-                GraphicalPrimitiveElement.Rectangle => new RectangleCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.Rectangle => new RectangleCommand(ec, eid, l, command),
                 // 12
-                GraphicalPrimitiveElement.Circle => new CircleCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.Circle => new CircleCommand(ec, eid, l, command),
                 // 13
-                GraphicalPrimitiveElement.CircularArc3Point => new CircularArc3PointCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.CircularArc3Point => new CircularArc3PointCommand(ec, eid, l, command),
                 // 14
-                GraphicalPrimitiveElement.CircularArc3PointClose => new CircularArc3PointCloseCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.CircularArc3PointClose => new CircularArc3PointCloseCommand(ec, eid, l, command),
                 // 15
-                GraphicalPrimitiveElement.CircularArcCentre => new CircularArcCentreCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.CircularArcCentre => new CircularArcCentreCommand(ec, eid, l, command),
                 // 16
-                GraphicalPrimitiveElement.CircularArcCentreClose => new CircularArcCentreCloseCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.CircularArcCentreClose => new CircularArcCentreCloseCommand(ec, eid, l, command),
                 // 17
-                GraphicalPrimitiveElement.Ellipse => new EllipseCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.Ellipse => new EllipseCommand(ec, eid, l, command),
                 // 18
-                GraphicalPrimitiveElement.EllipticalArc => new EllipticalArcCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.EllipticalArc => new EllipticalArcCommand(ec, eid, l, command),
                 // 19
-                GraphicalPrimitiveElement.EllipticalArcClose => new EllipticalArcCloseCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.EllipticalArcClose => new EllipticalArcCloseCommand(ec, eid, l, command),
                 // 20 
                 GraphicalPrimitiveElement.CircularArcCentreReversed or
                 // 21 
@@ -481,13 +480,13 @@ namespace CGMAnalyzerCore.Commands
                 // 25
                 GraphicalPrimitiveElement.NonUniformRationalBSpline => UnsupportedCommand.Unsupported(ec, eid, l, reader),
                 // 26
-                GraphicalPrimitiveElement.PolyBezier => new PolyBezierCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.PolyBezier => new PolyBezierCommand(ec, eid, l, command),
                 // 27
                 GraphicalPrimitiveElement.PolySymbol => UnsupportedCommand.Unsupported(ec, eid, l, reader),
                 // 28
-                GraphicalPrimitiveElement.BitonalTile => new BitonalTileCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.BitonalTile => new BitonalTileCommand(ec, eid, l, command),
                 // 29
-                GraphicalPrimitiveElement.Tile => new TileCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.Tile => new TileCommand(ec, eid, l, command),
                 _ => UnsupportedCommand.Unsupported(ec, eid, l, reader)
             };
         }

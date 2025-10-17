@@ -2,53 +2,116 @@
 using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.GraphicCommands
 {
+    /// <summary>
+    /// CIRCULAR_ARC_3_POINT_CLOSE (case 14) - Arc défini par 3 points avec fermeture (pie ou chord)
+    /// </summary>
     public class CircularArc3PointCloseCommand : BaseCgmCommand
     {
-        public Point2D StartPoint { get; private set; }
-        public Point2D IntermediatePoint { get; private set; }
-        public Point2D EndPoint { get; private set; }
+        public Point2D StartPoint { get; private set; } = new Point2D(0, 0);
+        public Point2D IntermediatePoint { get; private set; } = new Point2D(0, 0);
+        public Point2D EndPoint { get; private set; } = new Point2D(0, 0);
         public int ClosureType { get; private set; } // 0=pie, 1=chord
 
-        public CircularArc3PointCloseCommand(int ec, int eid, CgmCommand command, ExtractedArgumentReader argReader)
-            : base(ec, eid, command.Length)
+        public CircularArc3PointCloseCommand(int ec, int eid,int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            StartPoint = argReader.MakePoint(ec, eid);
-            IntermediatePoint = argReader.MakePoint(ec, eid);
-            EndPoint = argReader.MakePoint(ec, eid);
-            ClosureType = argReader.MakeEnum();
+            Args = command.Args;
+            Debug.WriteLine($"[CircularArc3PointCloseCommand] ArgsLength={Args?.Length ?? 0}");
+
+            try
+            {
+                var argReader = new ExtractedArgumentReader(this);
+                StartPoint = argReader.MakePoint();
+                Debug.WriteLine($"[CircularArc3PointCloseCommand] Read StartPoint=({StartPoint.X}, {StartPoint.Y})");
+
+                IntermediatePoint = argReader.MakePoint();
+                Debug.WriteLine($"[CircularArc3PointCloseCommand] Read IntermediatePoint=({IntermediatePoint.X}, {IntermediatePoint.Y})");
+
+                EndPoint = argReader.MakePoint();
+                Debug.WriteLine($"[CircularArc3PointCloseCommand] Read EndPoint=({EndPoint.X}, {EndPoint.Y})");
+
+                ClosureType = argReader.MakeEnum();
+                Debug.WriteLine($"[CircularArc3PointCloseCommand] Read ClosureType={ClosureType} (0=pie, 1=chord)");
+                ValidateArgumentsRead("CircularArc3PointCloseCommand");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[CircularArc3PointCloseCommand ERROR] {ex.Message}");
+                StartPoint = new Point2D(0, 0);
+                IntermediatePoint = new Point2D(0, 0);
+                EndPoint = new Point2D(0, 0);
+                ClosureType = 0;
+                HasReadErrors = true;
+            }
         }
 
         public override void Draw(Graphics g, Pen pen)
         {
-            // Utiliser la même logique que CircularArc3PointCommand mais fermer la forme
-            var center = CalculateCircleCenter(StartPoint, IntermediatePoint, EndPoint);
-            if (center == null) return;
-
-            var radius = Math.Sqrt(Math.Pow(center.X - StartPoint.X, 2) + Math.Pow(center.Y - StartPoint.Y, 2));
-            var startAngle = Math.Atan2(StartPoint.Y - center.Y, StartPoint.X - center.X) * 180 / Math.PI;
-            var endAngle = Math.Atan2(EndPoint.Y - center.Y, EndPoint.X - center.X) * 180 / Math.PI;
-            var sweepAngle = endAngle - startAngle;
-
-            var rect = new RectangleF((float)(center.X - radius), (float)(center.Y - radius),
-                                     (float)(radius * 2), (float)(radius * 2));
-
-            using var path = new GraphicsPath();
-            path.AddArc(rect, (float)startAngle, (float)sweepAngle);
-
-            if (ClosureType == 0) // Pie (secteur)
+            if (StartPoint == null || IntermediatePoint == null || EndPoint == null)
             {
-                path.AddLine(path.GetLastPoint(), new PointF((float)center.X, (float)center.Y));
+                Debug.WriteLine("[CircularArc3PointCloseCommand] Points invalides, dessin ignoré");
+                return;
             }
-            path.CloseFigure();
 
-            g.DrawPath(pen, path);
+            try
+            {
+                // Calculer le centre et le rayon de l'arc
+                var center = CalculateCircleCenter(StartPoint, IntermediatePoint, EndPoint);
+                if (center == null)
+                {
+                    Debug.WriteLine("[CircularArc3PointCloseCommand] Points colinéaires, impossible de calculer l'arc");
+                    return;
+                }
+
+                Debug.WriteLine($"[CircularArc3PointCloseCommand] Calculated center=({center.X}, {center.Y})");
+
+                var radius = Math.Sqrt(Math.Pow(center.X - StartPoint.X, 2) + Math.Pow(center.Y - StartPoint.Y, 2));
+                Debug.WriteLine($"[CircularArc3PointCloseCommand] Calculated center=({center.X}, {center.Y}), radius={radius:F2}");
+
+                var startAngle = Math.Atan2(StartPoint.Y - center.Y, StartPoint.X - center.X) * 180 / Math.PI;
+                var endAngle = Math.Atan2(EndPoint.Y - center.Y, EndPoint.X - center.X) * 180 / Math.PI;
+                var intermediateAngle = CalculateAngle(center.X, center.Y, IntermediatePoint);
+                Debug.WriteLine($"[CircularArc3PointCloseCommand] Angles - Start: {startAngle:F2}°, " +
+                                $"Intermediate: {intermediateAngle:F2}°, End: {endAngle:F2}°");
+
+
+                // Ajuster les angles pour s'assurer que l'arc passe par le point intermédiaire
+                var sweepAngle = CalculateSweepAngle(startAngle, endAngle, intermediateAngle);
+                Debug.WriteLine($"[CircularArc3PointCloseCommand] Initial sweepAngle={sweepAngle:F2}");
+
+                var rect = new RectangleF(
+                    (float)(center.X - radius),
+                    (float)(center.Y - radius),
+                    (float)(radius * 2),
+                    (float)(radius * 2)
+                );
+
+                using var path = new GraphicsPath();
+                path.AddArc(rect, (float)startAngle, (float)sweepAngle);
+
+                if (ClosureType == 0) // Pie (secteur)
+                {
+                    path.AddLine(path.GetLastPoint(), new PointF((float)center.X, (float)center.Y));
+                }
+
+                path.CloseFigure();
+                g.DrawPath(pen, path);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[CircularArc3PointCloseCommand ERROR] Erreur lors du dessin : {ex.Message}");
+                HasReadErrors = true;
+            }
         }
 
         private Point2D? CalculateCircleCenter(Point2D p1, Point2D p2, Point2D p3)
@@ -67,9 +130,42 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             return new Point2D(ux, uy);
         }
 
-        public override void ReadArguments(BinaryReader reader)
-            => throw new NotImplementedException("Utiliser le constructeur avec ExtractedArgumentReader");
+        private double CalculateAngle(double centerX, double centerY, Point2D point)
+        {
+            return Math.Atan2(point.Y - centerY, point.X - centerX) * 180 / Math.PI;
+        }
 
-        public override string ToString() => $"CIRCULAR_ARC_3_POINT_CLOSE ({(ClosureType == 0 ? "pie" : "chord")})";
+        private double CalculateSweepAngle(double startAngle, double endAngle, double intermediateAngle)
+        {
+            // Calculer l'angle de balayage en s'assurant de passer par le point intermédiaire
+            var sweep = endAngle - startAngle;
+
+            // Normaliser les angles
+            while (sweep > 360) sweep -= 360;
+            while (sweep < -360) sweep += 360;
+
+            // Vérifier si l'angle intermédiaire est dans la bonne direction
+            var intermediateFromStart = intermediateAngle - startAngle;
+            while (intermediateFromStart > 360) intermediateFromStart -= 360;
+            while (intermediateFromStart < -360) intermediateFromStart += 360;
+
+            if (Math.Sign(sweep) != Math.Sign(intermediateFromStart) && Math.Abs(sweep) > 180)
+            {
+                sweep = sweep > 0 ? sweep - 360 : sweep + 360;
+            }
+
+            return sweep;
+        }
+        
+        public override string ToString()
+        {
+            return $"CIRCULAR_ARC_3_POINT_CLOSE ({(ClosureType == 0 ? "pie" : "chord")})";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
+        }
     }
 }

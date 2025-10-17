@@ -3,6 +3,7 @@ using CGMAnalyzerCore.Helper;
 using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,44 +19,81 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
 
         public IReadOnlyList<Point2D> Points => _points;
 
-        public PolyMarkerCommand(int ec, int eid, CgmCommand command, ExtractedArgumentReader argReader)
-            : base(ec, eid, command.Length)
+        public PolyMarkerCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            // Calculer le nombre de points à partir de la taille des arguments
-            int pointCount = command.Args.Length / argReader.SizeOfPoint();
+            Args = command.Args;
+            Debug.WriteLine($"[PolyMarkerCommand] ArgsLength={Args?.Length ?? 0}");
 
-            for (int i = 0; i < pointCount; i++)
+            try
             {
-                Point2D point = argReader.MakePoint(ec, eid);
-                _points.Add(point);
+                var argReader = new ExtractedArgumentReader(this);
+                // Contrôle du nombre de points (pattern cohérent)
+                int pointSize = argReader.SizeOfPoint();
+                int maxPoints = Args.Length / pointSize;
+                Debug.WriteLine($"[PolyMarkerCommand] pointSize={pointSize}, maxPoints={maxPoints}");
+
+                // Lecture des points
+                for (int i = 0; i < maxPoints; i++)
+                {
+                    Point2D point = argReader.MakePoint();
+                    _points.Add(point);
+                    Debug.WriteLine($"[PolyMarkerCommand] Point {i + 1}: ({point.X}, {point.Y})");
+                }
+
+                Debug.WriteLine($"[PolyMarkerCommand] Total points: {_points.Count}");
+                ValidateArgumentsRead("PolyMarkerCommand");
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[PolyMarkerCommand ERROR] {ex.Message}");
+                _points.Clear();
+                HasReadErrors = true;
+            } 
         }
 
         public override void Draw(Graphics g, Pen pen)
         {
-            // Dessiner des petits cercles comme marqueurs (taille par défaut 3x3)
-            const float markerSize = 3.0f;
-            using var brush = new SolidBrush(pen.Color);
-
-            foreach (var point in _points)
+            if (_points == null || _points.Count == 0)
             {
-                var pointF = point.ToPointF();
-                g.FillEllipse(brush,
-                    pointF.X - markerSize / 2,
-                    pointF.Y - markerSize / 2,
-                    markerSize,
-                    markerSize);
+                Debug.WriteLine("[PolyMarkerCommand] Aucun point à dessiner");
+                return;
             }
-        }
 
-        public override void ReadArguments(BinaryReader reader)
-        {
-            throw new NotImplementedException("Utiliser le constructeur avec ExtractedArgumentReader");
+            Debug.WriteLine($"[PolyMarkerCommand] Dessin de {_points.Count} marqueurs");
+
+            try
+            {
+                // Dessiner des petits cercles comme marqueurs (taille par défaut 3x3)
+                const float markerSize = 3.0f;
+                using var brush = new SolidBrush(pen.Color);
+
+                foreach (var point in _points)
+                {
+                    var pointF = point.ToPointF();
+                    g.FillEllipse(brush,
+                        pointF.X - markerSize / 2,
+                        pointF.Y - markerSize / 2,
+                        markerSize,
+                        markerSize);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[PolyMarkerCommand Draw ERROR] {ex.Message}");
+                HasReadErrors = true;
+            }
         }
 
         public override string ToString()
         {
             return $"POLYMARKER ({_points.Count} markers)";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
     
