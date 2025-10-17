@@ -23,7 +23,8 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
+                Debug.WriteLine("[BeginApplicationStructure] Lecture des arguments...");
                 if (Args != null && Args.Length > 0)
                 {
                     // Lire les deux chaînes dans l'ordre

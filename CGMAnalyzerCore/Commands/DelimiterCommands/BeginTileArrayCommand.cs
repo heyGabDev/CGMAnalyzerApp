@@ -33,7 +33,8 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
             Args = command.Args;
             Debug.WriteLine($"[BeginTileArrayCommand] ArgsLength={Args?.Length ?? 0}");
 
-            var argReader = new ExtractedArgumentReader(command);
+            var argReader = new ExtractedArgumentReader(this);
+            Debug.WriteLine($"[BeginTileArrayCommand] Created ExtractedArgumentReader");
 
             try
             {

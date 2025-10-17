@@ -17,7 +17,7 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
             : base(ec, eid, l)
         {
             Args = command.Args;
-            var argReader = new ExtractedArgumentReader(command);
+            var argReader = new ExtractedArgumentReader(this);
 
             Debug.WriteLine($"[BeginMetafileCommand] ArgsLength={Args?.Length ?? 0}");
 
