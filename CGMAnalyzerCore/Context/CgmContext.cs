@@ -19,7 +19,7 @@ namespace CGMAnalyzerCore.Context
         // --------------------------------------------------------------------
         // VDC / Précisions (pilotés par VDCType, IntegerPrecision, RealPrecision)
         // --------------------------------------------------------------------
-        public static VDCTypeEnum VdcType { get; set; } = VDCTypeEnum.INTERGER;
+        public static VDCTypeEnum VdcType { get; set; } = VDCTypeEnum.INTEGER;
         public static int VdcIntegerPrecision { get; set; } = 16;
         public static VDCRealPrecisionEnum VdcRealPrecision { get; set; } = VDCRealPrecisionEnum.FixedPoint32;
 
@@ -150,7 +150,7 @@ namespace CGMAnalyzerCore.Context
         // --------------------------------------------------------------------
         public static void Reset()
         {
-            VdcType = VDCTypeEnum.INTERGER;
+            VdcType = VDCTypeEnum.INTEGER;
             VdcIntegerPrecision = 16;
             VdcRealPrecision = VDCRealPrecisionEnum.FixedPoint32;
 

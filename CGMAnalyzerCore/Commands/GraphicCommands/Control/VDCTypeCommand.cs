@@ -8,14 +8,14 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands.Control
     {
         public enum VDCTypeEnum
         {
-            INTERGER = 0,
+            INTEGER = 0,
             REAL = 1
         }
 
         public static VDCTypeEnum CurrentVDCType { get; private set; }
-        private const VDCTypeEnum DEFAULT_VDC_TYPE = VDCTypeEnum.INTERGER;
+        private const VDCTypeEnum DEFAULT_VDC_TYPE = VDCTypeEnum.INTEGER;
 
-        public VDCTypeEnum Type { get; } = VDCTypeEnum.INTERGER;// Valeur par défaut en cas d'erreur
+        public VDCTypeEnum Type { get; } = VDCTypeEnum.INTEGER;// Valeur par défaut en cas d'erreur
 
         public VDCTypeCommand(int ec, int eid, int l, CgmCommand command)
             : base(ec, eid, l)
@@ -30,7 +30,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands.Control
 
                 Type = vdcTypeCode switch
                 {
-                    0 => VDCTypeEnum.INTERGER,
+                    0 => VDCTypeEnum.INTEGER,
                     1 => VDCTypeEnum.REAL,
                     _ => throw new InvalidDataException($"Unknown VDC type: {vdcTypeCode}")
                 };

@@ -299,7 +299,7 @@ namespace CGMAnalyzerCore.Parser
                 return new Point2D.Double(0, 0);
             }
 
-            if(CgmContext.VdcType == VDCTypeEnum.INTERGER)
+            if(CgmContext.VdcType == VDCTypeEnum.INTEGER)
             {
                 if(CgmContext.VdcIntegerPrecision == 16)
                 {
@@ -667,7 +667,7 @@ namespace CGMAnalyzerCore.Parser
 
         public int SizeOfVdc()
         {
-            if (CgmContext.VdcType == VDCTypeEnum.INTERGER)
+            if (CgmContext.VdcType == VDCTypeEnum.INTEGER)
             {
                 return CgmContext.VdcIntegerPrecision / 8;
             }

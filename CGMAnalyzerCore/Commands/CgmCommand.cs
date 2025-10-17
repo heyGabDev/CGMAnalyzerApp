@@ -409,13 +409,13 @@ namespace CGMAnalyzerCore.Commands
             return element switch
             {
                 // 3, 1
-                ControlElement.VdcIntegerPrecision => new VDCIntegerPrecisionCommand(ec, eid, l, command, argumentReader),
+                ControlElement.VdcIntegerPrecision => new VDCIntegerPrecisionCommand(ec, eid, l, command),
                 // 3, 2
-                ControlElement.VdcRealPrecision => new VDCRealPrecisionCommand(ec, eid, l, command, argumentReader),
+                ControlElement.VdcRealPrecision => new VDCRealPrecisionCommand(ec, eid, l, command),
                 // 3, 5
-                ControlElement.ClipRectangle => new ClipRectangleCommand(ec, eid, l, command, argumentReader),
+                ControlElement.ClipRectangle => new ClipRectangleCommand(ec, eid, l, command),
                 // 3, 6
-                ControlElement.ClipIndicator => new ClipIndicatorCommand(ec, eid, l, command, argumentReader),
+                ControlElement.ClipIndicator => new ClipIndicatorCommand(ec, eid, l, command),
 
                 _ => UnsupportedCommand.Unsupported(ec, eid, l, reader)
             };

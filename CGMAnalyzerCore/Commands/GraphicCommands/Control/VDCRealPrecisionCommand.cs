@@ -3,74 +3,95 @@ using CGMAnalyzerCore.Enums.Precision;
 using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.GraphicCommands.Control
 {
-    public class VDCRealPrecisionCommand : CgmCommand
+    public class VDCRealPrecisionCommand : BaseCgmCommand
     {
         public VDCRealPrecisionEnum Precision { get; private set; }
+        private const VDCRealPrecisionEnum DEFAULT_PRECISION = VDCRealPrecisionEnum.FixedPoint32;
 
-        public VDCRealPrecisionCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        public VDCRealPrecisionCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            int p1 = argReader.MakeEnum();
-            int p2 = argReader.MakeInt();
-            int p3 = argReader.MakeInt();
+            Args = command.Args;
+            Debug.WriteLine($"[VDCRealPrecisionCommand] ArgsLength={Args?.Length ?? 0}");
 
-            if (p1 == 0) // Floating point
+            try
             {
-                if (p2 == 9 && p3 == 23)
+                var argReader = new ExtractedArgumentReader(this);
+                int p1 = argReader.MakeEnum();
+                int p2 = argReader.MakeInt();
+                int p3 = argReader.MakeInt();
+                Debug.WriteLine($"[VDCRealPrecisionCommand] Read values: p1={p1}, p2={p2}, p3={p3}");
+
+                if (p1 == 0) // Floating point
                 {
-                    Precision = VDCRealPrecisionEnum.FloatingPoint32;
+                    if (p2 == 9 && p3 == 23)
+                    {
+                        Precision = VDCRealPrecisionEnum.FloatingPoint32;
+                    }
+                    else if (p2 == 12 && p3 == 52)
+                    {
+                        Precision = VDCRealPrecisionEnum.FloatingPoint64;
+                    }
+                    else
+                    {
+                        // Use default
+                        Precision = VDCRealPrecisionEnum.FixedPoint32;
+                    }
                 }
-                else if (p2 == 12 && p3 == 52)
+                else if (p1 == 1) // Fixed point
                 {
-                    Precision = VDCRealPrecisionEnum.FloatingPoint64;
+                    if (p2 == 16 && p3 == 16)
+                    {
+                        Precision = VDCRealPrecisionEnum.FixedPoint32;
+                    }
+                    else if (p2 == 32 && p3 == 32)
+                    {
+                        Precision = VDCRealPrecisionEnum.FixedPoint64;
+                    }
+                    else
+                    {
+                        // Use default
+                        Precision = VDCRealPrecisionEnum.FixedPoint32;
+                    }
                 }
                 else
                 {
-                    // Use default
                     Precision = VDCRealPrecisionEnum.FixedPoint32;
                 }
+                CgmContext.VdcRealPrecision = Precision;
+                Debug.WriteLine($"[VDCRealPrecisionCommand] Set Precision={Precision}");
+                ValidateArgumentsRead("VDCRealPrecisionCommand");
             }
-            else if (p1 == 1) // Fixed point
+            catch (Exception ex)
             {
-                if (p2 == 16 && p3 == 16)
-                {
-                    Precision = VDCRealPrecisionEnum.FixedPoint32;
-                }
-                else if (p2 == 32 && p3 == 32)
-                {
-                    Precision = VDCRealPrecisionEnum.FixedPoint64;
-                }
-                else
-                {
-                    // Use default
-                    Precision = VDCRealPrecisionEnum.FixedPoint32;
-                }
+                Debug.WriteLine($"[VDCRealPrecisionCommand ERROR] {ex.Message}");
+                Precision = DEFAULT_PRECISION;
+                CgmContext.VdcRealPrecision = Precision;
+                HasReadErrors = true;
             }
-            else
-            {
-                Precision = VDCRealPrecisionEnum.FixedPoint32;
-            }
-
-            CgmContext.VdcRealPrecision = Precision;
-
-            System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-                "Not all arguments were read in VDCRealPrecision");
         }
 
-        public static void Reset()
+        public override void Draw(Graphics g, Pen pen)
         {
-            CgmContext.VdcRealPrecision = VDCRealPrecisionEnum.FixedPoint32;
+            // No drawing
         }
 
         public override string ToString()
         {
-            return $"VDCRealPrecision {Precision}";
+            return $"VDC_REAL_PRECISION : {Precision}";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

@@ -2,23 +2,31 @@
 using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.ControlCommands
 {
-    public class ClipRectangleCommand : CgmCommand
+    public class ClipRectangleCommand : BaseCgmCommand
     {
-        public Point2D.Double Point1 { get; private set; }
-        public Point2D.Double Point2 { get; private set; }
-        public Rectangle2D.Double ClipShape { get; private set; }
+        public Point2D.Double Point1 { get; private set; } = new Point2D.Double(0, 0);
+        public Point2D.Double Point2 { get; private set; } = new Point2D.Double(0, 0);
+        public Rectangle2D.Double ClipShape { get; private set; } = new Rectangle2D.Double(0, 0, 0, 0);
 
-        public ClipRectangleCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        public ClipRectangleCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            Point1 = argReader.MakePoint();
-            Point2 = argReader.MakePoint();
+            Args = command.Args;
+            Debug.WriteLine($"[ClipRectangleCommand] ArgsLength={Args?.Length ?? 0}");
+
+
+            try
+            {
+                var argReader = new ExtractedArgumentReader(this);
+                Point1 = argReader.MakePoint();
+                Point2 = argReader.MakePoint();
 
             // Créer le rectangle de clipping
             ClipShape = new Rectangle2D.Double(
@@ -28,10 +36,22 @@ namespace CGMAnalyzerCore.Commands.ControlCommands
                 Point2.Y - Point1.Y
             );
 
-            ValidateArgumentsRead("ClipRectangle");
+                Debug.WriteLine($"[ClipRectangleCommand] Point1=({Point1.X}, {Point1.Y}), Point2=({Point2.X}, {Point2.Y})");
+                ValidateArgumentsRead("ClipRectangle");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[ClipRectangleCommand ERROR] {ex.Message}");
+                Point1 = new Point2D.Double(0, 0);
+                Point2 = new Point2D.Double(0, 0);
+                ClipShape = new Rectangle2D.Double(0, 0, 0, 0);
+                HasReadErrors = true;
+            }
+        }
 
-            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-            //    "Not all arguments were read in ClipRectangle");
+        public override void Draw(Graphics g, Pen pen)
+        {
+            // No drawing
         }
 
         public override string ToString()
@@ -39,11 +59,10 @@ namespace CGMAnalyzerCore.Commands.ControlCommands
             return $"ClipRectangle p1={Point1}, p2={Point2}";
         }
 
-        // Méthode paint équivalente du Java (à adapter selon votre architecture de display)
-        public void ApplyToDisplay(object display)
+        public override void ReadArguments(BinaryReader reader)
         {
-            // Dans le Java original : if (d.getClipFlag()) { g2d.setClip(this.shape); }
-            // À implémenter selon votre architecture de rendu
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 

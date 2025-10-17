@@ -5,48 +5,52 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace CGMAnalyzerCore.Commands.GraphicCommands.Control
 {
-    public class VDCIntegerPrecisionCommand : CgmCommand
+    public class VDCIntegerPrecisionCommand : BaseCgmCommand
     {
-        public int Precision { get; }
+        public int Precision { get; private set; }
+        private const int DEFAULT_PRECISION = 16;
 
-        public VDCIntegerPrecisionCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-        : base(baseCommand, ec, eid, l)
+        public VDCIntegerPrecisionCommand(int ec, int eid, int l, CgmCommand command)
+        : base(ec, eid, l)
         {
-            Precision = argReader.MakeInt();
-            CgmContext.VdcIntegerPrecision = Precision;
+            Args = command.Args;
+            Debug.WriteLine($"[VDCIntegerPrecisionCommand] ArgsLength={Args?.Length ?? 0}");
 
-            //System.Diagnostics.Debug.Assert(Precision == 16 || Precision == 24 || Precision == 32,
-            //    "Invalid VDC integer precision");
-            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-            //    "Not all arguments were read in VDCIntegerPrecision");
-
-
-            // TO DELETE : OLD CODE
-            //// On lit la précision VDC à partir des arguments (ex. 2 octets codant la taille en bits)
-            //// Ici, la norme CGM indique souvent 2 octets pour la précision
-            //Precision = reader.ReadByte() * 8;
-
-            //// 🔒 Tu peux ajouter une vérification ici si nécessaire
-            //if (Precision != 16 && Precision != 24 && Precision != 32)
-            //{
-            //    throw new InvalidDataException($"Unsupported VDC Integer Precision: {Precision} bits");
-            //}
-
-            //// Stockage dans le contexte global pour accès par d'autres commandes
-            //CgmContext.VdcIntegerPrecision = Precision;
+            try
+            {
+                var argReader = new ExtractedArgumentReader(this);            
+                Precision = argReader.MakeInt();
+                CgmContext.VdcIntegerPrecision = Precision;
+                Debug.WriteLine($"[VDCIntegerPrecisionCommand] Precision={Precision}");
+                ValidateArgumentsRead("VDCIntegerPrecisionCommand");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[VDCIntegerPrecisionCommand ERROR] {ex.Message}");
+                Precision = DEFAULT_PRECISION;
+                CgmContext.VdcIntegerPrecision = Precision;
+                HasReadErrors = true;
+            }
         }
 
-        public static void Reset()
+        public override void Draw(Graphics g, Pen pen)
         {
-            CgmContext.VdcIntegerPrecision = 16;
+            // No drawing
         }
 
         public override string ToString()
         {
-            return $"VDC Integer Precision: {Precision} bits";
+            return $"VDC_INTEGER_PRECISION : {Precision} bits";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }
