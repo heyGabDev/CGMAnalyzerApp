@@ -187,35 +187,38 @@ namespace CGMAnalyzerCore.Commands
             return true;
         }
 
-
-        /// <summary>
-        /// Essaie de lire un argument de façon sûre
-        /// </summary>
-        [Obsolete("Utiliser TryNextArg() à la place")]
-        protected bool TryReadArg(out int value)
-        {
-            return TryNextArg(out value);
-        }
+        ///// <summary>
+        ///// Essaie de lire un argument de façon sûre
+        ///// </summary>
+        //[Obsolete("Utiliser TryNextArg() à la place")]
+        //protected bool TryReadArg(out int value)
+        //{
+        //    return TryNextArg(out value);
+        //}
 
         /// <summary>
         /// Valide que tous les arguments ont été lus
         /// </summary>
         protected void ValidateArgumentsRead(string commandName)
         {
-            commandName??= GetType().Name;
+            commandName ??= GetType().Name;
 
-            if(Args== null) return;
-            
-            if (CurrentArg < Args.Length)
+            if (Args == null) return;
+
+            int remaining = Args.Length - CurrentArg;
+
+            // TOLERANCE : 3 octets de padding
+            if (remaining > 3)
             {
-                Debug.WriteLine($"[CGM] Warning: {commandName} " +
-                    $"Arguments non lus  {CurrentArg}/{Args.Length} " +
-                    $"({Args.Length - CurrentArg}  octects restants)");
+                Debug.WriteLine($"[CGM] Warning: {commandName} Arguments non lus {CurrentArg}/{Args.Length} ({remaining} octets restants)");
+            }
+            else if (remaining > 0)
+            {
+                Debug.WriteLine($"[CGM] Info: {commandName} {remaining} octets de padding ignorés");
             }
             else if (CurrentArg > Args.Length)
             {
-                Debug.WriteLine($"[CGM ERROR] {commandName} " +
-                    $"Lecture au-delà des arguments {CurrentArg}/{Args.Length}");
+                Debug.WriteLine($"[CGM ERROR] {commandName} Lecture au-delà des arguments {CurrentArg}/{Args.Length}");
                 HasReadErrors = true;
             }
         }

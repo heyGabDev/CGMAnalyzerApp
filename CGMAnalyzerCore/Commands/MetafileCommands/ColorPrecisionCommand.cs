@@ -30,7 +30,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
             }
             catch (Exception)
             {
-                Precision = DEFAULT_PRECISION
+                Precision = DEFAULT_PRECISION;
                 CgmContext.ColorPrecision = Precision;
                 HasReadErrors = true;
             }

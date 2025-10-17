@@ -5,6 +5,7 @@ using CGMAnalyzerCore.Enums.Precision;
 using CGMAnalyzerCore.Geometry;
 using static CGMAnalyzerCore.Commands.GraphicCommands.Control.VDCTypeCommand;
 using static CGMAnalyzerCore.Commands.MetafileCommands.ColorModelCommand;
+using static CGMAnalyzerCore.Commands.SpecificationModeExtensions;
 
 namespace CGMAnalyzerCore.Context
 {
@@ -18,7 +19,7 @@ namespace CGMAnalyzerCore.Context
         // --------------------------------------------------------------------
         // VDC / Précisions (pilotés par VDCType, IntegerPrecision, RealPrecision)
         // --------------------------------------------------------------------
-        public static VDCTypeEnum VdcType { get; set; } = VDCTypeEnum.Integer;
+        public static VDCTypeEnum VdcType { get; set; } = VDCTypeEnum.INTERGER;
         public static int VdcIntegerPrecision { get; set; } = 16;
         public static VDCRealPrecisionEnum VdcRealPrecision { get; set; } = VDCRealPrecisionEnum.FixedPoint32;
 

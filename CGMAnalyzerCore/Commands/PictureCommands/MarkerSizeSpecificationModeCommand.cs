@@ -7,19 +7,12 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static CGMAnalyzerCore.Commands.SpecificationModeExtensions;
 
 namespace CGMAnalyzerCore.Commands.PictureCommands
 {
     public class MarkerSizeSpecificationModeCommand : BaseCgmCommand
     {
-        public enum SpecificationMode
-        {
-            ABSOLUTE = 0,
-            SCALED = 1,
-            FRACTIONAL = 2,
-            MM = 3
-        }
-
         public SpecificationMode Mode { get; private set; }
         private const SpecificationMode DEFAULT_MODE = SpecificationMode.ABSOLUTE;
 

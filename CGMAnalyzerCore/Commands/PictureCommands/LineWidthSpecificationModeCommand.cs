@@ -7,6 +7,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static CGMAnalyzerCore.Commands.PictureCommands.MarkerSizeSpecificationModeCommand;
+using static CGMAnalyzerCore.Commands.SpecificationModeExtensions;
 
 namespace CGMAnalyzerCore.Commands.PictureCommands
 {

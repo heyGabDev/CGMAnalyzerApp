@@ -6,6 +6,7 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Text;
+using static CGMAnalyzerCore.Commands.GraphicCommands.Control.VDCTypeCommand;
 using static CGMAnalyzerCore.Commands.MetafileCommands.ColorModelCommand;
 
 namespace CGMAnalyzerCore.Parser
@@ -298,7 +299,7 @@ namespace CGMAnalyzerCore.Parser
                 return new Point2D.Double(0, 0);
             }
 
-            if(CgmContext.VdcType == VDCTypeEnum.Integer)
+            if(CgmContext.VdcType == VDCTypeEnum.INTERGER)
             {
                 if(CgmContext.VdcIntegerPrecision == 16)
                 {
@@ -352,7 +353,7 @@ namespace CGMAnalyzerCore.Parser
         /// <returns></returns>
         public double MakeVdc()
         {
-            if (CgmContext.VdcType == VDCTypeEnum.Real)
+            if (CgmContext.VdcType == VDCTypeEnum.REAL)
             {
                 var precision = CgmContext.VdcRealPrecision;
                 return precision switch
@@ -666,7 +667,7 @@ namespace CGMAnalyzerCore.Parser
 
         public int SizeOfVdc()
         {
-            if (CgmContext.VdcType == VDCTypeEnum.Integer)
+            if (CgmContext.VdcType == VDCTypeEnum.INTERGER)
             {
                 return CgmContext.VdcIntegerPrecision / 8;
             }

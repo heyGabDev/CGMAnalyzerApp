@@ -27,6 +27,15 @@ namespace CGMAnalyzerCore.Commands.EscapeCommands
 
                 if(this.CurrentArg < Args?.Length)
                 {
+                    int remaining = Args.Length - CurrentArg;
+
+                    // Lire comme bytes bruts
+                    byte[] dataBytes = new byte[remaining];
+                    for (int i = 0; i < remaining; i++)
+                    {
+                        dataBytes[i] = (byte)argReader.MakeByte();
+                    }
+
                     DataRecord = argReader.MakeString();
                 }
 

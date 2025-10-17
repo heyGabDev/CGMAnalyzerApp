@@ -17,31 +17,57 @@ namespace CGMAnalyzerCore.Commands.DelimiterCommands
             : base(ec, eid, l)
         {
             Args = command.Args;
-            var argReader = new ExtractedArgumentReader(this);
-
             Debug.WriteLine($"[BeginMetafileCommand] ArgsLength={Args?.Length ?? 0}");
 
-            if (Args != null && Args.Length > 0)
+            try
             {
-                try
+                var argReader = new ExtractedArgumentReader(this);
+                // Le nom du métafichier est une chaîne
+                if (Args != null && Args.Length > 0)
                 {
-                // Lire les arguments avec validation
-                MetafileName = argReader.MakeString();
+                    MetafileName = argReader.MakeString();
+                }
+
                 Debug.WriteLine($"[BeginMetafileCommand] MetafileName='{MetafileName}'");
+
+                this.CurrentArg = Args.Length;
+
                 ValidateArgumentsRead("BeginMetafileCommand");
-                }
-                catch (Exception ex)
-                {
-                        Debug.WriteLine($"[BeginMetafileCommand ERROR]: {ex.Message}");
-                        MetafileName = "Error";
-                        HasReadErrors = true;
-                }
             }
-            else
+            catch (Exception ex)
             {
-                MetafileName = "Default";
-                Debug.WriteLine("[BeginMetafileCommand] Aucun argument, nom par défaut");
+                Debug.WriteLine($"[BeginMetafileCommand ERROR] {ex.Message}");
+                MetafileName = "";
+                HasReadErrors = true;
             }
+
+            // Ancien code
+            //Args = command.Args;
+            //var argReader = new ExtractedArgumentReader(this);
+
+            //Debug.WriteLine($"[BeginMetafileCommand] ArgsLength={Args?.Length ?? 0}");
+
+            //if (Args != null && Args.Length > 0)
+            //{
+            //    try
+            //    {
+            //    // Lire les arguments avec validation
+            //    MetafileName = argReader.MakeString();
+            //    Debug.WriteLine($"[BeginMetafileCommand] MetafileName='{MetafileName}'");
+            //    ValidateArgumentsRead("BeginMetafileCommand");
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //            Debug.WriteLine($"[BeginMetafileCommand ERROR]: {ex.Message}");
+            //            MetafileName = "Error";
+            //            HasReadErrors = true;
+            //    }
+            //}
+            //else
+            //{
+            //    MetafileName = "Default";
+            //    Debug.WriteLine("[BeginMetafileCommand] Aucun argument, nom par défaut");
+            //}
         }
 
         public override void Draw(Graphics g, Pen pen)
