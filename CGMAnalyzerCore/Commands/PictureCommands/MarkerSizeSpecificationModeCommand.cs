@@ -12,7 +12,16 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
 {
     public class MarkerSizeSpecificationModeCommand : BaseCgmCommand
     {
+        public enum SpecificationMode
+        {
+            ABSOLUTE = 0,
+            SCALED = 1,
+            FRACTIONAL = 2,
+            MM = 3
+        }
+
         public SpecificationMode Mode { get; private set; }
+        private const SpecificationMode DEFAULT_MODE = SpecificationMode.ABSOLUTE;
 
         public MarkerSizeSpecificationModeCommand(int ec, int eid, int l, CgmCommand command)
             : base(ec, eid, l)
@@ -22,7 +31,7 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 int mode = argReader.MakeEnum();
                 Mode = SpecificationModeExtensions.GetMode(mode);
                 CgmContext.MarkerSizeSpecificationMode = Mode;
@@ -34,7 +43,7 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
             catch (Exception ex)
             {
                 Debug.WriteLine($"[MarkerSizeSpecificationModeCommand ERROR] {ex.Message}");
-                Mode = SpecificationMode.ABSOLUTE; // Valeur par défaut
+                Mode = DEFAULT_MODE;
                 CgmContext.MarkerSizeSpecificationMode = Mode;
                 HasReadErrors = true;
             }

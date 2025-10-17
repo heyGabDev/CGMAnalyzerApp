@@ -17,7 +17,8 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
             DIRECT = 1
         }
 
-        public ColorSelectionType Type { get; private set; } = ColorSelectionType.INDEXED;
+        public ColorSelectionType Type { get; private set; }
+        private const ColorSelectionType DEFAULT_TYPE = ColorSelectionType.INDEXED;
 
         public ColorSelectionModeCommand(int ec, int eid, int l, CgmCommand command)
             : base(ec, eid, l)
@@ -27,7 +28,7 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
 
             try
             {
-               var argReader = new ExtractedArgumentReader(command);
+               var argReader = new ExtractedArgumentReader(this);
                 int e = argReader.MakeEnum();
                 Type = e switch
                 {
@@ -44,7 +45,7 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
             catch (Exception ex)
             {
                 Debug.WriteLine($"[ColorSelectionModeCommand ERROR] {ex.Message}");
-                Type = ColorSelectionType.INDEXED; // Valeur par défaut
+                Type = DEFAULT_TYPE;
                 CgmContext.ColorSelectionMode = Type;
                 HasReadErrors = true;
             }

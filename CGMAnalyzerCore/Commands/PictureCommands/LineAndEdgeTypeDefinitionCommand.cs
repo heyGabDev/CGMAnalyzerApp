@@ -12,6 +12,7 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
     {
         public int LineType { get; private set; }
         public List<double> DashPattern { get; private set; } = new List<double>();
+        private const int DEFAULT_LINE_TYPE = 1;
 
         public LineAndEdgeTypeDefinitionCommand(int ec, int eid, int l, CgmCommand command)
             : base(ec, eid, l)
@@ -21,7 +22,7 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 LineType = argReader.MakeIndex();
                 DashPattern = new List<double>();
 
@@ -40,7 +41,7 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
             catch (Exception ex)
             {
                 Debug.WriteLine($"[LineAndEdgeTypeDefinitionCommand ERROR] {ex.Message}");
-                LineType = 1; // Valeur par défaut
+                LineType = DEFAULT_LINE_TYPE;
                 DashPattern = new List<double>();
                 HasReadErrors = true;
             }

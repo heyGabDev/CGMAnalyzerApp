@@ -7,12 +7,14 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static CGMAnalyzerCore.Commands.PictureCommands.MarkerSizeSpecificationModeCommand;
 
 namespace CGMAnalyzerCore.Commands.PictureCommands
 {
     public class EdgeWidthSpecificationModeCommand : BaseCgmCommand
     {
         public SpecificationMode Mode { get; private set; }
+        private const SpecificationMode DEFAULT_MODE = SpecificationMode.ABSOLUTE;
 
         public EdgeWidthSpecificationModeCommand(int ec, int eid, int l, CgmCommand command)
             : base(ec, eid, l)
@@ -22,7 +24,7 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 int mode = argReader.MakeEnum();
                 Mode = SpecificationModeExtensions.GetMode(mode);
                 CgmContext.EdgeWidthSpecificationMode = Mode;
@@ -33,7 +35,7 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
             catch (Exception ex)
             {
                 Debug.WriteLine($"[EdgeWidthSpecificationModeCommand ERROR] {ex.Message}");
-                Mode = SpecificationMode.ABSOLUTE; // Valeur par défaut
+                Mode = DEFAULT_MODE;
                 CgmContext.EdgeWidthSpecificationMode = Mode;
                 HasReadErrors = true;
             }

@@ -11,8 +11,8 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
 {
     public class BackgroundColorCommand : BaseCgmCommand
     {
-        public System.Drawing.Color BackgroundColor { get; private set; } = System.Drawing.Color.White;
-
+        public System.Drawing.Color BackgroundColor { get; private set; }
+        private static readonly System.Drawing.Color DEFAULT_BACKGROUND_COLOR = System.Drawing.Color.White;
         public BackgroundColorCommand(int ec, int eid, int l, CgmCommand baseCommand )
             : base(ec, eid, l)
         {
@@ -29,7 +29,7 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
             }
             catch (Exception)
             {
-                BackgroundColor = System.Drawing.Color.White; // Valeur par défaut
+                BackgroundColor = DEFAULT_BACKGROUND_COLOR;
                 CgmContext.BackgroundColor = BackgroundColor;
                 Debug.WriteLine($"[BackgroundColorCommand ERROR] Setting default BackgroundColor={BackgroundColor}");
                 HasReadErrors = true;

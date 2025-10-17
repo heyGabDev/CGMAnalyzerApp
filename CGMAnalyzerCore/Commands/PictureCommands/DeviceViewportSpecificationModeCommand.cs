@@ -11,8 +11,10 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
 {
     public partial class DeviceViewportSpecificationModeCommand : BaseCgmCommand
     {
-        public DeviceViewportMode Mode { get; private set; } = DeviceViewportMode.FractionOfDrawingSurface;
-        public double MetricScaleFactor { get; private set; } = 1.0;
+        public DeviceViewportMode Mode { get; private set; }
+        public double MetricScaleFactor { get; private set; }
+        private const DeviceViewportMode DEFAULT_MODE = DeviceViewportMode.FractionOfDrawingSurface;
+        private const double DEFAULT_METRIC_SCALE_FACTOR = 1.0;
 
         public DeviceViewportSpecificationModeCommand(int ec, int eid, int l, CgmCommand command)
             : base(ec, eid, l)
@@ -22,7 +24,7 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 int e = argReader.MakeEnum();
                 Mode = e switch
                 {
@@ -40,7 +42,7 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
                 }
                 else
                 {
-                    MetricScaleFactor = 1.0; // Valeur par défaut
+                    MetricScaleFactor = DEFAULT_METRIC_SCALE_FACTOR;
                 }
                 CgmContext.DeviceViewportSpecificationMode = Mode;
                 Debug.WriteLine($"[DeviceViewportSpecificationModeCommand] Mode={Mode}, MetricScaleFactor={MetricScaleFactor}");
@@ -49,8 +51,8 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
             catch (Exception ex)
             {
                 Debug.WriteLine($"[DeviceViewportSpecificationModeCommand ERROR] {ex.Message}");
-                Mode = DeviceViewportMode.FractionOfDrawingSurface; // Valeur par défaut
-                MetricScaleFactor = 1.0; // Valeur par défaut
+                Mode = DEFAULT_MODE;
+                MetricScaleFactor = DEFAULT_METRIC_SCALE_FACTOR;
                 CgmContext.DeviceViewportSpecificationMode = Mode;
                 HasReadErrors = true;
             }

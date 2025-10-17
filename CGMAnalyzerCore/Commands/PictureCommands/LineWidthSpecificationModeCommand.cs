@@ -13,6 +13,7 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
     public class LineWidthSpecificationModeCommand : BaseCgmCommand
     {
         public SpecificationMode Mode { get; private set; }
+        private const SpecificationMode DEFAULT_MODE = SpecificationMode.ABSOLUTE;
 
         public LineWidthSpecificationModeCommand(int ec, int eid, int l, CgmCommand command)
             : base(ec, eid, l)
@@ -22,7 +23,7 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 int mode = argReader.MakeEnum();
                 Mode = SpecificationModeExtensions.GetMode(mode);
                 CgmContext.LineWidthSpecificationMode = Mode;
@@ -33,7 +34,7 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
             catch (Exception ex)
             {
                 Debug.WriteLine($"[LineWidthSpecificationModeCommand ERROR] {ex.Message}");
-                Mode = SpecificationMode.ABSOLUTE; // Valeur par défaut
+                Mode = DEFAULT_MODE;
                 CgmContext.LineWidthSpecificationMode = Mode;
                 HasReadErrors = true;
             }

@@ -10,9 +10,16 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
 {
     public partial class ScalingModeCommand : BaseCgmCommand
     {
+        public enum ScalingModeType
+        {
+            ABSTRACT = 0,
+            METRIC = 1
+        }
 
         public ScalingModeType Mode { get; private set; }
         public double MetricScalingFactor { get; private set; } = 1.0;
+        private const ScalingModeType DEFAULT_MODE = ScalingModeType.ABSTRACT;
+        private const double DEFAULT_METRIC_SCALING_FACTOR = 1.0;
 
         public ScalingModeCommand(int ec, int eid, int l, CgmCommand command)
             : base(ec, eid, l)
@@ -22,7 +29,7 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 int mod = l > 0 ? argReader.MakeEnum() : 0;
 
                 if (mod == 0)
@@ -41,8 +48,8 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
             catch (Exception ex)
             {
                 Debug.WriteLine($"[ScalingModeCommand ERROR] {ex.Message}");
-                Mode = ScalingModeType.ABSTRACT; // Valeur par défaut
-                MetricScalingFactor = 1.0;
+                Mode = DEFAULT_MODE;
+                MetricScalingFactor = DEFAULT_METRIC_SCALING_FACTOR;
                 HasReadErrors = true;
             }
         }

@@ -23,7 +23,7 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 LowerLeftCorner = argReader.MakePoint();
                 UpperRightCorner = argReader.MakePoint();
 
