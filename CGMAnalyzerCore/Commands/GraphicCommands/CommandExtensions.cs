@@ -49,17 +49,17 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
         /// <summary>
         /// Extension pour TES DisjointPolylineCommand qui utilisent Point2D
         /// </summary>
-        public static List<List<Point>> GetPointSets(this DisjointPolylineCommand command)
+        public static List<List<Point2D>> GetPointSets(this DisjointPolylineCommand command)
         {
-            var pointSets = new List<List<Point>>();
+            var pointSets = new List<List<Point2D>>();
 
             foreach (var line in command.Lines)
             {
-                var linePoints = new List<Point>
+                var linePoints = new List<Point2D>
                 {
                     // Convertir Point2D vers Point standard
-                    new Point((int)line.Start.X, (int)line.Start.Y),
-                    new Point((int)line.End.X, (int)line.End.Y)
+                    new Point2D((int)line.Start.X, (int)line.Start.Y),
+                    new Point2D((int)line.End.X, (int)line.End.Y)
                 };
                 pointSets.Add(linePoints);
             }

@@ -16,9 +16,9 @@ namespace CGMAnalyzerCore.Parser
     /// </summary>
     public class ExtractedArgumentReader
     {
-        private readonly CgmCommand _command;
+        private readonly BaseCgmCommand _command;
 
-        public ExtractedArgumentReader(CgmCommand command)
+        public ExtractedArgumentReader(BaseCgmCommand command)
         {
             _command = command ?? throw new ArgumentNullException(nameof(command));
         }
@@ -338,7 +338,7 @@ namespace CGMAnalyzerCore.Parser
         public Point2D.Double MakePoint(int ec, int eid)
         {
             int bytesNeeded = CalculatePointSize();
-            if (!_command.ValidateRemainingArgs(bytesNeeded, $"MakePoint(ec={ec},eid={eid})"))
+            if (!_command.ValidateRemainingArgs(bytesNeeded, $"MakePoint(ec={ec}, eid={eid})"))
             {
                 return new Point2D.Double(0, 0);
             }

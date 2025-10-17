@@ -431,9 +431,9 @@ namespace CGMAnalyzerCore.Commands
             return element switch
             {
                 // 1
-                GraphicalPrimitiveElement.Polyline => new PolylineCommand(ec, eid, l, reader),
+                GraphicalPrimitiveElement.Polyline => new PolylineCommand(ec, eid, l, command),
                 // 2
-                GraphicalPrimitiveElement.DisjointPolyline => new DisjointPolylineCommand(ec, eid, command, argumentReader),
+                GraphicalPrimitiveElement.DisjointPolyline => new DisjointPolylineCommand(ec, eid, l, command),
                 // 3
                 GraphicalPrimitiveElement.PolyMarker => new PolyMarkerCommand(ec, eid, command, argumentReader),
                 // 4
@@ -591,7 +591,7 @@ namespace CGMAnalyzerCore.Commands
         {
             var command = new CgmCommand(ec, eid, l, reader);
             var argumentReader = new ExtractedArgumentReader(command);
-            return new EscapeCommand(ec, eid, l, command, argumentReader);
+            return new EscapeCommand(ec, eid, l, command);
         }
 
         // Class 7

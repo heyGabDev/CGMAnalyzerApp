@@ -14,24 +14,27 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
     {
         public List<Point2D.Double> Points { get; private set; } = new List<Point2D.Double>();
 
-        public PolylineCommand(int ec, int eid, int l, BinaryReader reader)
+        public PolylineCommand(int ec, int eid, int l, CgmCommand command)
              : base(ec, eid, l)
         {
-            var command = new CgmCommand(ec, eid, l, reader);
             Args = command.Args;
-
             Debug.WriteLine($"[PolylineCommand] ArgsLength={Args?.Length ?? 0}");
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command); // 'this' pas 'reader'
-                int pointCount = 0;
-                while (CurrentArg < Args?.Length)
+                var argReader = new ExtractedArgumentReader(this);
+
+                // Controle des nb points
+                int pointSize = argReader.SizeOfPoint();
+                int maxPoints = Args.Length / pointSize;
+                Debug.WriteLine($"[PolylineCommand] Taille point: {pointSize} octets, Max points: {maxPoints}");
+
+                // Lire les points
+                for (int i = 0; i < maxPoints; i++)
                 {
                     Point2D.Double point = argReader.MakePoint();
                     Points.Add(point);
-                    pointCount++;
-                    Debug.WriteLine($"[PolylineCommand] Point {pointCount}: ({point.X}, {point.Y})");
+                    Debug.WriteLine($"[PolylineCommand] Point {i + 1}: ({point.X}, {point.Y})");
                 }
 
                 Debug.WriteLine($"[PolylineCommand] Total points: {Points.Count}");
@@ -43,49 +46,41 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
                 Points = new List<Point2D.Double>();
                 HasReadErrors = true;
             }
-            //// Lire les arguments dans Args[] via le constructeur parent
-            //var command = new CgmCommand(ec, eid, l, reader);
-            //Args = command.Args;
-
-            //// Parser avec ExtractedArgumentReader
-            //var argReader = new ExtractedArgumentReader(command);
-
-            //int pointSize = argReader.SizeOfPoint();
-            //int pointCount = command.RemainingArgs() / pointSize;
-
-            //Debug.WriteLine($"[PolylineCommand] ArgsLength={Args.Length} PointSize={pointSize} PointCount={pointCount}");
-
-            //for (int i = 0; i < pointCount; i++)
-            //{
-            //    var point = argReader.MakePoint(ec, eid);
-            //    Points.Add(point);
-            //    Debug.WriteLine($"[PolylineCommand] Point {i}: ({point.X}, {point.Y})");
-            //}
-
-            //ValidateArgumentsRead("PolylineCommand");
         }
 
         public override void Draw(Graphics g, Pen pen)
         {
-            if (Points.Count < 2)
+            if (Points == null || Points.Count < 2)
             {
-                Debug.WriteLine($"[PolylineCommand] Pas assez de points pour dessiner: {Points.Count}");
+                Debug.WriteLine("[PolylineCommand] Pas assez de points pour dessiner");
                 return;
             }
 
-            var pointsArray = new PointF[Points.Count];
-            for (int i = 0; i < Points.Count; i++)
+            try
             {
-                pointsArray[i] = new PointF((float)Points[i].X, (float)Points[i].Y);
-            }
+                for (int i = 0; i < Points.Count - 1; i++)
+                {
+                    var p1 = Points[i];
+                    var p2 = Points[i + 1];
 
-            g.DrawLines(pen, pointsArray);
-            Debug.WriteLine($"[PolylineCommand] Dessiné {Points.Count} points");
+                    // Conversion Point2D → PointF
+                    var point1 = new PointF((float)p1.X, (float)p1.Y);
+                    var point2 = new PointF((float)p2.X, (float)p2.Y);
+
+                    g.DrawLine(pen, point1, point2);
+                }
+
+                Debug.WriteLine($"[PolylineCommand] Dessiné {Points.Count} points");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[PolylineCommand Draw ERROR] {ex.Message}");
+            }
         }
 
         public override string ToString()
         {
-            return $"POLYLINE ({Points.Count} points)";
+            return $"POLYLINE : {Points.Count} points";
         }
 
         public override void ReadArguments(BinaryReader reader)

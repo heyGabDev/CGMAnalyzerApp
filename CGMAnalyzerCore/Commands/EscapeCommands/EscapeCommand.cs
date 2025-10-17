@@ -12,9 +12,9 @@ namespace CGMAnalyzerCore.Commands.EscapeCommands
     public class EscapeCommand : BaseCgmCommand
     {
         public int Identifier { get; private set; }
-        public string DataRecord { get; private set; }
+        public string DataRecord { get; private set; } = "";
 
-        public EscapeCommand(int ec, int eid, int l, CgmCommand command, ExtractedArgumentReader argReader)
+        public EscapeCommand(int ec, int eid, int l, CgmCommand command)
             : base(ec, eid, l)
         {
             Args = command.Args;
@@ -22,22 +22,25 @@ namespace CGMAnalyzerCore.Commands.EscapeCommands
 
             try
             {
+                var argReader = new ExtractedArgumentReader(this);
                 Identifier = argReader.MakeInt();
-                DataRecord = argReader.MakeString();
+
+                if(this.CurrentArg < Args?.Length)
+                {
+                    DataRecord = argReader.MakeString();
+                }
 
                 CgmContext.LastEscapeIdentifier = Identifier;
-                CgmContext.LastEscapeDataRecord = DataRecord;
-
+                CgmContext.LastEscapeDataRecord = DataRecord;   
                 Debug.WriteLine($"[EscapeCommand] Identifier={Identifier} DataRecord={DataRecord}");
                 ValidateArgumentsRead("Escape");
             }
             catch (Exception)
             {
                 Identifier = -1; // Valeur par défaut en cas d'erreur
-                DataRecord = string.Empty;
+                DataRecord = "";
                 HasReadErrors = true;
             }
-
         }
 
         public override void Draw(Graphics g, Pen pen)
