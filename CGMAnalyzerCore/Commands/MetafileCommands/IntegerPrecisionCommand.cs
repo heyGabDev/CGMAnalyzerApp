@@ -12,6 +12,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
     public class IntegerPrecisionCommand : BaseCgmCommand
     {
         public int Precision { get; }
+        private const int DEFAULT_PRECISION = 16;
 
         public IntegerPrecisionCommand(int ec, int eid, int l, CgmCommand command)
             : base(ec, eid, l)
@@ -21,7 +22,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 Precision = argReader.MakeInt();
 
                 // Mettre à jour le contexte CGM
@@ -32,7 +33,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
             }
             catch (Exception)
             {
-                Precision = 16; // Valeur par défaut en cas d'erreur
+                Precision = DEFAULT_PRECISION;
                 CgmContext.SetIntegerPrecision(Precision);
                 HasReadErrors = true;
             }

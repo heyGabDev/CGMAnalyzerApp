@@ -18,7 +18,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
         }
 
         public PrecisionType Precision { get; private set; }
-
+        private const PrecisionType DEFAULT_PRECISION = PrecisionType.FloatingPoint32Bit;
         public RealPrecisionCommand(int ec, int eid, int l, CgmCommand command)
             : base(ec, eid, l)
         {
@@ -27,7 +27,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 int p1 = argReader.MakeInt();
                 switch (p1)
                 {
@@ -49,11 +49,10 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
             catch (Exception ex)
             {
                 Debug.WriteLine($"[RealPrecisionCommand ERROR] {ex.Message}");
-                Precision = PrecisionType.FloatingPoint32Bit;// Valeur par défaut en cas d'erreur
+                Precision = DEFAULT_PRECISION;
                 CgmContext.RealPrecision = (int)Precision;
                 HasReadErrors = true;
             }
-
         }
 
         /// <summary>

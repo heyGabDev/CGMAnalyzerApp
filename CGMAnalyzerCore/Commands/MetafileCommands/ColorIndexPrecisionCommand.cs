@@ -26,7 +26,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 Precision = argReader.MakeInt();
                 CgmContext.ColorIndexPrecision = Precision;
                 Debug.WriteLine($"[ColorIndexPrecisionCommand] Precision={Precision}");

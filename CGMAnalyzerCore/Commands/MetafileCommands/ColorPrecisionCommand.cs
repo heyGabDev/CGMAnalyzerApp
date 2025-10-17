@@ -12,6 +12,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
     public class ColorPrecisionCommand : BaseCgmCommand
     {
         public int Precision { get; private set; }
+        private const int DEFAULT_PRECISION = 8;
 
         public ColorPrecisionCommand(int ec, int eid, int l, CgmCommand command)
             : base(ec, eid, l)
@@ -21,7 +22,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 Precision = argReader.MakeInt();
                 CgmContext.ColorPrecision = Precision;
                 Debug.WriteLine($"[ColorPrecisionCommand] Precision={Precision}");
@@ -29,7 +30,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
             }
             catch (Exception)
             {
-                Precision = 8; // Valeur par défaut en cas d'erreur
+                Precision = DEFAULT_PRECISION
                 CgmContext.ColorPrecision = Precision;
                 HasReadErrors = true;
             }

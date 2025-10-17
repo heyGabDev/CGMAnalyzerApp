@@ -20,21 +20,17 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 var fontList = new List<string>();
 
                 // Lire les chaînes jusqu'à épuisement des arguments
-                while (command.CurrentArg < Args?.Length)
+                for (int i = this.CurrentArg; i < Args?.Length; i++)
                 {
                     string fontName = argReader.MakeString();
                     fontList.Add(fontName);
                     Debug.WriteLine($"[FontListCommand] Font[{fontList.Count - 1}]: {fontName}");
-                }
 
-                FontNames = fontList.ToArray();
-                Debug.WriteLine($"[FontListCommand] Total fonts: {FontNames.Length}");
-                ValidateArgumentsRead("FontListCommand");
-
+                };
             }
             catch (Exception ex)
             {

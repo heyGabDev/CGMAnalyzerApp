@@ -1,5 +1,4 @@
-﻿using CGMAnalyzerCore.Context;
-using CGMAnalyzerCore.Enums.Precision;
+﻿using CGMAnalyzerCore.Context; // Ajouté pour VDCTypeEnum
 using CGMAnalyzerCore.Parser;
 using System.Diagnostics;
 
@@ -7,9 +6,16 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands.Control
 {
     public class VDCTypeCommand : BaseCgmCommand
     {
-        public static VDCTypeEnum CurrentVDCType { get; private set; } = VDCTypeEnum.Integer;
+        public enum VDCTypeEnum
+        {
+            INTERGER = 0,
+            REAL = 1
+        }
 
-        public VDCTypeEnum Type { get; }
+        public static VDCTypeEnum CurrentVDCType { get; private set; }
+        private const VDCTypeEnum DEFAULT_VDC_TYPE = VDCTypeEnum.INTERGER;
+
+        public VDCTypeEnum Type { get; } = VDCTypeEnum.INTERGER;// Valeur par défaut en cas d'erreur
 
         public VDCTypeCommand(int ec, int eid, int l, CgmCommand command)
             : base(ec, eid, l)
@@ -19,13 +25,13 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands.Control
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 int vdcTypeCode = argReader.NextArg();
 
                 Type = vdcTypeCode switch
                 {
-                    0 => VDCTypeEnum.Integer,
-                    1 => VDCTypeEnum.Real,
+                    0 => VDCTypeEnum.INTERGER,
+                    1 => VDCTypeEnum.REAL,
                     _ => throw new InvalidDataException($"Unknown VDC type: {vdcTypeCode}")
                 };
 
@@ -39,7 +45,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands.Control
             catch (Exception)
             {
                 Debug.WriteLine($"[VDCTypeCommand ERROR] Error reading VDCTypeCommand");
-                Type = VDCTypeEnum.Integer; // Valeur par défaut en cas d'erreur
+                Type = DEFAULT_VDC_TYPE; 
                 CurrentVDCType = Type;
                 CgmContext.SetVdcType(Type);
                 HasReadErrors = true;

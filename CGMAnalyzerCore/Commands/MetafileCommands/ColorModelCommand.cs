@@ -30,7 +30,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 ColorModel = argReader.MakeInt();
                 CgmContext.ColorModel = (ColorModelEnum)ColorModel;
                 Debug.WriteLine($"[ColorModelCommand] ColourModel={ColorModel}");

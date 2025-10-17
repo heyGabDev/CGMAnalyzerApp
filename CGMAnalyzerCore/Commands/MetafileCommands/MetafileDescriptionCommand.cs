@@ -10,7 +10,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
     public class MetafileDescriptionCommand : BaseCgmCommand
     {
-        public string Description { get; }
+        public string Description { get; } = "";
 
         public MetafileDescriptionCommand(int ec, int eid, int l, CgmCommand command)
             : base(ec, eid, l)
@@ -21,7 +21,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 
             try 
             { 
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 Description = argReader.MakeString();
                 Debug.WriteLine($"[MetafileDescriptionCommand] Description='{Description}'");
 

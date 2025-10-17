@@ -22,7 +22,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 Precision = argReader.MakeInt();
                 CgmContext.NamePrecision = Precision;
                 Debug.WriteLine($"[NamePrecisionCommand] Precision={Precision}");

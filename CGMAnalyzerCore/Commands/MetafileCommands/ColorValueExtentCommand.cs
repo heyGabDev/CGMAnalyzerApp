@@ -29,7 +29,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 var colorModel = CgmContext.ColorModel;
 
                 if (colorModel == ColorModelEnum.RGB || colorModel == ColorModelEnum.CMYK)

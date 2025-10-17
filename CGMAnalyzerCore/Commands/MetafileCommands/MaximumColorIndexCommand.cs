@@ -22,7 +22,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 MaxColorIndex = argReader.MakeColorIndex();
                 CgmContext.MaximumColorIndex = MaxColorIndex;
                 Debug.WriteLine($"[MaximumColorIndexCommand] MaxColorIndex={MaxColorIndex}");

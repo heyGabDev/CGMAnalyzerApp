@@ -3,6 +3,7 @@ using System.Drawing;
 using CGMAnalyzerCore.Commands.PictureCommands;
 using CGMAnalyzerCore.Enums.Precision;
 using CGMAnalyzerCore.Geometry;
+using static CGMAnalyzerCore.Commands.GraphicCommands.Control.VDCTypeCommand;
 using static CGMAnalyzerCore.Commands.MetafileCommands.ColorModelCommand;
 
 namespace CGMAnalyzerCore.Context
@@ -148,7 +149,7 @@ namespace CGMAnalyzerCore.Context
         // --------------------------------------------------------------------
         public static void Reset()
         {
-            VdcType = VDCTypeEnum.Integer;
+            VdcType = VDCTypeEnum.INTERGER;
             VdcIntegerPrecision = 16;
             VdcRealPrecision = VDCRealPrecisionEnum.FixedPoint32;
 

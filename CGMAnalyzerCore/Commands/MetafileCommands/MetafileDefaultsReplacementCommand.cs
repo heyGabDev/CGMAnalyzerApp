@@ -21,7 +21,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
             Debug.WriteLine($"[MetafileDefaultsReplacementCommand] ArgsLength={Args?.Length ?? 0}");
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 // Lire l'en-tête de la commande embarquée (16 bits)
                 int k = argReader.MakeUInt(16);
 

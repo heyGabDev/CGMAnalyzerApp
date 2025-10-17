@@ -29,10 +29,10 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 CharacterSets = new Dictionary<CharacterSetType, string>();
 
-                while (CurrentArg < Args?.Length)
+                for ( int i = this.CurrentArg; i < Args?.Length; i++)
                 {
                     int typ = argReader.MakeEnum();
                     CharacterSetType type = typ switch
@@ -48,6 +48,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
                     string characterSetDesignation = argReader.MakeFixedString();
                     CharacterSets[type] = characterSetDesignation;
                 }
+
                 Debug.WriteLine($"[CharacterSetListCommand] CharacterSets: " +
                                 $"{string.Join(", ", CharacterSets.Select(kvp => $"[{kvp.Key},{kvp.Value}]"))}");
                 ValidateArgumentsRead("CharacterSetListCommand");

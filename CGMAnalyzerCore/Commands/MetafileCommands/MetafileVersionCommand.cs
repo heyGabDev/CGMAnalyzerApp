@@ -13,7 +13,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
     public class MetafileVersionCommand : BaseCgmCommand
     {
         public int Version { get; private set; }
-
+        private const int DEFAULT_VERSION = 1;
         public MetafileVersionCommand(int ec, int eid, int l, CgmCommand command)
                     : base(ec, eid, l)
         {
@@ -23,7 +23,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 
             try 
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 Version = argReader.MakeInt();
                 Debug.WriteLine($"[MetafileVersionCommand] Version={Version}");
                 ValidateArgumentsRead("MetafileVersionCommand");
@@ -31,7 +31,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
             catch (Exception ex)
             {
                 Debug.WriteLine($"[MetafileVersionCommand ERROR] {ex.Message}");
-                Version = 1; // Version par défaut
+                Version = DEFAULT_VERSION;
                 HasReadErrors = true;
             }
         }

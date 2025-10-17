@@ -22,7 +22,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 Point1 = argReader.MakePoint(ec, eid);
                 Point2 = argReader.MakePoint(ec, eid);
                 Debug.WriteLine($"[MaximumVdcExtentCommand] Point1=({Point1.X}, {Point1.Y}), Point2=({Point2.X}, {Point2.Y})");

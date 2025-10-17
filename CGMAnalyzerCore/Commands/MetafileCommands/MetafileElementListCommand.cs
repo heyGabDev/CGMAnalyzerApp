@@ -20,7 +20,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 
             try
             {
-                var argReader = new ExtractedArgumentReader(command);
+                var argReader = new ExtractedArgumentReader(this);
                 int nElements = argReader.MakeInt();
                 MetaFileElements = new string[nElements];
 
