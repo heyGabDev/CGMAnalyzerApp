@@ -32,6 +32,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             try
             {
                 var argReader = new ExtractedArgumentReader(this);
+
                 // Rectangle de restriction (largeur et hauteur)
                 Width = argReader.MakeVdc();
                 Debug.WriteLine($"[RestrictedTextCommand] Read Width={Width}");
@@ -80,7 +81,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             {
                 var position = Position.ToPointF();
                 using var brush = new SolidBrush(pen.Color);
-                using var font = new Font("Arial", 10);
+                using var font = new Font("Arial", 10); // Plus petit pour le texte restreint
 
                 // Créer un rectangle de restriction
                 var restrictRect = new RectangleF(
@@ -107,7 +108,6 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
                 HasReadErrors = true;
             }     
         }
-
 
         public override string ToString()
         {

@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.GraphicCommands
 {
+    /// <summary>
+    /// APPEND_TEXT (case 6) - Commande non supportée (comme dans la version Java originale)
+    /// </summary>
     public class AppendTextCommand : BaseCgmCommand
     {
         public string Text { get; private set; } = "";
@@ -23,6 +26,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             try
             {
                 var argReader = new ExtractedArgumentReader(this);
+
                 // Le texte à ajouter
                 Text = argReader.MakeString();
                 Debug.WriteLine($"[AppendTextCommand] Text=\"{Text}\"");
@@ -51,7 +55,6 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
         {
             // Ne plus utiliser cette méthode
             throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
-
         }
     }
 }

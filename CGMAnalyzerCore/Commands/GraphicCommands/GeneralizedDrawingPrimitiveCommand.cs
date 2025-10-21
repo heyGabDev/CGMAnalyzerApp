@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -45,7 +47,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
 
         public override string ToString()
         {
-            return $"GENERALIZED_DRAWING_PRIMITIVE";
+            return $"GENERALIZED_DRAWING_PRIMITIVE (unsupported)";
         }
 
         public override void ReadArguments(BinaryReader reader)

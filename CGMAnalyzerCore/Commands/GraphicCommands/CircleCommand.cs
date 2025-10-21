@@ -29,6 +29,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             try
             {
                 var argReader = new ExtractedArgumentReader(this);
+
                 // Un cercle est défini par le centre et un point sur le bord
                 Center = argReader.MakePoint();
                 Debug.WriteLine($"[CircleCommand] Read Center=({Center.X}, {Center.Y})");

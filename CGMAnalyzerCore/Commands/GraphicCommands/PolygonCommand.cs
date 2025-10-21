@@ -31,13 +31,13 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             try
             {
                 var argReader = new ExtractedArgumentReader(this);
+
                 // Contrôle du nombre de points
                 int pointSize = argReader.SizeOfPoint();
                 int maxPoints = Args.Length / pointSize;
                 Debug.WriteLine($"[PolygonCommand] pointSize={pointSize}, maxPoints={maxPoints}");
 
                 // Lire les points
-
                 for (int i = 0; i < maxPoints; i++)
                 {
                     Point2D point = argReader.MakePoint();
@@ -46,7 +46,6 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
                 }
                 Debug.WriteLine($"[PolygonCommand] Total points: {_points.Count}");
                 ValidateArgumentsRead("PolygonCommand");
-
             }
             catch (Exception ex)
             {

@@ -1,8 +1,9 @@
-﻿using System;
-using System.Drawing;
-using CGMAnalyzerCore.Commands.PictureCommands;
+﻿using CGMAnalyzerCore.Commands.PictureCommands;
 using CGMAnalyzerCore.Enums.Precision;
 using CGMAnalyzerCore.Geometry;
+using System;
+using System.Diagnostics;
+using System.Drawing;
 using static CGMAnalyzerCore.Commands.GraphicCommands.Control.VDCTypeCommand;
 using static CGMAnalyzerCore.Commands.MetafileCommands.ColorModelCommand;
 using static CGMAnalyzerCore.Commands.SpecificationModeExtensions;
@@ -53,9 +54,83 @@ namespace CGMAnalyzerCore.Context
         public static Color FillColor { get; set; } = Color.Transparent;
         public static float LineWidth { get; set; } = 1f;
 
-        // --------------------------------------------------------------------
-        // VDC Extent (boîte englobante logique du dessin CGM)
-        // --------------------------------------------------------------------
+        #region ===== TABLE DE COULEURS =====
+
+        /// <summary>
+        /// Table de couleurs indexées (remplie par ColourTableCommand)
+        /// </summary>
+        private static Dictionary<int, Color> _colorTable = new Dictionary<int, Color>();
+
+        /// <summary>
+        /// Récupère une couleur depuis la table de couleurs par son index
+        /// </summary>
+        public static Color GetColorFromIndex(int index)
+        {
+            // Si la couleur existe dans la table, la retourner
+            if (_colorTable.ContainsKey(index))
+            {
+                return _colorTable[index];
+            }
+
+            // Sinon, utiliser des couleurs par défaut standard CGM
+            // Selon la spec CGM, les 8 premières couleurs sont normalisées
+            return index switch
+            {
+                0 => Color.White,       // Background (souvent blanc)
+                1 => Color.Black,       // Foreground (souvent noir)
+                2 => Color.Red,
+                3 => Color.Green,
+                4 => Color.Blue,
+                5 => Color.Yellow,
+                6 => Color.Magenta,
+                7 => Color.Cyan,
+                _ => GenerateDefaultColor(index) // Génération automatique pour les autres index
+            };
+        }
+
+        /// <summary>
+        /// Génère une couleur par défaut basée sur l'index (pour les index > 7)
+        /// </summary>
+        private static Color GenerateDefaultColor(int index)
+        {
+            // Stratégie 1: Niveau de gris
+            int gray = (index * 255) / Math.Max(CgmContext.MaximumColorIndex, 255);
+            return Color.FromArgb(gray, gray, gray);
+
+            // Stratégie 2 (alternative): Couleurs distinctes en utilisant HSV
+            // float hue = (index * 137.5f) % 360; // Golden angle pour distribution uniforme
+            // return ColorFromHSV(hue, 1.0f, 1.0f);
+        }
+
+        /// <summary>
+        /// Définit une couleur dans la table de couleurs (utilisé par ColourTableCommand)
+        /// </summary>
+        public static void SetColorInTable(int index, Color color)
+        {
+            _colorTable[index] = color;
+            Debug.WriteLine($"[CgmContext] ColorTable[{index}] = R:{color.R}, G:{color.G}, B:{color.B}");
+        }
+
+        /// <summary>
+        /// Efface la table de couleurs (appelé au début d'un nouveau métafichier)
+        /// </summary>
+        public static void ClearColorTable()
+        {
+            _colorTable.Clear();
+            Debug.WriteLine("[CgmContext] Color table cleared");
+        }
+
+        /// <summary>
+        /// Retourne le nombre d'entrées dans la table de couleurs
+        /// </summary>
+        public static int GetColorTableSize()
+        {
+            return _colorTable.Count;
+        }
+
+        #endregion
+
+        #region ===== VDC Extent (boîte englobante logique du dessin CGM)  =====
         public struct VdcExtentRect
         {
             public double Left;
@@ -94,10 +169,9 @@ namespace CGMAnalyzerCore.Context
         /// Extent VDC courant (utilisé par le renderer pour transformer VDC → pixels).
         /// </summary>
         public static VdcExtentRect VdcExtent { get; private set; } = new VdcExtentRect(0, 1, 1, 0);
+        #endregion
 
-        // --------------------------------------------------------------------
-        // Modes de spécification et autres paramètres
-        // --------------------------------------------------------------------
+        #region ===== Modes de spécification et autres paramètres  =====
         public static int CurrentLayerId { get; set; } = 0;
         public static ColorSelectionModeCommand.ColorSelectionType ColorSelectionMode { get; set; }
         public static SpecificationMode EdgeWidthSpecificationMode { get; set; }
@@ -110,11 +184,9 @@ namespace CGMAnalyzerCore.Context
         public static string LastEscapeDataRecord { get; set; } = "";
         public static Color BackgroundColor { get; internal set; }
         public static SpecificationMode InteriorStyleSpecificationMode { get; internal set; }
+        #endregion
 
-        // --------------------------------------------------------------------
-        // Helpers de mise à jour (appelés par le renderer quand il croise des commandes "contexte")
-        // --------------------------------------------------------------------
-
+        #region ===== Helpers de mise à jour (appelés par le renderer quand il croise des commandes "contexte")  =====
         /// <summary>
         /// Met à jour l'extent VDC à partir de deux points CGM (min/max).
         /// </summary>
@@ -144,10 +216,9 @@ namespace CGMAnalyzerCore.Context
             var width = LineWidth <= 0 ? 1f : LineWidth;
             return new Pen(StrokeColor, width);
         }
+        #endregion
 
-        // --------------------------------------------------------------------
-        // Reset : appelé en début de parsing / nouveau fichier
-        // --------------------------------------------------------------------
+        #region ===== Reset : appelé en début de parsing / nouveau fichier  =====
         public static void Reset()
         {
             VdcType = VDCTypeEnum.INTEGER;
@@ -184,5 +255,6 @@ namespace CGMAnalyzerCore.Context
             LastEscapeIdentifier = 0;
             LastEscapeDataRecord = "";
         }
+        #endregion
     }
 }

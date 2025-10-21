@@ -32,7 +32,6 @@ namespace CGMAnalyzerCore.Commands
         public int LayerId { get; set; }
         public bool ErrorCommand { get; set; }
 
-
         /// <summary>
         /// Constructeur principal - lit les octets depuis le stream
         /// </summary>
@@ -496,7 +495,6 @@ namespace CGMAnalyzerCore.Commands
         {
             var element = (AttributeElement)eid;
             var command = new CgmCommand(ec, eid, l, reader);
-            var argumentReader = new ExtractedArgumentReader(command);
 
             return element switch
             {
@@ -508,39 +506,39 @@ namespace CGMAnalyzerCore.Commands
                 AttributeElement.EdgeBundleIndex => UnsupportedCommand.Unsupported(ec, eid, l, reader), // 26
 
                 // 2-4 - Line attributes
-                AttributeElement.LineType => new LineTypeCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.LineWidth => new LineWidthCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.LineColour => new LineColourCommand(ec, eid, l, command, argumentReader),
+                AttributeElement.LineType => new LineTypeCommand(ec, eid, l, command),
+                AttributeElement.LineWidth => new LineWidthCommand(ec, eid, l, command),
+                AttributeElement.LineColour => new LineColorCommand(ec, eid, l, command),
 
                 // 6-8 - Marker attributes
-                AttributeElement.MarkerType => new MarkerTypeCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.MarkerSize => new MarkerSizeCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.MarkerColour => new MarkerColourCommand(ec, eid, l, command, argumentReader),
+                AttributeElement.MarkerType => new MarkerTypeCommand(ec, eid, l, command),
+                AttributeElement.MarkerSize => new MarkerSizeCommand(ec, eid, l, command),
+                AttributeElement.MarkerColour => new MarkerColorCommand(ec, eid, l, command),
 
                 // 10-20 - Text attributes
-                AttributeElement.TextFontIndex => new TextFontIndexCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.TextPrecision => new TextPrecisionCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.CharacterExpansionFactor => new CharacterExpansionFactorCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.CharacterSpacing => new CharacterSpacingCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.TextColour => new TextColourCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.CharacterHeight => new CharacterHeightCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.CharacterOrientation => new CharacterOrientationCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.TextPath => new TextPathCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.TextAlignment => new TextAlignmentCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.CharacterSetIndex => new CharacterSetIndexCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.AlternateCharacterSetIndex => new AlternateCharacterSetIndexCommand(ec, eid, l, command, argumentReader),
+                AttributeElement.TextFontIndex => new TextFontIndexCommand(ec, eid, l, command),
+                AttributeElement.TextPrecision => new TextPrecisionCommand(ec, eid, l, command),
+                AttributeElement.CharacterExpansionFactor => new CharacterExpansionFactorCommand(ec, eid, l, command),
+                AttributeElement.CharacterSpacing => new CharacterSpacingCommand(ec, eid, l, command),
+                AttributeElement.TextColour => new TextColorCommand(ec, eid, l, command),
+                AttributeElement.CharacterHeight => new CharacterHeightCommand(ec, eid, l, command ),
+                AttributeElement.CharacterOrientation => new CharacterOrientationCommand(ec, eid, l, command),
+                AttributeElement.TextPath => new TextPathCommand(ec, eid, l, command),
+                AttributeElement.TextAlignment => new TextAlignmentCommand(ec, eid, l, command),
+                AttributeElement.CharacterSetIndex => new CharacterSetIndexCommand(ec, eid, l, command),
+                AttributeElement.AlternateCharacterSetIndex => new AlternateCharacterSetIndexCommand(ec, eid, l, command),
 
                 // 22-25 - Fill attributes
-                AttributeElement.InteriorStyle => new InteriorStyleCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.FillColour => new FillColourCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.HatchIndex => new HatchIndexCommand(ec, eid, l, command, argumentReader),
+                AttributeElement.InteriorStyle => new InteriorStyleCommand(ec, eid, l, command),
+                AttributeElement.FillColour => new FillColorCommand(ec, eid, l, command),
+                AttributeElement.HatchIndex => new HatchIndexCommand(ec, eid, l, command),
                 AttributeElement.PatternIndex => UnsupportedCommand.Unsupported(ec, eid, l, reader),
 
                 // 27-30 - Edge attributes
-                AttributeElement.EdgeType => new EdgeTypeCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.EdgeWidth => new EdgeWidthCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.EdgeColour => new EdgeColourCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.EdgeVisibility => new EdgeVisibilityCommand(ec, eid, l, command, argumentReader),
+                AttributeElement.EdgeType => new EdgeTypeCommand(ec, eid, l, command),
+                AttributeElement.EdgeWidth => new EdgeWidthCommand(ec, eid, l, command),
+                AttributeElement.EdgeColour => new EdgeColorCommand(ec, eid, l, command),
+                AttributeElement.EdgeVisibility => new EdgeVisibilityCommand(ec, eid, l, command),
 
                 // 31-33 - Pattern attributes (non supportés)
                 AttributeElement.FillReferencePoint or
@@ -548,15 +546,15 @@ namespace CGMAnalyzerCore.Commands
                 AttributeElement.PatternSize => UnsupportedCommand.Unsupported(ec, eid, l, reader),
 
                 // 34 - Colour table
-                AttributeElement.ColourTable => new ColourTableCommand(ec, eid, l, command, argumentReader),
+                AttributeElement.ColorTable => new ColorTableCommand(ec, eid, l, command),
 
                 // 35-36 - Misc attributes (non supportés)
                 AttributeElement.AspectSourceFlags or
                 AttributeElement.PickIdentifier => UnsupportedCommand.Unsupported(ec, eid, l, reader),
 
                 // 37-38 - Line caps and joins
-                AttributeElement.LineCap => new LineCapCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.LineJoin => new LineJoinCommand(ec, eid, l, command, argumentReader),
+                AttributeElement.LineCap => new LineCapCommand(ec, eid, l, command),
+                AttributeElement.LineJoin => new LineJoinCommand(ec, eid, l, command),
 
                 // 39-41 - Line continuation (non supportés)
                 AttributeElement.LineTypeContinuation or
@@ -564,14 +562,14 @@ namespace CGMAnalyzerCore.Commands
                 AttributeElement.TextScoreType => UnsupportedCommand.Unsupported(ec, eid, l, reader),
 
                 // 42 - Restricted text type
-                AttributeElement.RestrictedTextType => new RestrictedTextTypeCommand(ec, eid, l, command, argumentReader),
+                AttributeElement.RestrictedTextType => new RestrictedTextTypeCommand(ec, eid, l, command),
 
                 // 43 - Interpolated interior (non supporté)
                 AttributeElement.InterpolatedInterior => UnsupportedCommand.Unsupported(ec, eid, l, reader),
 
                 // 44-45 - Edge caps and joins
-                AttributeElement.EdgeCap => new EdgeCapCommand(ec, eid, l, command, argumentReader),
-                AttributeElement.EdgeJoin => new EdgeJoinCommand(ec, eid, l, command, argumentReader),
+                AttributeElement.EdgeCap => new EdgeCapCommand(ec, eid, l, command),
+                AttributeElement.EdgeJoin => new EdgeJoinCommand(ec, eid, l, command),
 
                 // 46-51 - Edge continuation et symbol attributes (non supportés)
                 AttributeElement.EdgeTypeContinuation or
@@ -612,7 +610,7 @@ namespace CGMAnalyzerCore.Commands
         private static BaseCgmCommand ReadApplicationStructureElements(BinaryReader reader, int ec, int eid, int l)
         {
             var command = new CgmCommand(ec, eid, l, reader);
-            return new ApplicationStructureCommand(command, ec, eid,l);
+            return new ApplicationStructureCommand(ec, eid,l, command);
         }
         #endregion
 

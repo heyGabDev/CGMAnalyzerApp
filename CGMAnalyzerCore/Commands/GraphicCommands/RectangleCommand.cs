@@ -3,6 +3,8 @@ using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,6 +28,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             try
             {
                 var argReader = new ExtractedArgumentReader(this);
+
                 // Un rectangle est défini par 2 points (coins opposés)
                 Corner1 = argReader.MakePoint();
                 Debug.WriteLine($"[RectangleCommand] Read Corner1=({Corner1.X}, {Corner1.Y})");

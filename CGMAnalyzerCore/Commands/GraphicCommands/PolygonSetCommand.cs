@@ -108,7 +108,6 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
         {
             // Ne plus utiliser cette méthode
             throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
-
         }
     }
 }

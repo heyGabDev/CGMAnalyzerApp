@@ -29,8 +29,10 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             try
             {
                 var argReader = new ExtractedArgumentReader(this);
+
                 // Position du texte
                 Position = argReader.MakePoint();
+                Debug.WriteLine($"[TextCommand] Read Position=({Position.X}, {Position.Y})");
 
                 // Le texte suit après le point
                 Text = argReader.MakeString();
@@ -76,7 +78,6 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
                 HasReadErrors = true;
             }
         }
-
 
         public override string ToString()
         {

@@ -3,6 +3,8 @@ using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,6 +29,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             try
             {
                 var argReader = new ExtractedArgumentReader(this);
+
                 StartPoint = argReader.MakePoint();
                 Debug.WriteLine($"[CircularArc3PointCommand] Read StartPoint=({StartPoint.X}, {StartPoint.Y})");
 
@@ -55,21 +58,33 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
                 return;
             }
 
+            Debug.WriteLine($"[CircularArc3PointCommand] Dessin arc de ({StartPoint.X}, {StartPoint.Y}) via ({IntermediatePoint.X}, {IntermediatePoint.Y}) à ({EndPoint.X}, {EndPoint.Y})");
+
             try
             {
                 // Calculer le centre et le rayon de l'arc à partir des 3 points
                 var center = CalculateCircleCenter(StartPoint, IntermediatePoint, EndPoint);
-                if (center == null) return; // Points colinéaires
+                if (center == null)
+                {
+                    Debug.WriteLine("[CircularArc3PointCommand] Points colinéaires, impossible de calculer l'arc");
+                    return;
+                }
+
+                Debug.WriteLine($"[CircularArc3PointCommand] Centre calculé: ({center.X:F2}, {center.Y:F2})");
 
                 var radius = Math.Sqrt(Math.Pow(center.X - StartPoint.X, 2) + Math.Pow(center.Y - StartPoint.Y, 2));
+                Debug.WriteLine($"[CircularArc3PointCommand] Rayon calculé: {radius:F2}");
 
                 // Calculer les angles
-
                 var startAngle = CalculateAngle(center.X, center.Y, StartPoint);
                 var endAngle = CalculateAngle(center.X, center.Y, EndPoint);
+                var intermediateAngle = CalculateAngle(center.X, center.Y, IntermediatePoint);
+
+                Debug.WriteLine($"[CircularArc3PointCommand] Angles - Start: {startAngle:F2}°, Intermediate: {intermediateAngle:F2}°, End: {endAngle:F2}°");
 
                 // S'assurer que l'arc passe par le point intermédiaire
-                var sweepAngle = CalculateSweepAngle(startAngle, endAngle, CalculateAngle(center.X, center.Y, IntermediatePoint));
+                var sweepAngle = CalculateSweepAngle(startAngle, endAngle, intermediateAngle);
+                Debug.WriteLine($"[CircularArc3PointCommand] Sweep angle: {sweepAngle:F2}°");
 
                 // Dessiner l'arc
                 var rect = new RectangleF(
@@ -80,11 +95,10 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
                 );
 
                 g.DrawArc(pen, rect, (float)startAngle, (float)sweepAngle);
-
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[CircularArc3PointCommand ERROR] Erreur lors du dessin : {ex.Message}");
+                Debug.WriteLine($"[CircularArc3PointCommand Draw ERROR] {ex.Message}");
                 HasReadErrors = true;
             }
         }
@@ -136,7 +150,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
 
         public override string ToString()
         {
-            return $"CIRCULAR_ARC_3_POINT {StartPoint} -> {IntermediatePoint} -> {EndPoint}";
+            return $"CIRCULAR_ARC_3_POINT ({StartPoint.X}, {StartPoint.Y}) -> ({IntermediatePoint.X}, {IntermediatePoint.Y}) -> ({EndPoint.X}, {EndPoint.Y})";
         }
 
         public override void ReadArguments(BinaryReader reader)

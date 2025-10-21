@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -11,7 +13,33 @@ using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands
 {
-    public partial class ApplicationStructureCommand : BaseCgmCommand
+    public enum SDRType
+    {
+        SDR = 1,
+        CI = 2,
+        CD = 3,
+        N = 4,
+        E = 5,
+        I = 6,
+        Reserved = 7,
+        IF8 = 8,
+        IF16 = 9,
+        IF32 = 10,
+        IX = 11,
+        R = 12,
+        S = 13,
+        SF = 14,
+        VC = 15,
+        VDC = 16,
+        CCO = 17,
+        UI8 = 18,
+        UI32 = 19,
+        BS = 20,
+        CL = 21,
+        UI16 = 22
+    }
+
+    public class ApplicationStructureCommand : BaseCgmCommand
     {
         //public string AttributeType { get; private set; }
         //public object AttributeValue { get; private set; }
@@ -22,7 +50,7 @@ namespace CGMAnalyzerCore.Commands
         public string Id { get; private set; }
         public string Type { get; private set; }
 
-        public ApplicationStructureCommand(CgmCommand command, int ec, int eid, int l)
+        public ApplicationStructureCommand(int ec, int eid, int l,CgmCommand command)
             : base(ec, eid, l)
         {
             Args = command.Args;
@@ -70,6 +98,7 @@ namespace CGMAnalyzerCore.Commands
                 // ANCIEN CODE POUR PARSER LE SDR
                 // Lire le SDR (Structured Data Record)
                 //ParseSDR(argReader);
+                ValidateArgumentsRead("ApplicationStructureCommand");
 
             }
             catch (Exception)

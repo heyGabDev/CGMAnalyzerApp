@@ -42,7 +42,7 @@ namespace CGMAnalyzerCore.Enums.Core
         FillReferencePoint = 31,
         PatternTable = 32,
         PatternSize = 33,
-        ColourTable = 34,
+        ColorTable = 34,
         AspectSourceFlags = 35,
         PickIdentifier = 36,
         LineCap = 37,

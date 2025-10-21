@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.IO;
 
 namespace CGMAnalyzerCore.Commands.GraphicCommands
@@ -38,17 +37,19 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
                 // Lire les points
                 for (int i = 0; i < maxPoints; i++)
                 {
-                    Point2D point = argReader.MakePoint();  // ← Sans paramètres !
+                    Point2D point = argReader.MakePoint(); 
                     allPoints.Add(point);
                 }
 
+                // Vérifier qu'on a un nombre pair de points
                 if (allPoints.Count % 2 != 0)
                 {
                     Debug.WriteLine($"[DisjointPolyline WARNING] Nombre de points impair: {allPoints.Count}, ignoré le dernier");
                     allPoints.RemoveAt(allPoints.Count - 1); // Ignorer le dernier point
                 }
 
-                for(int i = 0; i < allPoints.Count; i += 2)
+                // Créer les lignes par paires de points
+                for (int i = 0; i < allPoints.Count; i += 2)
                 {
                     Lines.Add((allPoints[i], allPoints[i + 1]));
                     Debug.WriteLine($"[DisjointPolyline] Ligne {i / 2}: ({allPoints[i].X},{allPoints[i].Y}) -> ({allPoints[i + 1].X},{allPoints[i + 1].Y})");

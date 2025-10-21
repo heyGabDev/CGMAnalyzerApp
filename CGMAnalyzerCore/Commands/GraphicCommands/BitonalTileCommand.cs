@@ -11,6 +11,9 @@ using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.GraphicCommands
 {
+    /// <summary>
+    /// BITONAL_TILE (case 28) - Tuile monochrome (noir/blanc)
+    /// </summary>
     public class BitonalTileCommand : BaseCgmCommand
     {
         public Point2D Position { get; private set; } = new Point2D(0, 0);
@@ -25,12 +28,13 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             try
             {
                 var argReader = new ExtractedArgumentReader(this);
+
                 Position = argReader.MakePoint();
                 Debug.WriteLine($"[BitonalTileCommand] Read Position=({Position.X}, {Position.Y})");
 
-                var remainingArgs = command.Args.Length - argReader.SizeOfPoint();
-                TileData = new byte[remainingArgs];
-                for (int i = 0; i < remainingArgs; i++)
+                int remainingBytes = this.RemainingArgs();
+                TileData = new byte[remainingBytes];
+                for (int i = 0; i < remainingBytes; i++)
                 {
                     TileData[i] = (byte)argReader.MakeUInt8();
                 }
@@ -74,14 +78,14 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[BitonalTileCommand ERROR] Error during drawing: {ex.Message}");
+                Debug.WriteLine($"[BitonalTileCommand Draw ERROR] {ex.Message}");
                 HasReadErrors = true;
             }
         }
 
         public override string ToString()
         {
-            return $"BITONAL_TILE at {Position}";
+            return $"BITONAL_TILE at ({Position.X}, {Position.Y}) - {TileData.Length} bytes";
         }
 
         public override void ReadArguments(BinaryReader reader)

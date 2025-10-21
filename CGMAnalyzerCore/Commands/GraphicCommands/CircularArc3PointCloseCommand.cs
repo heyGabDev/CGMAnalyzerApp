@@ -31,6 +31,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             try
             {
                 var argReader = new ExtractedArgumentReader(this);
+
                 StartPoint = argReader.MakePoint();
                 Debug.WriteLine($"[CircularArc3PointCloseCommand] Read StartPoint=({StartPoint.X}, {StartPoint.Y})");
 
@@ -42,6 +43,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
 
                 ClosureType = argReader.MakeEnum();
                 Debug.WriteLine($"[CircularArc3PointCloseCommand] Read ClosureType={ClosureType} (0=pie, 1=chord)");
+
                 ValidateArgumentsRead("CircularArc3PointCloseCommand");
             }
             catch (Exception ex)
@@ -63,6 +65,8 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
                 return;
             }
 
+            Debug.WriteLine($"[CircularArc3PointCloseCommand] Dessin arc fermé ({(ClosureType == 0 ? "pie" : "chord")}) de ({StartPoint.X}, {StartPoint.Y}) via ({IntermediatePoint.X}, {IntermediatePoint.Y}) à ({EndPoint.X}, {EndPoint.Y})");
+
             try
             {
                 // Calculer le centre et le rayon de l'arc
@@ -73,21 +77,21 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
                     return;
                 }
 
-                Debug.WriteLine($"[CircularArc3PointCloseCommand] Calculated center=({center.X}, {center.Y})");
+                Debug.WriteLine($"[CircularArc3PointCloseCommand] Centre calculé: ({center.X:F2}, {center.Y:F2})");
 
                 var radius = Math.Sqrt(Math.Pow(center.X - StartPoint.X, 2) + Math.Pow(center.Y - StartPoint.Y, 2));
-                Debug.WriteLine($"[CircularArc3PointCloseCommand] Calculated center=({center.X}, {center.Y}), radius={radius:F2}");
+                Debug.WriteLine($"[CircularArc3PointCloseCommand] Rayon calculé: {radius:F2}");
 
-                var startAngle = Math.Atan2(StartPoint.Y - center.Y, StartPoint.X - center.X) * 180 / Math.PI;
-                var endAngle = Math.Atan2(EndPoint.Y - center.Y, EndPoint.X - center.X) * 180 / Math.PI;
+                // Calculer les angles
+                var startAngle = CalculateAngle(center.X, center.Y, StartPoint);
+                var endAngle = CalculateAngle(center.X, center.Y, EndPoint);
                 var intermediateAngle = CalculateAngle(center.X, center.Y, IntermediatePoint);
-                Debug.WriteLine($"[CircularArc3PointCloseCommand] Angles - Start: {startAngle:F2}°, " +
-                                $"Intermediate: {intermediateAngle:F2}°, End: {endAngle:F2}°");
 
+                Debug.WriteLine($"[CircularArc3PointCloseCommand] Angles - Start: {startAngle:F2}°, Intermediate: {intermediateAngle:F2}°, End: {endAngle:F2}°");
 
-                // Ajuster les angles pour s'assurer que l'arc passe par le point intermédiaire
+                // S'assurer que l'arc passe par le point intermédiaire
                 var sweepAngle = CalculateSweepAngle(startAngle, endAngle, intermediateAngle);
-                Debug.WriteLine($"[CircularArc3PointCloseCommand] Initial sweepAngle={sweepAngle:F2}");
+                Debug.WriteLine($"[CircularArc3PointCloseCommand] Sweep angle: {sweepAngle:F2}°");
 
                 var rect = new RectangleF(
                     (float)(center.X - radius),
@@ -103,13 +107,14 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
                 {
                     path.AddLine(path.GetLastPoint(), new PointF((float)center.X, (float)center.Y));
                 }
+                // Si ClosureType == 1 (chord), la ligne de fermeture sera ajoutée par CloseFigure()
 
                 path.CloseFigure();
                 g.DrawPath(pen, path);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[CircularArc3PointCloseCommand ERROR] Erreur lors du dessin : {ex.Message}");
+                Debug.WriteLine($"[CircularArc3PointCloseCommand Draw ERROR] {ex.Message}");
                 HasReadErrors = true;
             }
         }
@@ -117,7 +122,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
         private Point2D? CalculateCircleCenter(Point2D p1, Point2D p2, Point2D p3)
         {
             var d = 2 * (p1.X * (p2.Y - p3.Y) + p2.X * (p3.Y - p1.Y) + p3.X * (p1.Y - p2.Y));
-            if (Math.Abs(d) < 0.0001) return null;
+            if (Math.Abs(d) < 0.0001) return null; // Points colinéaires
 
             var ux = ((p1.X * p1.X + p1.Y * p1.Y) * (p2.Y - p3.Y) +
                       (p2.X * p2.X + p2.Y * p2.Y) * (p3.Y - p1.Y) +

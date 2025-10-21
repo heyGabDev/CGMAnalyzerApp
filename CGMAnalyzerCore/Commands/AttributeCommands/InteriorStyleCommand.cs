@@ -1,41 +1,82 @@
-﻿using CGMAnalyzerCore.Enums.Fonts;
-using CGMAnalyzerCore.Parser;
+﻿using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.AttributeCommands
 {
-    public class InteriorStyleCommand : CgmCommand
+    /// <summary>
+    /// INTERIOR_STYLE (case 22) - Définit le style de remplissage des polygones
+    /// </summary>
+    public enum InteriorStyleType
     {
-        public InteriorStyleType Style { get; private set; }
+        Hollow = 0,
+        Solid = 1,
+        Pattern = 2,
+        Hatch = 3,
+        Empty = 4,
+        GeometricPattern = 5,
+        Interpolated = 6
+    }
 
-        public InteriorStyleCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+    public class InteriorStyleCommand : BaseCgmCommand
+    {
+        public InteriorStyleType Style { get; private set; } = InteriorStyleType.Hollow;
+        private const InteriorStyleType DEFAULT_INTERIOR_STYLE_TYPE = InteriorStyleType.Hollow;
+
+        public InteriorStyleCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
         {
-            int style = argReader.MakeEnum();
-            Style = style switch
-            {
-                0 => InteriorStyleType.Hollow,
-                1 => InteriorStyleType.Solid,
-                2 => InteriorStyleType.Pattern,
-                3 => InteriorStyleType.Hatch,
-                4 => InteriorStyleType.Empty,
-                5 => InteriorStyleType.GeometricPattern,
-                6 => InteriorStyleType.Interpolated,
-                _ => InteriorStyleType.Hollow
-            };
-            ValidateArgumentsRead("InteriorStyle");
+            Args = command.Args;
+            Debug.WriteLine($"[InteriorStyleCommand] ArgsLength={Args?.Length ?? 0}");
 
-            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-            //    "Not all arguments were read in InteriorStyle");
+            try
+            {
+                var argReader = new ExtractedArgumentReader(this);
+                int styleValue = argReader.MakeEnum();
+                Style = styleValue switch
+                {
+                    0 => InteriorStyleType.Hollow,
+                    1 => InteriorStyleType.Solid,
+                    2 => InteriorStyleType.Pattern,
+                    3 => InteriorStyleType.Hatch,
+                    4 => InteriorStyleType.Empty,
+                    5 => InteriorStyleType.GeometricPattern,
+                    6 => InteriorStyleType.Interpolated,
+                    _ => InteriorStyleType.Hollow
+                };
+                Debug.WriteLine($"[InteriorStyleCommand] Style: {styleValue} ({Style})");
+
+                ValidateArgumentsRead("InteriorStyleCommand");
+
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[InteriorStyleCommand Error] {ex.Message}");
+                Style = DEFAULT_INTERIOR_STYLE_TYPE;
+                HasReadErrors = true;
+            }
+        }
+
+        public override void Draw(Graphics g, Pen pen)
+        {
+            // No drawing
         }
 
         public override string ToString()
         {
-            return $"InteriorStyle {Style}";
+            return $"INTERIOR_STYLE_TYPE : {Style}";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

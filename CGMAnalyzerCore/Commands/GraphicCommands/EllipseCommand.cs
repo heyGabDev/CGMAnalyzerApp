@@ -30,6 +30,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             try
             {
                 var argReader = new ExtractedArgumentReader(this);
+
                 // Une ellipse est définie par le centre et 2 diamètres conjugués
                 Center = argReader.MakePoint();
                 Debug.WriteLine($"[EllipseCommand] Read Center=({Center.X}, {Center.Y})");
@@ -39,6 +40,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             
                 SecondConjugateDiameter = argReader.MakePoint();
                 Debug.WriteLine($"[EllipseCommand] Read SecondConjugateDiameter=({SecondConjugateDiameter.X}, {SecondConjugateDiameter.Y})");
+                
                 ValidateArgumentsRead("EllipseCommand");
             }
             catch (Exception ex)
@@ -53,15 +55,23 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
 
         public override void Draw(Graphics g, Pen pen)
         {
-            // Calculer les rayons à partir des diamètres conjugués
-            float rx = (float)Math.Abs(FirstConjugateDiameter.X - Center.X);
-            float ry = (float)Math.Abs(SecondConjugateDiameter.Y - Center.Y);
+            // Distance du centre au point = rayon
+            float rx = (float)Math.Sqrt(
+                            Math.Pow(FirstConjugateDiameter.X - Center.X, 2) +
+                            Math.Pow(FirstConjugateDiameter.Y - Center.Y, 2)
+                        );
+            float ry = (float)Math.Sqrt(
+                Math.Pow(SecondConjugateDiameter.X - Center.X, 2) +
+                Math.Pow(SecondConjugateDiameter.Y - Center.Y, 2)
+            );
 
-            if (rx == 0 || ry == 0)
+            if (rx <= 0 || ry <= 0)
             {
-                Debug.WriteLine("[EllipseCommand] Rayons invalides, dessin ignoré");
+                Debug.WriteLine($"[EllipseCommand] Rayons invalides (rx={rx:F2}, ry={ry:F2}), dessin ignoré");
                 return;
             }
+
+            Debug.WriteLine($"[EllipseCommand] Dessin ellipse centre ({Center.X}, {Center.Y}), rx={rx:F2}, ry={ry:F2}");
 
             try
             {
@@ -81,7 +91,9 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
 
         public override string ToString()
         {
-            return $"ELLIPSE center={Center} rx={(FirstConjugateDiameter.X - Center.X):F2} ry={(SecondConjugateDiameter.Y - Center.Y):F2}";
+            float rx = (float)Math.Sqrt(Math.Pow(FirstConjugateDiameter.X - Center.X, 2) + Math.Pow(FirstConjugateDiameter.Y - Center.Y, 2));
+            float ry = (float)Math.Sqrt(Math.Pow(SecondConjugateDiameter.X - Center.X, 2) + Math.Pow(SecondConjugateDiameter.Y - Center.Y, 2));
+            return $"ELLIPSE center=({Center.X}, {Center.Y}) rx={rx:F2} ry={ry:F2}";
         }
 
         public override void ReadArguments(BinaryReader reader)

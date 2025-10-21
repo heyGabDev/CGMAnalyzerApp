@@ -1,38 +1,75 @@
 ﻿using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.AttributeCommands
 {
-    public partial class TextPrecisionCommand : CgmCommand
+    public class TextPrecisionCommand : BaseCgmCommand
     {
-
-        public TextPrecisionType Precision { get; private set; }
-
-        public TextPrecisionCommand(int ec, int eid, int l, CgmCommand baseCommand, ExtractedArgumentReader argReader)
-            : base(baseCommand, ec, eid, l)
+        /// <summary>
+        /// TEXT_PRECISION (case 11) - Définit la précision du rendu de texte
+        /// </summary>
+        public enum TextPrecisionType
         {
-            int precision = argReader.MakeEnum();
-            Precision = precision switch
+            String = 0,
+            Character = 1,
+            Stroke = 2
+        }
+
+        public TextPrecisionType Precision { get; private set; } = TextPrecisionType.String;
+        private const TextPrecisionType DEFAULT_TEXT_PRECISION_TYPE = TextPrecisionType.String;
+
+        public TextPrecisionCommand(int ec, int eid, int l, CgmCommand command)
+            : base(ec, eid, l)
+        {
+            Args = command.Args;
+            Debug.WriteLine($"[TextPrecisionCommand] ArgsLength={Args?.Length ?? 0}");
+
+            try
             {
-                0 => TextPrecisionType.String,
-                1 => TextPrecisionType.Character,
-                2 => TextPrecisionType.Stroke,
-                _ => TextPrecisionType.String
-            };
+                var argReader = new ExtractedArgumentReader(this);
 
-            ValidateArgumentsRead("TextPrecision");
+                int precisionValue = argReader.MakeEnum();
+                Precision = precisionValue switch
+                {
+                    0 => TextPrecisionType.String,
+                    1 => TextPrecisionType.Character,
+                    2 => TextPrecisionType.Stroke,
+                    _ => TextPrecisionType.String
+                };
 
-            //System.Diagnostics.Debug.Assert(CurrentArg == Args.Length,
-            //    "Not all arguments were read in TextPrecision");
+                Debug.WriteLine($"[TextPrecisionCommand] Precision : {precisionValue}");
+                ValidateArgumentsRead("TextPrecisionCommand");
+
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[TextPrecisionCommand Error] {ex.Message}");
+                Precision = DEFAULT_TEXT_PRECISION_TYPE;
+                HasReadErrors = true;
+            }
+        }
+
+        public override void Draw(Graphics g, Pen pen)
+        {
+            // No drawing
         }
 
         public override string ToString()
         {
-            return $"TextPrecision {Precision}";
+            return $"TEXT_PRECISION: {Precision}";
+        }
+
+        public override void ReadArguments(BinaryReader reader)
+        {
+            // Ne plus utiliser cette méthode
+            throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
 }

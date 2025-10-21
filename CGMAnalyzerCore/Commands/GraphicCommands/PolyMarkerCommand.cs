@@ -4,6 +4,8 @@ using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,6 +30,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             try
             {
                 var argReader = new ExtractedArgumentReader(this);
+
                 // Contrôle du nombre de points (pattern cohérent)
                 int pointSize = argReader.SizeOfPoint();
                 int maxPoints = Args.Length / pointSize;
@@ -95,6 +98,5 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             // Ne plus utiliser cette méthode
             throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
-    }
-    
+    }   
 }

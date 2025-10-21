@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,6 +32,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             try
             {
                 var argReader = new ExtractedArgumentReader(this);
+
                 Center = argReader.MakePoint();
                 Debug.WriteLine($"[CircularArcCentreCommand] Read Center=({Center.X}, {Center.Y})");
 
@@ -41,6 +44,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
 
                 Radius = argReader.MakeVdc();
                 Debug.WriteLine($"[CircularArcCentreCommand] Read Radius={Radius:F2}");
+
                 ValidateArgumentsRead("CircularArcCentreCommand");
             }
             catch (Exception ex)
@@ -71,8 +75,19 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
                
                 // Calculer l'angle de balayage
                 var sweepAngle = endAngle - startAngle;
-                if (sweepAngle < 0) sweepAngle += 360;
-                if (sweepAngle > 180) sweepAngle -= 360; // Prendre le chemin le plus court
+
+                // Normaliser pour obtenir un angle positif dans le sens trigonométrique
+                if (sweepAngle < 0)
+                {
+                    sweepAngle += 360;
+                }
+
+                // Si l'angle est > 180°, on peut vouloir le chemin court ou long
+                // Pour CGM, on garde généralement l'arc tel quel (pas de modification)
+                // Si vous voulez forcer le chemin court, décommentez la ligne suivante :
+                // if (sweepAngle > 180) sweepAngle -= 360;
+
+                Debug.WriteLine($"[CircularArcCentreCommand] Sweep angle: {sweepAngle:F2}°");
 
                 // Rectangle englobant
                 var rect = new RectangleF(
