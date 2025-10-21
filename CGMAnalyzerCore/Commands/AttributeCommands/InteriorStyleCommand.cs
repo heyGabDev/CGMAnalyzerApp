@@ -48,7 +48,11 @@ namespace CGMAnalyzerCore.Commands.AttributeCommands
                     _ => InteriorStyleType.Hollow
                 };
                 CgmContext.InteriorStyle = this.Style;
+                //Debug.WriteLine($"[InteriorStyleCommand] Style : {styleValue} ({Style})");
+
+                //DEBUG
                 Debug.WriteLine($"[InteriorStyleCommand] Style : {styleValue} ({Style})");
+                Debug.WriteLine($"[InteriorStyleCommand] Context updated");
 
                 ValidateArgumentsRead("InteriorStyleCommand");
             }

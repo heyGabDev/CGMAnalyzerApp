@@ -603,8 +603,8 @@ namespace CGMAnalyzerCore.Commands
 
             return element switch
             {
-                ExternalElement.Message => new MessageCommand(ec, eid, l, command, argumentReader),
-                ExternalElement.ApplicationData => new ApplicationDataCommand(ec, eid, l, command, argumentReader),
+                ExternalElement.Message => new MessageCommand(ec, eid, l, command),
+                ExternalElement.ApplicationData => new ApplicationDataCommand(ec, eid, l, command),
                 _ => UnsupportedCommand.Unsupported(ec, eid, l, reader)
             };
         }

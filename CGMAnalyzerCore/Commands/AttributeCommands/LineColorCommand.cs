@@ -45,7 +45,12 @@ namespace CGMAnalyzerCore.Commands.AttributeCommands
                 }
 
                 CgmContext.LineColor = this.LineColor;
-                ValidateArgumentsRead("LineColor");
+
+                //DEBUG
+                Debug.WriteLine($"[LineColorCommand] LineColor: R={LineColor.R}, G={LineColor.G}, B={LineColor.B}");
+                Debug.WriteLine($"[LineColorCommand] Context updated");
+
+                ValidateArgumentsRead("LineColorCommand");
 
             }
             catch (Exception ex)

@@ -3,6 +3,8 @@ using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -42,7 +44,8 @@ namespace CGMAnalyzerCore.Commands.EscapeCommands
                 CgmContext.LastEscapeIdentifier = Identifier;
                 CgmContext.LastEscapeDataRecord = DataRecord;   
                 Debug.WriteLine($"[EscapeCommand] Identifier={Identifier} DataRecord={DataRecord}");
-                ValidateArgumentsRead("Escape");
+
+                ValidateArgumentsRead("EscapeCommand");
             }
             catch (Exception)
             {
@@ -66,7 +69,6 @@ namespace CGMAnalyzerCore.Commands.EscapeCommands
         {
             // Ne plus utiliser cette méthode
             throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
-
         }
     }
 }

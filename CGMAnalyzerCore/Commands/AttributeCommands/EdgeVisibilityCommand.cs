@@ -31,6 +31,10 @@ namespace CGMAnalyzerCore.Commands.AttributeCommands
                 CgmContext.EdgeVisible = this.EdgeVisible;
                 Debug.WriteLine($"[EdgeVisibilityCommand] {EdgeVisible}");
 
+                //DEBUG
+                Debug.WriteLine($"[EdgeVisibilityCommand] EdgeVisible: {EdgeVisible} ({(EdgeVisible ? "ON" : "OFF")})");
+                Debug.WriteLine($"[EdgeVisibilityCommand] Context updated");
+
                 ValidateArgumentsRead("EdgeVisibilityCommand");
             }
             catch (Exception ex)

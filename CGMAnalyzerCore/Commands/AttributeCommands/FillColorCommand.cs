@@ -44,6 +44,10 @@ namespace CGMAnalyzerCore.Commands.AttributeCommands
                 }
                 CgmContext.FillColor = this.FillColor;
 
+                //DEBUG
+                Debug.WriteLine($"[FillColorCommand] FillColor: R={FillColor.R}, G={FillColor.G}, B={FillColor.B}");
+                Debug.WriteLine($"[FillColorCommand] Context updated");
+
                 ValidateArgumentsRead("FillColorCommand");
 
             }
