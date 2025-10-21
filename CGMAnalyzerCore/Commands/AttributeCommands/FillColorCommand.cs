@@ -40,8 +40,10 @@ namespace CGMAnalyzerCore.Commands.AttributeCommands
                 else
                 {
                     FillColor = argReader.MakeDirectColor();
+                    Debug.WriteLine($"[FillColorCommand] Direct color: R={FillColor.R}, G={FillColor.G}, B={FillColor.B}");
                 }
-                Debug.WriteLine($"[FillColorCommand] Direct color: R={FillColor.R}, G={FillColor.G}, B={FillColor.B}");
+                CgmContext.FillColor = this.FillColor;
+
                 ValidateArgumentsRead("FillColorCommand");
 
             }
@@ -49,6 +51,7 @@ namespace CGMAnalyzerCore.Commands.AttributeCommands
             {
                 Debug.WriteLine($"[FillColorCommand Error] {ex.Message}");
                 FillColor=DEFAULT_FILL_COLOR;
+                CgmContext.FillColor = this.FillColor;
                 HasReadErrors = true;
             }
         }

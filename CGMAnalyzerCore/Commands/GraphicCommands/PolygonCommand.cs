@@ -1,4 +1,6 @@
-﻿using CGMAnalyzerCore.Geometry;
+﻿using CGMAnalyzerCore.Commands.AttributeCommands;
+using CGMAnalyzerCore.Context;
+using CGMAnalyzerCore.Geometry;
 using CGMAnalyzerCore.Helper;
 using CGMAnalyzerCore.Parser;
 using System;
@@ -45,6 +47,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
                     Debug.WriteLine($"[PolygonCommand] Point {i + 1}: ({point.X}, {point.Y})");
                 }
                 Debug.WriteLine($"[PolygonCommand] Total points: {_points.Count}");
+
                 ValidateArgumentsRead("PolygonCommand");
             }
             catch (Exception ex)
@@ -69,17 +72,48 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
                 return;
             }
 
+            // Debug du contexte actuel
+            Debug.WriteLine($"[PolygonCommand] Dessin polygone avec {_points.Count} points");
+            Debug.WriteLine($"[PolygonCommand] Context - InteriorStyle: {CgmContext.InteriorStyle}");
+            Debug.WriteLine($"[PolygonCommand] Context - FillColor: R={CgmContext.FillColor.R}, G={CgmContext.FillColor.G}, B={CgmContext.FillColor.B}, A={CgmContext.FillColor.A}");
+            Debug.WriteLine($"[PolygonCommand] Context - EdgeVisible: {CgmContext.EdgeVisible}");
+            Debug.WriteLine($"[PolygonCommand] Context - LineColor: {CgmContext.LineColor}");
+
             try
             {
                 // Convertir en tableau de PointF pour Graphics
                 var pointsArray = _points.Select(p => p.ToPointF()).ToArray();
+                
+                // Remplir D'ABORD (si nécessaire)
+                if (CgmContext.InteriorStyle == InteriorStyleType.Solid && CgmContext.FillColor.A > 0)
+                {
+                    using var brush = new SolidBrush(CgmContext.FillColor);
+                    g.FillPolygon(brush, pointsArray);
+                    Debug.WriteLine($"[PolygonCommand] Polygon filled with {CgmContext.FillColor}");
+                }
+                else if (CgmContext.InteriorStyle == InteriorStyleType.Hollow)
+                {
+                    Debug.WriteLine($"[PolygonCommand] Interior style is Hollow - no fill");
+                }
 
-                // Dessiner le contour du polygone
-                g.DrawPolygon(pen, pointsArray);
+                //  Dessiner le contour ENSUITE (si visible)
+                if (CgmContext.EdgeVisible)
+                {
+                    using var edgePen = new Pen(CgmContext.LineColor, (float)CgmContext.LineWidth);
+                    g.DrawPolygon(edgePen, pointsArray);
+                    Debug.WriteLine($"[PolygonCommand] Polygon edge drawn with {CgmContext.LineColor}, width={CgmContext.LineWidth}");
+                }
+                else
+                {
+                    Debug.WriteLine($"[PolygonCommand] Edge not visible - no outline");
+                }
 
-                // Optionnel : remplir le polygone avec une couleur semi-transparente
-                using var brush = new SolidBrush(Color.FromArgb(50, pen.Color));
-                g.FillPolygon(brush, pointsArray);
+                //// Dessiner le contour du polygone
+                //g.DrawPolygon(pen, pointsArray);
+
+                //// Optionnel : remplir le polygone avec une couleur semi-transparente
+                //using var brush = new SolidBrush(Color.FromArgb(50, pen.Color));
+                //g.FillPolygon(brush, pointsArray);
             }
             catch (Exception ex)
             {

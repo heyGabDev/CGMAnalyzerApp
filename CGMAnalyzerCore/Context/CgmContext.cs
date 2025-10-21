@@ -1,5 +1,6 @@
-﻿using CGMAnalyzerCore.Commands.PictureCommands;
-using CGMAnalyzerCore.Enums.Precision;
+﻿using CGMAnalyzerCore.Commands.AttributeCommands;
+using CGMAnalyzerCore.Commands.GraphicCommands.Control;
+using CGMAnalyzerCore.Commands.PictureCommands;
 using CGMAnalyzerCore.Geometry;
 using System;
 using System.Diagnostics;
@@ -184,6 +185,9 @@ namespace CGMAnalyzerCore.Context
         public static string LastEscapeDataRecord { get; set; } = "";
         public static Color BackgroundColor { get; internal set; }
         public static SpecificationMode InteriorStyleSpecificationMode { get; internal set; }
+        public static InteriorStyleType InteriorStyle { get; set; } = InteriorStyleType.Hollow;
+        public static bool EdgeVisible { get; set; } = false;
+        public static Color LineColor { get; set; } = Color.Black;
         #endregion
 
         #region ===== Helpers de mise à jour (appelés par le renderer quand il croise des commandes "contexte")  =====

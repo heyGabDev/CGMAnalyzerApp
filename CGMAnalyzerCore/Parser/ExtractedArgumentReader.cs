@@ -1,6 +1,6 @@
 ﻿using CGMAnalyzerCore.Commands;
+using CGMAnalyzerCore.Commands.GraphicCommands.Control;
 using CGMAnalyzerCore.Context;
-using CGMAnalyzerCore.Enums.Precision;
 using CGMAnalyzerCore.Geometry;
 using System;
 using System.Diagnostics;

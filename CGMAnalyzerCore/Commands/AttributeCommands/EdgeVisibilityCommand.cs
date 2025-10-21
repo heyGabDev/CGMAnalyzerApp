@@ -1,4 +1,5 @@
-﻿using CGMAnalyzerCore.Parser;
+﻿using CGMAnalyzerCore.Context;
+using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,6 +28,7 @@ namespace CGMAnalyzerCore.Commands.AttributeCommands
             {
                 var argReader = new ExtractedArgumentReader(this);
                 EdgeVisible = argReader.MakeEnum() == 1;
+                CgmContext.EdgeVisible = this.EdgeVisible;
                 Debug.WriteLine($"[EdgeVisibilityCommand] {EdgeVisible}");
 
                 ValidateArgumentsRead("EdgeVisibilityCommand");
@@ -35,6 +37,7 @@ namespace CGMAnalyzerCore.Commands.AttributeCommands
             {
                 Debug.WriteLine($"[EdgeVisibilityCommand Error] {ex.Message}");
                 EdgeVisible = DEFAULT_EDGE_VISIBLE;
+                CgmContext.EdgeVisible = this.EdgeVisible;
                 HasReadErrors = true;
             }
         }

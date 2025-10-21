@@ -34,7 +34,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
                 {
                     Point2D.Double point = argReader.MakePoint();
                     Points.Add(point);
-                    Debug.WriteLine($"[PolylineCommand] Point {i + 1}: ({point.X}, {point.Y})");
+                    //Debug.WriteLine($"[PolylineCommand] Point {i + 1}: ({point.X}, {point.Y})");
                 }
 
                 Debug.WriteLine($"[PolylineCommand] Total points: {Points.Count}");

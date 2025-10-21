@@ -14,23 +14,18 @@ namespace CGMAnalyzerCore.Parser
     public class CgmParser
     {
         private const int INITIAL_NUM_COMMANDS = 500;
-        private const int MAX_COMMANDS = 50000; // Limite de sécurité
+        private const int MAX_COMMANDS = 50000;
         private readonly List<ICommandListener> _commandListeners = new();
         private readonly Dictionary<int, int> _commandStats = new();
         private readonly Dictionary<string, int> _unsupportedCommands = new();
+
         public List<BaseCgmCommand> Commands { get; private set; } = new(INITIAL_NUM_COMMANDS);
         public List<string> Messages { get; private set; } = new();
         public CgmMetadata Metadata { get; private set; } = new();
         public static int CurrentLayerId = 0;
-        private readonly List<BaseCgmCommand> commands = new();
 
-        //public void AddListener(ICommandListener listener)
-        //{
-        //    if(listener != null)
-        //        _commandListeners.Add(listener);
-        //}
 
-        // <summary>
+        /// <summary>
         /// Charge et parse un fichier CGM depuis un stream
         /// </summary>
         public async Task LoadAsync(Stream stream, string filename)
@@ -53,7 +48,7 @@ namespace CGMAnalyzerCore.Parser
             FinalizeMetadata();
         }
 
-        // <summary>
+        /// <summary>
         /// Version synchrone pour compatibilité
         /// </summary>
         public void Load(Stream stream, string filename)
@@ -66,6 +61,7 @@ namespace CGMAnalyzerCore.Parser
             Reset();
             var stopwatch = Stopwatch.StartNew();
             Commands = new List<BaseCgmCommand>(INITIAL_NUM_COMMANDS);
+
             try
             {
                 int commandCount = 0;
@@ -93,52 +89,49 @@ namespace CGMAnalyzerCore.Parser
                             cgmCmd.LogCommandInfo();
                         }
 
-                        // Statistiques des commandes
+                        // 1. Ajouter la commande D'ABORD
+                        Commands.Add(command);
+                        commandCount++;
+
+                        // 2. Statistiques
                         TrackCommandUsage(command);
 
-                        //TO DO : CONTROLE TEST
+                        // 3. Contrôle test
                         if (command is NullCommand)
                         {
                             var key = $"Class{command.ElementClass}:ID{command.ElementId}";
                             _unsupportedCommands.TryGetValue(key, out var count);
                             _unsupportedCommands[key] = count + 1;
                         }
-                        //TO DO : FIN CONTROLE TEST
 
-                        // Debug spécifique pour certaines classes d'éléments
+                        // 4. Debug
                         if (command.ElementClass == 9 && Debugger.IsAttached)
                         {
                             Debug.WriteLine($"[CGM] {command}");
                         }
 
-                        // ===== CORRECTION : UN SEUL AJOUT =====
-                        Commands.Add(command);
-                        commandCount++;
-
-                        // Optimisation : redimensionner la liste si nécessaire
+                        // 5. Redimensionner si nécessaire
                         if (Commands.Count == Commands.Capacity && Commands.Capacity < MAX_COMMANDS)
                         {
                             Commands.Capacity = Math.Min(Commands.Capacity * 2, MAX_COMMANDS);
                         }
 
-                        // ===== CORRECTION : Nettoyer APRÈS l'ajout =====
-                        // Notifier les listeners en parallèle pour éviter les blocages
+                        // 6. Notifier les listeners
                         NotifyListenersAsync(command);
 
-                        // Nettoyage des arguments pour libérer la mémoire
-                        // ATTENTION : à faire en dernier car ça supprime les Args
+                        // 7. Nettoyer EN DERNIER (après tout le reste)
                         command.CleanUpArguments();
                     }
                     catch (EndOfStreamException ex)
                     {
                         Messages.Add("End of stream reached unexpectedly. " + ex.Message);
-                        System.Diagnostics.Debug.WriteLine($"[Stream reached Error] {ex.Message}");
-                        break; // Sortir de la boucle en cas de fin de stream
+                        Debug.WriteLine($"[Stream reached Error] {ex.Message}");
+                        break;
                     }
                     catch (Exception ex)
                     {
                         Messages.Add("An error occurred while parsing the CGM file: " + ex.Message);
-                        System.Diagnostics.Debug.WriteLine($"[Parser Error] {ex.Message}");
+                        Debug.WriteLine($"[Parser Error] {ex.Message}");
 
                         // Continuer le parsing même en cas d'erreur sur une commande
                         commandCount++; // Compter l'erreur pour éviter boucle infinie
@@ -172,113 +165,7 @@ namespace CGMAnalyzerCore.Parser
                 Messages.Add($"Parsing terminé en {stopwatch.ElapsedMilliseconds}ms. {Commands.Count} commandes traitées.");
             }
         }
-
-        //public void Read(BinaryReader reader)
-        //{
-        //    Reset();
-        //    var stopwatch = Stopwatch.StartNew();
-        //    Commands = new List<BaseCgmCommand>(INITIAL_NUM_COMMANDS);
-
-        //    try
-        //    {
-        //        int commandCount = 0;
-        //        while (commandCount < MAX_COMMANDS)
-        //        {
-        //            try
-        //            {
-        //                // Vérifier qu'il reste des données
-        //                if (reader.BaseStream.Position >= reader.BaseStream.Length)
-        //                {
-        //                    Messages.Add("Fin du stream atteinte normalement");
-        //                    break;
-        //                }
-
-        //                var command = CgmCommand.Read(reader);
-        //                if (command == null)
-        //                {
-        //                    Messages.Add("End of file reached or no more commands to read.");
-        //                    break;
-        //                }
-
-        //                // Statistiques des commandes
-        //                TrackCommandUsage(command);
-
-        //                //TO DO : CONTROLE TEST
-        //                if (command is NullCommand)
-        //                {
-        //                    var key = $"Class{command.ElementClass}:ID{command.ElementId}";
-        //                    _unsupportedCommands.TryGetValue(key, out var count);
-        //                    _unsupportedCommands[key] = count + 1;
-        //                }
-        //                //TO DO : FIN CONTROLE TEST
-
-        //                // Notifier les listeners en parallèle pour éviter les blocages
-        //                NotifyListenersAsync(command);
-
-        //                // Nettoyage des arguments pour libérer la mémoire
-        //                command.CleanUpArguments();
-
-        //                // Debug spécifique pour certaines classes d'éléments
-        //                if (command.ElementClass == 9 && Debugger.IsAttached)
-        //                {
-        //                    Debug.WriteLine($"[CGM] {command}");
-        //                }
-
-        //                Commands.Add(command);
-        //                commandCount++;
-
-        //                // Optimisation : redimensionner la liste si nécessaire
-        //                if (Commands.Count == Commands.Capacity && Commands.Capacity < MAX_COMMANDS)
-        //                {
-        //                    Commands.Capacity = Math.Min(Commands.Capacity * 2, MAX_COMMANDS);
-        //                }
-
-        //                Commands.Add(command);
-        //            }
-        //            catch (EndOfStreamException ex)
-        //            {
-        //                Messages.Add("End of stream reached unexpectedly. " + ex.Message);
-        //                System.Diagnostics.Debug.WriteLine($"[Stream reached Error] {ex.Message}");
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                Messages.Add("An error occurred while parsing the CGM file: " + ex.Message);
-        //                System.Diagnostics.Debug.WriteLine($"[Parser Error] {ex.Message}");
-
-        //                // Continuer le parsing même en cas d'erreur sur une commande
-        //                // (optionnel : ajouter un compteur d'erreurs max)
-        //                continue;
-        //            }
-        //        }
-        //        if (commandCount >= MAX_COMMANDS)
-        //        {
-        //            // TODO SGC - translate
-        //            Messages.Add($"Limite de commandes atteinte ({MAX_COMMANDS}). Parsing interrompu pour des raisons de sécurité.");
-        //        }
-
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Messages.Add($"Erreur critique lors de l'analyse du fichier CGM: {ex.Message}");
-        //        Debug.WriteLine($"[Critical Parser Error] {ex}");
-        //    }
-        //    finally
-        //    {
-        //        stopwatch.Stop();
-
-        //        //TO DO : CONTROLE TEST
-        //        if (_unsupportedCommands.Any())
-        //        {
-        //            var unsupportedSummary = string.Join(", ",
-        //                _unsupportedCommands.Select(kvp => $"{kvp.Key}({kvp.Value}x)"));
-        //            Messages.Add($"Commandes non supportées ignorées: {unsupportedSummary}");
-        //        }
-        //        //TO DO : FIN CONTROLE TEST
-
-        //        Messages.Add($"Parsing terminé en {stopwatch.ElapsedMilliseconds}ms. {Commands.Count} commandes traitées.");
-        //    }
-        //}
-
+       
         public void AddCommandListener(ICommandListener listener)
         {
             if (listener == null)
@@ -305,23 +192,18 @@ namespace CGMAnalyzerCore.Parser
             Metadata.UsedCommands = _commandStats
                 .OrderByDescending(cgmMetadata => cgmMetadata.Value)
                 .Take(10)
-                .Select(cgmMetadata => $"{cgmMetadata.Key >> 0}: Id{cgmMetadata.Key & 0xFF}({cgmMetadata.Value}x))")
+                .Select(cgmMetadata => $"Class{cgmMetadata.Key >> 8}: Id{cgmMetadata.Key & 0xFF}({cgmMetadata.Value}x)")
                 .ToList();
 
-            // Extraire la version si disponible
             var versionCommand = Commands.FirstOrDefault(c => c.ElementClass == 1 && c.ElementId == 1);
             if (versionCommand != null)
             {
-                //TO DO : POUR CONTROL TEST
                 Messages.Add($"Version CGM détectée : {versionCommand}");
-                // Log si version non standard
                 if (!versionCommand.ToString().Contains("1") && !versionCommand.ToString().Contains("3"))
                 {
                     Messages.Add("Attention : Version CGM non standard détectée");
                 }
-
-                // TO DO : A decommanter apres controle
-                // Metadata.Version = versionCommand.ToString();
+                Metadata.Version = versionCommand.ToString();
             }
         }
 

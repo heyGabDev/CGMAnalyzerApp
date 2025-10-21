@@ -1,5 +1,4 @@
 ﻿using CGMAnalyzerCore.Context;
-using CGMAnalyzerCore.Enums.Precision;
 using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;

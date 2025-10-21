@@ -42,7 +42,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
                 {
                     Point2D point = argReader.MakePoint();
                     _controlPoints.Add(point);
-                    Debug.WriteLine($"[PolyBezierCommand] Control Point {i + 1}: ({point.X}, {point.Y})");
+                    //Debug.WriteLine($"[PolyBezierCommand] Control Point {i + 1}: ({point.X}, {point.Y})");
 
                 }
 

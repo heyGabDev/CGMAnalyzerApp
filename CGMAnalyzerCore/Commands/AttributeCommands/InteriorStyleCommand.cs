@@ -1,12 +1,9 @@
-﻿using CGMAnalyzerCore.Parser;
+﻿using CGMAnalyzerCore.Context;
+using CGMAnalyzerCore.Parser;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.AttributeCommands
 {
@@ -50,15 +47,16 @@ namespace CGMAnalyzerCore.Commands.AttributeCommands
                     6 => InteriorStyleType.Interpolated,
                     _ => InteriorStyleType.Hollow
                 };
-                Debug.WriteLine($"[InteriorStyleCommand] Style: {styleValue} ({Style})");
+                CgmContext.InteriorStyle = this.Style;
+                Debug.WriteLine($"[InteriorStyleCommand] Style : {styleValue} ({Style})");
 
                 ValidateArgumentsRead("InteriorStyleCommand");
-
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"[InteriorStyleCommand Error] {ex.Message}");
                 Style = DEFAULT_INTERIOR_STYLE_TYPE;
+                CgmContext.InteriorStyle = this.Style;
                 HasReadErrors = true;
             }
         }

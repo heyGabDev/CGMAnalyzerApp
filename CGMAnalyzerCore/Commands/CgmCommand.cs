@@ -426,6 +426,9 @@ namespace CGMAnalyzerCore.Commands
             var element = (GraphicalPrimitiveElement)eid;
             var command = new CgmCommand(ec, eid, l, reader);
 
+            // ✅ AJOUTEZ CE DEBUG
+            Debug.WriteLine($"[GRAPHICAL DETECTED]  Element={element}, EC={ec}, EID={eid},");
+
             return element switch
             {
                 // 1

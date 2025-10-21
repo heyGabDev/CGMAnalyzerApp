@@ -13,7 +13,7 @@ using static CGMAnalyzerCore.Commands.PictureCommands.ColorSelectionModeCommand;
 namespace CGMAnalyzerCore.Commands.AttributeCommands
 {
     /// <summary>
-    /// LINE_COLOUR (case 4) - Définit la couleur de ligne
+    /// LINE_COLOUR (case 3) - Définit la couleur de ligne
     /// </summary>
     public class LineColorCommand : BaseCgmCommand
     {
@@ -41,9 +41,10 @@ namespace CGMAnalyzerCore.Commands.AttributeCommands
                 else
                 {
                     LineColor = argReader.MakeDirectColor();
+                    Debug.WriteLine($"[LineColorCommand] Direct color: R={LineColor.R}, G={LineColor.G}, B={LineColor.B}");
                 }
 
-                Debug.WriteLine($"[LineColorCommand] Direct color: R={LineColor.R}, G={LineColor.G}, B={LineColor.B}");
+                CgmContext.LineColor = this.LineColor;
                 ValidateArgumentsRead("LineColor");
 
             }
@@ -51,6 +52,7 @@ namespace CGMAnalyzerCore.Commands.AttributeCommands
             {
                 Debug.WriteLine($"[LineColorCommand Error] {ex.Message}");
                 LineColor = DEFAULT_LINE_COLOR;
+                CgmContext.LineColor = this.LineColor;
                 HasReadErrors = true;
             }
         }
