@@ -1,17 +1,18 @@
 ﻿using CGMAnalyzerCore.Parser;
 using CGMAnalyzerCore.Context;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 
 namespace CGMAnalyzerCore.Commands.GraphicCommands.Control
 {
+    /// <summary>
+    /// VDC_INTEGER_PRECISION (case 3, 1) - Définit la précision des coordonnées VDC entières
+    /// </summary>
     public class VDCIntegerPrecisionCommand : BaseCgmCommand
     {
-        public int Precision { get; private set; }
+        public int Precision { get; private set; } = 16;
         private const int DEFAULT_PRECISION = 16;
 
         public VDCIntegerPrecisionCommand(int ec, int eid, int l, CgmCommand command)
@@ -25,7 +26,8 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands.Control
                 var argReader = new ExtractedArgumentReader(this);            
                 Precision = argReader.MakeInt();
                 CgmContext.VdcIntegerPrecision = Precision;
-                Debug.WriteLine($"[VDCIntegerPrecisionCommand] Precision={Precision}");
+                Debug.WriteLine($"[VDCIntegerPrecisionCommand] Precision={Precision} bits");
+
                 ValidateArgumentsRead("VDCIntegerPrecisionCommand");
             }
             catch (Exception ex)

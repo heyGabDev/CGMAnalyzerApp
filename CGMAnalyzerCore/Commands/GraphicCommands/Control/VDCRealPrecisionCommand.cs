@@ -1,18 +1,26 @@
 ﻿using CGMAnalyzerCore.Context;
-using CGMAnalyzerCore.Enums.Precision;
 using CGMAnalyzerCore.Parser;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Drawing;
+using System.IO;
 
 namespace CGMAnalyzerCore.Commands.GraphicCommands.Control
 {
+    /// <summary>
+    /// VDC_REAL_PRECISION (case 3, 2) - Définit la précision des coordonnées VDC réelles
+    /// </summary>
+    public enum VDCRealPrecisionEnum
+    {
+        FixedPoint32 = 0,
+        FixedPoint64 = 1,
+        FloatingPoint32 = 2,
+        FloatingPoint64 = 3,
+    }
+
     public class VDCRealPrecisionCommand : BaseCgmCommand
     {
-        public VDCRealPrecisionEnum Precision { get; private set; }
+        public VDCRealPrecisionEnum Precision { get; private set; } = VDCRealPrecisionEnum.FixedPoint32;
         private const VDCRealPrecisionEnum DEFAULT_PRECISION = VDCRealPrecisionEnum.FixedPoint32;
 
         public VDCRealPrecisionCommand(int ec, int eid, int l, CgmCommand command)
@@ -24,9 +32,9 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands.Control
             try
             {
                 var argReader = new ExtractedArgumentReader(this);
-                int p1 = argReader.MakeEnum();
-                int p2 = argReader.MakeInt();
-                int p3 = argReader.MakeInt();
+                int p1 = argReader.MakeEnum();  // 0=Floating, 1=Fixed
+                int p2 = argReader.MakeInt();   // Bits entiers
+                int p3 = argReader.MakeInt();   // Bits fractionnaires
                 Debug.WriteLine($"[VDCRealPrecisionCommand] Read values: p1={p1}, p2={p2}, p3={p3}");
 
                 if (p1 == 0) // Floating point
@@ -42,6 +50,7 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands.Control
                     else
                     {
                         // Use default
+                        Debug.WriteLine($"[VDCRealPrecisionCommand WARNING] Unknown floating point precision: {p2},{p3}, using FixedPoint32");
                         Precision = VDCRealPrecisionEnum.FixedPoint32;
                     }
                 }
@@ -58,15 +67,19 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands.Control
                     else
                     {
                         // Use default
+                        Debug.WriteLine($"[VDCRealPrecisionCommand WARNING] Unknown fixed point precision: {p2},{p3}, using FixedPoint32");
                         Precision = VDCRealPrecisionEnum.FixedPoint32;
                     }
                 }
                 else
                 {
+                    Debug.WriteLine($"[VDCRealPrecisionCommand WARNING] Unknown precision type: {p1}, using FixedPoint32");
                     Precision = VDCRealPrecisionEnum.FixedPoint32;
                 }
+
                 CgmContext.VdcRealPrecision = Precision;
                 Debug.WriteLine($"[VDCRealPrecisionCommand] Set Precision={Precision}");
+
                 ValidateArgumentsRead("VDCRealPrecisionCommand");
             }
             catch (Exception ex)

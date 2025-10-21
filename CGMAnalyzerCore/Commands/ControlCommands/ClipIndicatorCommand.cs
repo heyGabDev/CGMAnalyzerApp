@@ -8,9 +8,12 @@ using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.ControlCommands
 {
+    /// <summary>
+    /// CLIP_INDICATOR (case 3, 6) - Active ou désactive le clipping
+    /// </summary>
     public class ClipIndicatorCommand : BaseCgmCommand
     {
-        public bool ClipFlag { get; private set; }
+        public bool ClipFlag { get; private set; } = false;
         private const bool DEFAULT_CLIP_FLAG = false;
 
         public ClipIndicatorCommand(int ec, int eid, int l, CgmCommand command)
@@ -21,9 +24,10 @@ namespace CGMAnalyzerCore.Commands.ControlCommands
 
             try
             {
-            var argReader = new ExtractedArgumentReader(this);
-            ClipFlag = argReader.MakeEnum() == 1;
-            Debug.WriteLine($"[ClipIndicatorCommand] ClipFlag={ClipFlag}");
+                var argReader = new ExtractedArgumentReader(this);
+                ClipFlag = argReader.MakeEnum() == 1;
+                Debug.WriteLine($"[ClipIndicatorCommand] ClipFlag={ClipFlag}");
+            
                 ValidateArgumentsRead("ClipIndicator");
             }
             catch (Exception ex)
@@ -41,7 +45,7 @@ namespace CGMAnalyzerCore.Commands.ControlCommands
 
         public override string ToString()
         {
-            return $"CLIP_INDICATOR : {ClipFlag}";
+            return $"CLIP_INDICATOR : {(ClipFlag ? "ON" : "OFF")}";
         }
 
         public override void ReadArguments(BinaryReader reader)
