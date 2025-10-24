@@ -215,46 +215,45 @@ namespace CGMAnalyzerCore.Commands
             {
                 // Class: 0
                 case ElementEnums.DelimiterElements:
-                    return ReadDelimiterElements(reader, ec, eid, l);
+                    return ReadDelimiterElements(command, ec, eid, l);
                 // Class: 1
                 case ElementEnums.MetafileDescriptorElements:
-                    return ReadMetaFileDescriptorElements(reader, ec, eid, l);
+                    return ReadMetaFileDescriptorElements(command, ec, eid, l);
                 // Class: 2
                 case ElementEnums.PictureDescriptorElements:
-                    return ReadPictureDescriptorElements(reader, ec, eid, l);
+                    return ReadPictureDescriptorElements(command, ec, eid, l);
                 // Class: 3
                 case ElementEnums.ControlElements:
-                    return ReadControlElements(reader, ec, eid, l);
+                    return ReadControlElements(command, ec, eid, l);
                 // Class: 4
                 case ElementEnums.GraphicalPrimitiveElements:
-                    return ReadGraphicalPrimitiveElements(reader, ec, eid, l);
+                    return ReadGraphicalPrimitiveElements(command, ec, eid, l);
                 // Class: 5
                 case ElementEnums.AttributeElements:
-                    return ReadAttributeElements(reader, ec, eid, l);
+                    return ReadAttributeElements(command, ec, eid, l);
                 // Class: 6
                 case ElementEnums.EscapeElements:
-                    return ReadEscapeElements(reader, ec, eid, l);
+                    return ReadEscapeElements(command, ec, eid, l);
                 // Class: 7
                 case ElementEnums.ExternalElements:
-                    return ReadExternalElements(reader, ec, eid, l);
+                    return ReadExternalElements(command, ec, eid, l);
                 // Class: 8
                 case ElementEnums.SegmentElements:
-                    return UnsupportedCommand.Unsupported(ec, eid, l, reader);
+                    return UnsupportedCommand.CreateUnsupported(ec, eid, l, command);
                 // Class: 9
                 case ElementEnums.ApplicationStructureElements:
-                    return ReadApplicationStructureElements(reader, ec, eid, l);
+                    return ReadApplicationStructureElements(command, ec, eid, l);
 
-                default: return UnsupportedCommand.Unsupported(ec, eid, l, reader);
+                default: return UnsupportedCommand.CreateUnsupported(ec, eid, l, command);
             }
         }
         #endregion
 
         #region ===== EID [0,63] ReadElementClass function =====
         // Class: 0 
-        private static BaseCgmCommand ReadDelimiterElements(BinaryReader reader, int ec, int eid, int l)
+        private static BaseCgmCommand ReadDelimiterElements(CgmCommand command, int ec, int eid, int l)
         {
             var element = (DelimiterElement)eid;
-            var command = new CgmCommand(ec, eid, l, reader);
 
             return element switch
             {
@@ -283,7 +282,7 @@ namespace CGMAnalyzerCore.Commands
                 DelimiterElement.BeginCompoundTextPath or
 
                 // 0,18
-                DelimiterElement.EndCompoundTextPath => UnsupportedCommand.Unsupported(ec, eid, l, reader),
+                DelimiterElement.EndCompoundTextPath => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
                 // 0,19 ok
                 DelimiterElement.BeginTileArray => new BeginTileArrayCommand(ec, eid, l, command),
                 DelimiterElement.EndTileArray => new EndTileArrayCommand(ec, eid, l, command),
@@ -292,16 +291,15 @@ namespace CGMAnalyzerCore.Commands
                 DelimiterElement.BeginApplicationStructureBody => new BeginApplicationStructureBodyCommand(ec, eid, l, command),
                 DelimiterElement.EndApplicationStructure => new EndApplicationStructureCommand(ec, eid, l, command),
 
-                _ => UnsupportedCommand.Unsupported(ec, eid, l, reader)
+                _ => UnsupportedCommand.CreateUnsupported(ec, eid, l, command)
             };
         }
 
         // Class: 1
-        private static BaseCgmCommand ReadMetaFileDescriptorElements(BinaryReader reader, int ec, int eid, int l)
+        private static BaseCgmCommand ReadMetaFileDescriptorElements(CgmCommand command, int ec, int eid, int l)
         {
             var element = (MetafileDescriptorElement)eid;
-            var command = new CgmCommand(ec, eid, l, reader);
-
+ 
             return element switch
             {
                 // 1, 1
@@ -339,7 +337,7 @@ namespace CGMAnalyzerCore.Commands
                 // 1, 17
                 MetafileDescriptorElement.MaximumVdcExtent => new MaximumVdcExtentCommand(ec, eid, l, command),
                 // 1, 18
-                MetafileDescriptorElement.SegmentPriorityExtent => UnsupportedCommand.Unsupported(ec, eid, l, reader),
+                MetafileDescriptorElement.SegmentPriorityExtent => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
                 // 1, 19
                 MetafileDescriptorElement.ColorModel => new ColorModelCommand(ec, eid, l, command),
 
@@ -347,16 +345,15 @@ namespace CGMAnalyzerCore.Commands
                 MetafileDescriptorElement.FontProperties or
                 MetafileDescriptorElement.GlyphMapping or
                 MetafileDescriptorElement.SymbolLibraryList or
-                MetafileDescriptorElement.PictureDirectory => UnsupportedCommand.Unsupported(ec, eid, l, reader),
-                _ => UnsupportedCommand.Unsupported(ec, eid, l, reader)
+                MetafileDescriptorElement.PictureDirectory => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
+                _ => UnsupportedCommand.CreateUnsupported(ec, eid, l, command)
             };
         }
 
         // Class 2
-        private static BaseCgmCommand ReadPictureDescriptorElements(BinaryReader reader, int ec, int eid, int l)
+        private static BaseCgmCommand ReadPictureDescriptorElements(CgmCommand command, int ec, int eid, int l)
         {
             var element = (PictureDescriptorElement)eid;
-            var command = new CgmCommand(ec, eid, l, reader);
 
             return element switch
             {
@@ -375,7 +372,7 @@ namespace CGMAnalyzerCore.Commands
                 // 2, 7
                 PictureDescriptorElement.BackgroundColor => new BackgroundColorCommand(ec, eid, l, command),
                 // 2, 8
-                PictureDescriptorElement.DeviceViewport => UnsupportedCommand.Unsupported(ec, eid, l, reader),
+                PictureDescriptorElement.DeviceViewport => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
                 // 2, 9
                 PictureDescriptorElement.DeviceViewportSpecificationMode => new DeviceViewportSpecificationModeCommand(ec, eid, l, command),
                 // 2, 10-15
@@ -384,7 +381,7 @@ namespace CGMAnalyzerCore.Commands
                 PictureDescriptorElement.MarkerRepresentation or
                 PictureDescriptorElement.TextRepresentation or
                 PictureDescriptorElement.FillRepresentation or
-                PictureDescriptorElement.EdgeRepresentation => UnsupportedCommand.Unsupported(ec, eid, l, reader),
+                PictureDescriptorElement.EdgeRepresentation => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
                 // 2, 16
                 PictureDescriptorElement.InteriorStyleSpecificationMode => new InteriorStyleSpecificationModeCommand(ec, eid, l, command),
                 // 2, 17
@@ -392,18 +389,16 @@ namespace CGMAnalyzerCore.Commands
                 // 2, 18-20
                 PictureDescriptorElement.HatchStyleDefinition or
                 PictureDescriptorElement.GeometricPatternDefinition or
-                PictureDescriptorElement.ApplicationStructureDirectory => UnsupportedCommand.Unsupported(ec, eid, l, reader),
+                PictureDescriptorElement.ApplicationStructureDirectory => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
 
-                _ => UnsupportedCommand.Unsupported(ec, eid, l, reader)
+                _ => UnsupportedCommand.CreateUnsupported(ec, eid, l, command)
             };
         }
 
         // Class 3
-        private static BaseCgmCommand ReadControlElements(BinaryReader reader, int ec, int eid, int l)
+        private static BaseCgmCommand ReadControlElements(CgmCommand command, int ec, int eid, int l)
         {
             var element = (ControlElement)eid;
-            var command = new CgmCommand(ec, eid, l, reader);
-            var argumentReader = new ExtractedArgumentReader(command);
 
             return element switch
             {
@@ -416,17 +411,16 @@ namespace CGMAnalyzerCore.Commands
                 // 3, 6
                 ControlElement.ClipIndicator => new ClipIndicatorCommand(ec, eid, l, command),
 
-                _ => UnsupportedCommand.Unsupported(ec, eid, l, reader)
+                _ => UnsupportedCommand.CreateUnsupported(ec, eid, l, command)
             };
         }
 
         // Class: 4
-        private static BaseCgmCommand ReadGraphicalPrimitiveElements(BinaryReader reader, int ec, int eid, int l)
+        private static BaseCgmCommand ReadGraphicalPrimitiveElements(CgmCommand command, int ec, int eid, int l)
         {
             var element = (GraphicalPrimitiveElement)eid;
-            var command = new CgmCommand(ec, eid, l, reader);
 
-            // ✅ AJOUTEZ CE DEBUG
+            // DEBUG
             Debug.WriteLine($"[GRAPHICAL DETECTED]  Element={element}, EC={ec}, EID={eid},");
 
             return element switch
@@ -480,24 +474,23 @@ namespace CGMAnalyzerCore.Commands
                 // 24
                 GraphicalPrimitiveElement.NonUniformBSpline or
                 // 25
-                GraphicalPrimitiveElement.NonUniformRationalBSpline => UnsupportedCommand.Unsupported(ec, eid, l, reader),
+                GraphicalPrimitiveElement.NonUniformRationalBSpline => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
                 // 26
                 GraphicalPrimitiveElement.PolyBezier => new PolyBezierCommand(ec, eid, l, command),
                 // 27
-                GraphicalPrimitiveElement.PolySymbol => UnsupportedCommand.Unsupported(ec, eid, l, reader),
+                GraphicalPrimitiveElement.PolySymbol => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
                 // 28
                 GraphicalPrimitiveElement.BitonalTile => new BitonalTileCommand(ec, eid, l, command),
                 // 29
                 GraphicalPrimitiveElement.Tile => new TileCommand(ec, eid, l, command),
-                _ => UnsupportedCommand.Unsupported(ec, eid, l, reader)
+                _ => UnsupportedCommand.CreateUnsupported(ec, eid, l, command)
             };
         }
 
         // Class: 5
-        private static BaseCgmCommand ReadAttributeElements(BinaryReader reader, int ec, int eid, int l)
+        private static BaseCgmCommand ReadAttributeElements(CgmCommand command, int ec, int eid, int l)
         {
             var element = (AttributeElement)eid;
-            var command = new CgmCommand(ec, eid, l, reader);
 
             return element switch
             {
@@ -506,7 +499,7 @@ namespace CGMAnalyzerCore.Commands
                 AttributeElement.MarkerBundleIndex or // 5
                 AttributeElement.TextBundleIndex or // 9
                 AttributeElement.FillBundleIndex or // 21
-                AttributeElement.EdgeBundleIndex => UnsupportedCommand.Unsupported(ec, eid, l, reader), // 26
+                AttributeElement.EdgeBundleIndex => UnsupportedCommand.CreateUnsupported(ec, eid, l, command), // 26
 
                 // 2-4 - Line attributes
                 AttributeElement.LineType => new LineTypeCommand(ec, eid, l, command),
@@ -535,7 +528,7 @@ namespace CGMAnalyzerCore.Commands
                 AttributeElement.InteriorStyle => new InteriorStyleCommand(ec, eid, l, command),
                 AttributeElement.FillColour => new FillColorCommand(ec, eid, l, command),
                 AttributeElement.HatchIndex => new HatchIndexCommand(ec, eid, l, command),
-                AttributeElement.PatternIndex => UnsupportedCommand.Unsupported(ec, eid, l, reader),
+                AttributeElement.PatternIndex => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
 
                 // 27-30 - Edge attributes
                 AttributeElement.EdgeType => new EdgeTypeCommand(ec, eid, l, command),
@@ -546,14 +539,14 @@ namespace CGMAnalyzerCore.Commands
                 // 31-33 - Pattern attributes (non supportés)
                 AttributeElement.FillReferencePoint or
                 AttributeElement.PatternTable or
-                AttributeElement.PatternSize => UnsupportedCommand.Unsupported(ec, eid, l, reader),
+                AttributeElement.PatternSize => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
 
                 // 34 - Colour table
                 AttributeElement.ColorTable => new ColorTableCommand(ec, eid, l, command),
 
                 // 35-36 - Misc attributes (non supportés)
                 AttributeElement.AspectSourceFlags or
-                AttributeElement.PickIdentifier => UnsupportedCommand.Unsupported(ec, eid, l, reader),
+                AttributeElement.PickIdentifier => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
 
                 // 37-38 - Line caps and joins
                 AttributeElement.LineCap => new LineCapCommand(ec, eid, l, command),
@@ -562,13 +555,13 @@ namespace CGMAnalyzerCore.Commands
                 // 39-41 - Line continuation (non supportés)
                 AttributeElement.LineTypeContinuation or
                 AttributeElement.LineTypeInitialOffset or
-                AttributeElement.TextScoreType => UnsupportedCommand.Unsupported(ec, eid, l, reader),
+                AttributeElement.TextScoreType => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
 
                 // 42 - Restricted text type
                 AttributeElement.RestrictedTextType => new RestrictedTextTypeCommand(ec, eid, l, command),
 
                 // 43 - Interpolated interior (non supporté)
-                AttributeElement.InterpolatedInterior => UnsupportedCommand.Unsupported(ec, eid, l, reader),
+                AttributeElement.InterpolatedInterior => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
 
                 // 44-45 - Edge caps and joins
                 AttributeElement.EdgeCap => new EdgeCapCommand(ec, eid, l, command),
@@ -580,39 +573,34 @@ namespace CGMAnalyzerCore.Commands
                 AttributeElement.SymbolLibraryIndex or
                 AttributeElement.SymbolColour or
                 AttributeElement.SymbolSize or
-                AttributeElement.SymbolOrientation => UnsupportedCommand.Unsupported(ec, eid, l, reader),
+                AttributeElement.SymbolOrientation => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
 
-                _ => UnsupportedCommand.Unsupported(ec, eid, l, reader)
+                _ => UnsupportedCommand.CreateUnsupported(ec, eid, l, command)
             };
         }
 
         // Class 6
-        private static BaseCgmCommand ReadEscapeElements(BinaryReader reader, int ec, int eid, int l)
+        private static BaseCgmCommand ReadEscapeElements(CgmCommand command, int ec, int eid, int l)
         {
-            var command = new CgmCommand(ec, eid, l, reader);
-            var argumentReader = new ExtractedArgumentReader(command);
             return new EscapeCommand(ec, eid, l, command);
         }
 
         // Class 7
-        private static BaseCgmCommand ReadExternalElements(BinaryReader reader, int ec, int eid, int l)
+        private static BaseCgmCommand ReadExternalElements(CgmCommand command, int ec, int eid, int l)
         {
             var element = (ExternalElement)eid;
-            var command = new CgmCommand(ec, eid, l, reader);
-            var argumentReader = new ExtractedArgumentReader(command);
 
             return element switch
             {
                 ExternalElement.Message => new MessageCommand(ec, eid, l, command),
                 ExternalElement.ApplicationData => new ApplicationDataCommand(ec, eid, l, command),
-                _ => UnsupportedCommand.Unsupported(ec, eid, l, reader)
+                _ => UnsupportedCommand.CreateUnsupported(ec, eid, l, command)
             };
         }
 
         // Class 9
-        private static BaseCgmCommand ReadApplicationStructureElements(BinaryReader reader, int ec, int eid, int l)
+        private static BaseCgmCommand ReadApplicationStructureElements(CgmCommand command, int ec, int eid, int l)
         {
-            var command = new CgmCommand(ec, eid, l, reader);
             return new ApplicationStructureCommand(ec, eid,l, command);
         }
         #endregion

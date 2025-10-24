@@ -9,8 +9,15 @@ using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.PictureCommands
 {
-    public partial class DeviceViewportSpecificationModeCommand : BaseCgmCommand
+    public class DeviceViewportSpecificationModeCommand : BaseCgmCommand
     {
+        public enum DeviceViewportMode
+        {
+            FractionOfDrawingSurface = 0,
+            MillimetersWithScaleFactor = 1,
+            PhysicalDeviceCoordinates = 2
+        }
+
         public DeviceViewportMode Mode { get; private set; }
         public double MetricScaleFactor { get; private set; }
         private const DeviceViewportMode DEFAULT_MODE = DeviceViewportMode.FractionOfDrawingSurface;

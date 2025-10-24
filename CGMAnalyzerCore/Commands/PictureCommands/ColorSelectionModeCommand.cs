@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CGMAnalyzerCore.Commands.PictureCommands
 {
-    public partial class ColorSelectionModeCommand : BaseCgmCommand
+    public class ColorSelectionModeCommand : BaseCgmCommand
     {
         public enum ColorSelectionType
         {
@@ -67,5 +67,4 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
             throw new NotImplementedException("Use constructor with ExtractedArgumentReader instead");
         }
     }
-
 }

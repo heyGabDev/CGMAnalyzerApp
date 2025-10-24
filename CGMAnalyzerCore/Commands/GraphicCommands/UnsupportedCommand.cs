@@ -1,4 +1,5 @@
 ﻿using CGMAnalyzerCore.Messages;
+using System.Diagnostics;
 using System.Security.Cryptography;
 using static CGMAnalyzerCore.Messages.Message;
 
@@ -6,75 +7,34 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
 {
     public class UnsupportedCommand
     {
-        //TO DO : CONTROLE TEST
-        public static BaseCgmCommand CreateUnsupported(int ec, int eid, int length, BinaryReader reader)
-        {
-            // Au lieu de lever une exception, créer une commande "neutre"
-            return new NullCommand(ec, eid, length, reader);
-        }
-
         /// <summary>
-        /// Enregistre que la commande n'est pas supportée ET retourne une commande générique.
+        /// Ne lève pas d'exception, retourne une commande neutre
         /// </summary>
-        /// <param name="ec"></param>
-        /// <param name="eid"></param>
-        /// <param name="length"></param>
-        /// <param name="reader"></param>
-        /// <returns></returns>
-        /// <exception cref="InvalidOperationException"></exception>
-        public static BaseCgmCommand Unsupported(int ec, int eid, int length, BinaryReader reader)
+        public static BaseCgmCommand CreateUnsupported(int ec, int eid, int length, CgmCommand command)
         {
-            if (ec == 0 && eid == 0)
-            {
-                // 0, 0 is NO-OP
-                throw new InvalidOperationException($"[Unsupported] element class - EC={ec}, element ID - EID={eid}");
+            Debug.WriteLine($"[UNSUPPORTED] EC={ec}, EID={eid}, Length={length}");
 
+            // Créer une CgmCommand de base qui LIT les Args
+            //var cmd = new CgmCommand(ec, eid, length, reader);
 
-            }
+            Debug.WriteLine($"[UNSUPPORTED] Args ALREADY read: {command.Args?.Length ?? 0} bytes");
 
-            if (ec < 10 || ec > 15)
-            {
-                throw new InvalidOperationException($"[Unsupported] element class - EC={ec}, element ID - EID={eid}");
-            }
-
-            new Messages.Message(
-                SeverityLevel.Unimplemented,
-                ec,
-                eid,
-                "unsupported",
-                commandDescription: null);
-
-            return new CgmCommand(ec, eid, length, reader); // fallback vers commande neutre
-        }
-
-        public static Messages.Message Unsupported(int ec, int eid, string msg) { 
-            return new Messages.Message(
-                SeverityLevel.Unimplemented,
-                ec,
-                eid,
-                "unsupported",
-                msg);
+            // Retourner une NullCommand qui UTILISE les Args déjà lus
+            return new NullCommand(ec, eid, length, command);
         }
     }
 
-    //TO DO : CONTROLE TEST
     public class NullCommand : BaseCgmCommand
     {
-        public NullCommand(int ec, int eid, int length, BinaryReader reader)
+        /// <summary>
+        /// Utilise les Args déjà lus par CgmCommand
+        /// </summary>
+        public NullCommand(int ec, int eid, int length, CgmCommand command)
             : base(ec, eid, length)
         {
-            // Lire et ignorer les arguments sans traitement de facon securisée
-            for (int i = 0; i < length; i++)
-            {
-                try
-                {
-                    reader.ReadByte();
-                }
-                catch (EndOfStreamException)
-                {
-                    break; // Arrêter si on atteint la fin
-                }
-            }
+            // Récupérer les Args déjà lus(pas de double lecture)
+            Args = command.Args;
+            Debug.WriteLine($"[NullCommand] Created with {Args?.Length ?? 0} args");
         }
 
         public override void Draw(Graphics g, Pen pen)
@@ -84,12 +44,13 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
 
         public override void ReadArguments(BinaryReader reader)
         {
-            // Déjà lu dans le constructeur
+            // Les arguments ont déjà été lus
+            throw new NotImplementedException("Use constructor with CgmCommand instead");
         }
 
         public override string ToString()
         {
-            return $"[Unsupported] Class={ElementClass}, ID={ElementId}";
+            return $"[Unsupported] Class={ElementClass}, ID={ElementId}, Args={Args?.Length ?? 0}";
         }
     }
 
