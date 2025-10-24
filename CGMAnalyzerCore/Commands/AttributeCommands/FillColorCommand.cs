@@ -40,7 +40,7 @@ namespace CGMAnalyzerCore.Commands.AttributeCommands
                 else
                 {
                     FillColor = argReader.MakeDirectColor();
-                    Debug.WriteLine($"[FillColorCommand] Direct color: R={FillColor.R}, G={FillColor.G}, B={FillColor.B}");
+                    Debug.WriteLine($"[FillColorCommand] Direct color: R={FillColor.R}, G={FillColor.G}, B={FillColor.B}, A={FillColor.A}");
                 }
                 CgmContext.FillColor = this.FillColor;
 

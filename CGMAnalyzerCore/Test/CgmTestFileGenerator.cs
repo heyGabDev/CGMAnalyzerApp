@@ -14,64 +14,71 @@ namespace CGMAnalyzerCore.Test
             using var fs = new FileStream(outputPath, FileMode.Create);
             using var writer = new BinaryWriter(fs);
 
-            // === ENTÊTE CGM ===
+            // BEGIN METAFILE (0, 1)
+            WriteCommand(writer, 0, 1, new byte[] { });
 
-            // BEGIN METAFILE (0, 1) - nom vide
-            WriteCommand(writer, 0, 1, new byte[] { 0x00 });
-
-            // METAFILE VERSION (1, 1) - version 1
+            // METAFILE VERSION (1, 1) = 1
             WriteCommand(writer, 1, 1, new byte[] { 0x00, 0x01 });
 
-            // VDC TYPE (1, 3) - INTEGER
+            // VDC TYPE (1, 3) = INTEGER
             WriteCommand(writer, 1, 3, new byte[] { 0x00, 0x00 });
 
-            // INTEGER PRECISION (1, 4) - 16 bits
+            // INTEGER PRECISION (1, 4) = 16 bits
             WriteCommand(writer, 1, 4, new byte[] { 0x00, 0x10 });
 
-            // COLOR PRECISION (1, 7) - 8 bits
+            // VDC INTEGER PRECISION (3, 1) = 16 bits
+            WriteCommand(writer, 3, 1, new byte[] { 0x00, 0x10 });
+
+            // COLOR PRECISION (1, 7) = 8 bits
             WriteCommand(writer, 1, 7, new byte[] { 0x00, 0x08 });
 
-            // COLOR SELECTION MODE (2, 2) - INDEXED
+            // COLOR INDEX PRECISION (1, 8) = 8 bits
+            WriteCommand(writer, 1, 8, new byte[] { 0x00, 0x08 });
+
+            // ✅ COLOR SELECTION MODE (2, 2) = DIRECT (0x0001)
             WriteCommand(writer, 2, 2, new byte[] { 0x00, 0x01 });
 
-            // VDC EXTENT (2, 6) - (0,0) to (1000,1000)
+            // VDC EXTENT (2, 6) = (0,0) to (1000,1000)
             WriteCommand(writer, 2, 6, new byte[] {
-            0x00, 0x00, 0x00, 0x00,  // x1, y1
-            0x03, 0xE8, 0x03, 0xE8   // x2, y2 (1000, 1000)
+                0x00, 0x00, 0x00, 0x00,  // (0, 0)
+                0x03, 0xE8, 0x03, 0xE8   // (1000, 1000)
             });
 
-            // === PICTURE ===
-
             // BEGIN PICTURE (0, 3)
-            WriteCommand(writer, 0, 3, new byte[] { 0x00 });
+            WriteCommand(writer, 0, 3, new byte[] { });
 
             // BEGIN PICTURE BODY (0, 4)
             WriteCommand(writer, 0, 4, new byte[] { });
 
-            // === ATTRIBUTS ===
-
-            // INTERIOR STYLE (5, 22) - SOLID (1)
+            // INTERIOR STYLE (5, 22) = SOLID (1)
             WriteCommand(writer, 5, 22, new byte[] { 0x00, 0x01 });
 
-            // FILL COLOR (5, 23) - RED (index 1 = red dans table par défaut)
-            WriteCommand(writer, 5, 23, new byte[] { 0x01 });
+            // ✅ FILL COLOR (5, 23) = ROUGE en DIRECT (255, 0, 0)
+            WriteCommand(writer, 5, 23, new byte[] {
+                0xFF,  // R = 255 (rouge)
+                0x00,  // G = 0
+                0x00   // B = 0
+            });
 
-            // EDGE VISIBILITY (5, 30) - ON (1)
+            // EDGE VISIBILITY (5, 30) = ON (1)
             WriteCommand(writer, 5, 30, new byte[] { 0x00, 0x01 });
 
-            // LINE COLOR (5, 4) - BLACK (index 0)
-            WriteCommand(writer, 5, 4, new byte[] { 0x00 });
-
-            // === POLYGON ===
+            // ✅ LINE COLOR (5, 4) = NOIR en DIRECT (0, 0, 0)
+            WriteCommand(writer, 5, 4, new byte[] {
+                0x00,  // R = 0
+                0x00,  // G = 0
+                0x00   // B = 0
+            });
 
             // POLYGON (4, 7) - Triangle
             WriteCommand(writer, 4, 7, new byte[] {
-            0x01, 0x00, 0x01, 0x00,  // Point 1: (256, 256)
-            0x03, 0x00, 0x01, 0x00,  // Point 2: (768, 256)
-            0x02, 0x00, 0x03, 0x00   // Point 3: (512, 768)
-        });
-
-            // === FIN ===
+                0x00, 0xC8,  // X1 = 200
+                0x00, 0xC8,  // Y1 = 200
+                0x03, 0x20,  // X2 = 800
+                0x00, 0xC8,  // Y2 = 200
+                0x01, 0xF4,  // X3 = 500
+                0x03, 0x20   // Y3 = 800
+            });
 
             // END PICTURE (0, 5)
             WriteCommand(writer, 0, 5, new byte[] { });

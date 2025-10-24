@@ -24,6 +24,27 @@ namespace CGMAnalyzerCore.Parser
         public CgmMetadata Metadata { get; private set; } = new();
         public static int CurrentLayerId = 0;
 
+        /// <summary>
+        /// Version synchrone pour compatibilité
+        /// </summary>
+        public void Load(Stream stream, string filename)
+        {
+            Stream inputStream = stream;
+
+            if (IsCompressedFile(filename))
+            {
+                inputStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true);
+                Metadata.IsCompressed = true;
+            }
+
+            using var buffered = new BufferedStream(inputStream, 8192);
+            using var reader = new BinaryReader(buffered);
+
+            Read(reader);  // ← Appel direct, pas async
+            FinalizeMetadata();
+
+            //LoadAsync(stream, filename).GetAwaiter().GetResult();
+        }
 
         /// <summary>
         /// Charge et parse un fichier CGM depuis un stream
@@ -35,25 +56,17 @@ namespace CGMAnalyzerCore.Parser
             // Détection automatique de la compression
             if (IsCompressedFile(filename))
             {
-                inputStream = new GZipStream(stream, CompressionMode.Decompress);
+                inputStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true);
                 Metadata.IsCompressed = true;
             }
 
             using var buffered = new BufferedStream(inputStream, 8192); // Buffer plus grand
-            using var reader = new BinaryReader(buffered);
+            using var reader = new BinaryReader(buffered, Encoding.UTF8, leaveOpen: false);
 
             await Task.Run(() => Read(reader));
 
             // Finaliser les métadonnées
             FinalizeMetadata();
-        }
-
-        /// <summary>
-        /// Version synchrone pour compatibilité
-        /// </summary>
-        public void Load(Stream stream, string filename)
-        {
-            LoadAsync(stream, filename).GetAwaiter().GetResult();
         }
 
         public void Read(BinaryReader reader)
