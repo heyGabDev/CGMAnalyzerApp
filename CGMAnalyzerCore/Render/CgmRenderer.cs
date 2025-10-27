@@ -215,9 +215,6 @@ namespace CGMAnalyzerCore.Render
                 case BeginPictureCommand: return true;
                 case BeginPictureBodyCommand: return true;
                 case EndPictureCommand: return true;
-
-                // Pas (encore) supporté : on ne dessine pas
-                //case UnsupportedCommand: return false;
             }
 
             // 3) Défaut : on ne sait pas rendre → ignorer (pas d’erreur)
@@ -231,46 +228,38 @@ namespace CGMAnalyzerCore.Render
             return true;
         }
 
-        #region Méthodes de transformation et contexte
-        private PointF TransformPoint(System.Drawing.Point point)
-        {
-            // Transformation VDC vers coordonnées écran
-            var VdcExtent = CgmContext.VdcExtent;
-            var x = (float)((point.X - _context.VdcExtent.Left) * Options.Width / VdcExtent.Width);
-            var y = (float)((point.Y - _context.VdcExtent.Top) * Options.Height / VdcExtent.Height);
+        //#region Méthodes de transformation et contexte
+        //private PointF TransformPoint(System.Drawing.Point point)
+        //{
+        //    // Transformation VDC vers coordonnées écran
+        //    var VdcExtent = CgmContext.VdcExtent;
+        //    var x = (float)((point.X - _context.VdcExtent.Left) * Options.Width / VdcExtent.Width);
+        //    var y = (float)((point.Y - _context.VdcExtent.Top) * Options.Height / VdcExtent.Height);
 
-            return new PointF(x, y);
-        }
+        //    return new PointF(x, y);
+        //}
 
-        // A deplacer dans RenderContext
-        private SizeF TransformSize(double vdcWidth, double vdcHeight)
-        {
-            return new SizeF(
-                (float)(vdcWidth * Options.Width / _context.VdcExtent.Width),
-                (float)(vdcHeight * Options.Height / _context.VdcExtent.Height)
-            );
-        }
+        //// A deplacer dans RenderContext
+        //private SizeF TransformSize(double vdcWidth, double vdcHeight)
+        //{
+        //    return new SizeF(
+        //        (float)(vdcWidth * Options.Width / _context.VdcExtent.Width),
+        //        (float)(vdcHeight * Options.Height / _context.VdcExtent.Height)
+        //    );
+        //}
 
-        #endregion
+        //#endregion
 
         private void UpdateColourModel(ColorModelCommand command)
         {
-            var modelValue = command.ColorModel;
-            var model = (ColorModelEnum)modelValue;
-            //var model = modelValue switch
-            //{
-            //    0 => CgmContext.ColorModelEnum.Indexed,
-            //    1 => CgmContext.ColorModelEnum.RGB,
-            //    2 => CgmContext.ColorModelEnum.CMYK,
-            //    _ => CgmContext.ColorModelEnum.Indexed
-            //};
+            int modelValue = command.ColorModel;
+            ColorModelEnum model = (ColorModelEnum)modelValue;
             CgmContext.SetColorModel(model);
         }
 
         private void UpdateIntegerPrecision(IntegerPrecisionCommand command)
         {
             CgmContext.SetIntegerPrecision(command.GetPrecision());
-            //_context.IntegerPrecision = command.GetPrecision();
         }
 
         private void UpdateVdcExtent(MaximumVdcExtentCommand command)
@@ -316,60 +305,60 @@ namespace CGMAnalyzerCore.Render
 
 
         #region Aide au rendu de Bézier 
-        /// <summary>
-        /// Construction d'un chemin de Bézier continu
-        /// Format : P0,P1,P2,P3 puis P4,P5,P6 puis P7,P8,P9 etc.
-        /// </summary>
-        private void BuildContinuousBezierPath(GraphicsPath path, List<PointF> points)
-        {
-            if (points.Count < 4) return;
+        ///// <summary>
+        ///// Construction d'un chemin de Bézier continu
+        ///// Format : P0,P1,P2,P3 puis P4,P5,P6 puis P7,P8,P9 etc.
+        ///// </summary>
+        //private void BuildContinuousBezierPath(GraphicsPath path, List<PointF> points)
+        //{
+        //    if (points.Count < 4) return;
 
-            path.StartFigure();
+        //    path.StartFigure();
 
-            // Première courbe de Bézier (4 points)
-            path.AddBezier(
-                points[0],  // P0: point de départ
-                points[1],  // P1: premier point de contrôle
-                points[2],  // P2: deuxième point de contrôle
-                points[3]   // P3: point d'arrivée
-            );
+        //    // Première courbe de Bézier (4 points)
+        //    path.AddBezier(
+        //        points[0],  // P0: point de départ
+        //        points[1],  // P1: premier point de contrôle
+        //        points[2],  // P2: deuxième point de contrôle
+        //        points[3]   // P3: point d'arrivée
+        //    );
 
-            // Courbes suivantes (3 points supplémentaires chacune)
-            // Le point de départ est le point d'arrivée de la courbe précédente
-            int index = 4;
-            while (index + 2 < points.Count)
-            {
-                path.AddBezier(
-                    points[index - 1], // Dernier point de la courbe précédente
-                    points[index],     // Premier point de contrôle
-                    points[index + 1], // Deuxième point de contrôle
-                    points[index + 2]  // Point d'arrivée
-                );
-                index += 3;
-            }
-        }
+        //    // Courbes suivantes (3 points supplémentaires chacune)
+        //    // Le point de départ est le point d'arrivée de la courbe précédente
+        //    int index = 4;
+        //    while (index + 2 < points.Count)
+        //    {
+        //        path.AddBezier(
+        //            points[index - 1], // Dernier point de la courbe précédente
+        //            points[index],     // Premier point de contrôle
+        //            points[index + 1], // Deuxième point de contrôle
+        //            points[index + 2]  // Point d'arrivée
+        //        );
+        //        index += 3;
+        //    }
+        //}
 
-        /// <summary>
-        /// Construction d'un chemin de Bézier discontinu
-        /// Format : P0,P1,P2,P3 puis P4,P5,P6,P7 puis P8,P9,P10,P11 etc.
-        /// </summary>
-        private void BuildDiscontinuousBezierPath(GraphicsPath path, List<PointF> points)
-        {
-            if (points.Count < 4) return;
+        ///// <summary>
+        ///// Construction d'un chemin de Bézier discontinu
+        ///// Format : P0,P1,P2,P3 puis P4,P5,P6,P7 puis P8,P9,P10,P11 etc.
+        ///// </summary>
+        //private void BuildDiscontinuousBezierPath(GraphicsPath path, List<PointF> points)
+        //{
+        //    if (points.Count < 4) return;
 
-            path.StartFigure();
+        //    path.StartFigure();
 
-            // Chaque courbe nécessite 4 points complets
-            for (int i = 0; i <= points.Count - 4; i += 4)
-            {
-                path.AddBezier(
-                    points[i],      // P0: point de départ
-                    points[i + 1],  // P1: premier point de contrôle
-                    points[i + 2],  // P2: deuxième point de contrôle
-                    points[i + 3]   // P3: point d'arrivée
-                );
-            }
-        }
+        //    // Chaque courbe nécessite 4 points complets
+        //    for (int i = 0; i <= points.Count - 4; i += 4)
+        //    {
+        //        path.AddBezier(
+        //            points[i],      // P0: point de départ
+        //            points[i + 1],  // P1: premier point de contrôle
+        //            points[i + 2],  // P2: deuxième point de contrôle
+        //            points[i + 3]   // P3: point d'arrivée
+        //        );
+        //    }
+        //}
         #endregion
 
         public void Dispose()

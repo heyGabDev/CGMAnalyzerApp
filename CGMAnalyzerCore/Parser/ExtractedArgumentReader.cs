@@ -307,12 +307,6 @@ namespace CGMAnalyzerCore.Parser
                     var y = MakeSignedInt16();
                     return new Point2D.Double(x, y);
                 }
-                //else if(CgmContext.VdcIntegerPrecision == 24)
-                //{
-                //    var x = MakeSignedInt24();
-                //    var y = MakeSignedInt24();
-                //    return new Point2D.Double(x, y);
-                //}
                 else if(CgmContext.VdcIntegerPrecision == 32)
                 {
                     var x = MakeSignedInt32();
@@ -353,6 +347,8 @@ namespace CGMAnalyzerCore.Parser
         /// <returns></returns>
         public double MakeVdc()
         {
+            Debug.WriteLine($"[MakeVdc] VdcType={CgmContext.VdcType}, VdcIntegerPrecision={CgmContext.VdcIntegerPrecision}");
+
             if (CgmContext.VdcType == VDCTypeEnum.REAL)
             {
                 var precision = CgmContext.VdcRealPrecision;
@@ -399,7 +395,9 @@ namespace CGMAnalyzerCore.Parser
         public double MakeReal()
         {
             var precision = CgmContext.RealPrecision;
-            return precision switch
+            Debug.WriteLine($"[MakeReal] RealPrecision={precision}");
+
+            double value = precision switch
             {
                 0 => MakeFixedPoint32(),      // Fixed32
                 1 => MakeFixedPoint64(),      // Fixed64
@@ -407,6 +405,9 @@ namespace CGMAnalyzerCore.Parser
                 3 => MakeFloatingPoint64(),   // Floating64
                 _ => MakeFixedPoint32()       // Default
             };
+
+            Debug.WriteLine($"[MakeReal] Read value={value}");
+            return value;
         }
 
         public double MakeFixedPoint32()

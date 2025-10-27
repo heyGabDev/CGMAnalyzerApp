@@ -13,11 +13,15 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
     {
         public enum PrecisionType
         {
-            FloatingPoint32Bit = 1,
-            FloatingPoint64Bit = 2
+            FixedPoint32Bit = 0,
+            FixedPoint64Bit = 1,
+            FloatingPoint32Bit = 2,
+            FloatingPoint64Bit = 3  
         }
 
         public PrecisionType Precision { get; private set; }
+        public int FieldWidth { get; private set; }
+        public int FractionWidth { get; private set; }
         private const PrecisionType DEFAULT_PRECISION = PrecisionType.FloatingPoint32Bit;
         public RealPrecisionCommand(int ec, int eid, int l, CgmCommand command)
             : base(ec, eid, l)
@@ -28,21 +32,46 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
             try
             {
                 var argReader = new ExtractedArgumentReader(this);
-                int p1 = argReader.MakeInt();
-                switch (p1)
+                int format = argReader.MakeEnum();    // 2 bytes
+                FieldWidth = argReader.MakeInt();     // 2 bytes
+                FractionWidth = argReader.MakeInt();  // 2 bytes
+
+                Debug.WriteLine($"[RealPrecisionCommand] Format={format}, FieldWidth={FieldWidth}, FractionWidth={FractionWidth}");
+
+                switch (format)
                 {
-                    case 1:
+                    case 0: // FixedPoint 32-bit
                         Precision = PrecisionType.FloatingPoint32Bit;
+                        CgmContext.RealPrecision = (int)Precision;
+                        Debug.WriteLine("[RealPrecisionCommand] Format 0: Using 32-bit floating point");
                         break;
-                    case 2:
+
+                    case 1: // FixedPoint 64-bit
                         Precision = PrecisionType.FloatingPoint64Bit;
+                        CgmContext.RealPrecision = (int)Precision;
+                        Debug.WriteLine($"[RealPrecisionCommand] Format 1: Using 64-bit floating point");
                         break;
+
+                    case 2: // FloatingPoint 32-bit
+                        Precision = PrecisionType.FloatingPoint64Bit;
+                        CgmContext.RealPrecision = (int)Precision;
+                        Debug.WriteLine($"[RealPrecisionCommand] Format 3: Using 64-bit fixed point");
+                        break;
+
+                    case 3:  // FloatingPoint 64-bit
+                        Precision = PrecisionType.FloatingPoint64Bit;
+                        CgmContext.RealPrecision = (int)Precision;
+                        Debug.WriteLine($"[RealPrecisionCommand] Format 3: Using 64-bit fixed point");
+                        break;
+
                     default:
-                        throw new NotSupportedException($"Unsupported REAL precision value: {p1}");
+                        Debug.WriteLine($"[RealPrecisionCommand WARNING] Unknown format {format}, using 32-bit default");
+                        Precision = PrecisionType.FloatingPoint32Bit;
+                        CgmContext.RealPrecision = (int)Precision;
+                        HasReadErrors = true;  // Marquer l'erreur sans planter
+                        break;
                 }
 
-                CgmContext.RealPrecision = (int)Precision;
-                Debug.WriteLine($"[RealPrecisionCommand] Precision={Precision}");
                 ValidateArgumentsRead("RealPrecisionCommand");
 
             }

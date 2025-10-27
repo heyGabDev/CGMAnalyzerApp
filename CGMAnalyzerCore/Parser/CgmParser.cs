@@ -1,5 +1,7 @@
 ﻿using CGMAnalyzerCore.Commands;
 using CGMAnalyzerCore.Commands.GraphicCommands;
+using CGMAnalyzerCore.Commands.GraphicCommands.Control;
+using CGMAnalyzerCore.Context;
 using CGMAnalyzerCore.Modeles;
 using System;
 using System.Collections.Generic;
@@ -8,6 +10,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static CGMAnalyzerCore.Commands.GraphicCommands.Control.VDCTypeCommand;
 
 namespace CGMAnalyzerCore.Parser
 {
@@ -42,8 +45,6 @@ namespace CGMAnalyzerCore.Parser
 
             Read(reader);  // ← Appel direct, pas async
             FinalizeMetadata();
-
-            //LoadAsync(stream, filename).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -174,7 +175,6 @@ namespace CGMAnalyzerCore.Parser
                     Messages.Add($"Commandes non supportées ignorées: {unsupportedSummary}");
                 }
                 //TO DO : FIN CONTROLE TEST
-
                 Messages.Add($"Parsing terminé en {stopwatch.ElapsedMilliseconds}ms. {Commands.Count} commandes traitées.");
             }
         }
@@ -191,6 +191,17 @@ namespace CGMAnalyzerCore.Parser
         {
             Commands.Clear();
             CurrentLayerId = 0;
+
+            // Contexte reinitialize
+            CgmContext.VdcType = VDCTypeEnum.REAL;
+            CgmContext.VdcIntegerPrecision = 32;
+            CgmContext.VdcRealPrecision = VDCRealPrecisionEnum.FloatingPoint32;
+            CgmContext.IntegerPrecision = 16;
+            CgmContext.RealPrecision = 2;
+
+            Debug.WriteLine("[CgmParser Reset] VdcIntegerPrecision forcé à 32 bits");
+            Debug.WriteLine("[CgmParser Reset] VdcType=REAL, FloatingPoint32");
+            Debug.WriteLine("[CgmParser Reset] RealPrecision forcé à 2 (FloatingPoint32)");
         }
 
         private static bool IsCompressedFile(string filename)

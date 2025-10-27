@@ -11,8 +11,8 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 {
     public class IntegerPrecisionCommand : BaseCgmCommand
     {
-        public int Precision { get; }
-        private const int DEFAULT_PRECISION = 16;
+        public int IntPrecision { get; }
+        private const int DEFAULT_INT_PRECISION = 16;
 
         public IntegerPrecisionCommand(int ec, int eid, int l, CgmCommand command)
             : base(ec, eid, l)
@@ -23,18 +23,18 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
             try
             {
                 var argReader = new ExtractedArgumentReader(this);
-                Precision = argReader.MakeInt();
+                IntPrecision = argReader.MakeInt();
 
                 // Mettre à jour le contexte CGM
-                CgmContext.VdcIntegerPrecision = Precision;
+                CgmContext.IntegerPrecision = IntPrecision;
 
-                Debug.WriteLine($"[IntegerPrecisionCommand] Precision={Precision}");
+                Debug.WriteLine($"[IntegerPrecisionCommand] Precision={IntPrecision}");
                 ValidateArgumentsRead("IntegerPrecisionCommand");
             }
             catch (Exception)
             {
-                Precision = DEFAULT_PRECISION;
-                CgmContext.SetIntegerPrecision(Precision);
+                IntPrecision = DEFAULT_INT_PRECISION;
+                CgmContext.SetIntegerPrecision(IntPrecision);
                 HasReadErrors = true;
             }
         }
@@ -46,7 +46,7 @@ namespace CGMAnalyzerCore.Commands.MetafileCommands
 
         public override string ToString()
         {
-            return $"INTERGER_PRECISION : {Precision}";
+            return $"INTERGER_PRECISION : {IntPrecision}";
         }
 
         public override void ReadArguments(BinaryReader reader)

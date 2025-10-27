@@ -17,9 +17,9 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
     /// </summary>
     public class PolyBezierCommand :BaseCgmCommand
     {
-        private readonly List<Point2D> _controlPoints = new List<Point2D>();
+        private readonly List<Point2D.Double> _controlPoints = new List<Point2D.Double>();
 
-        public IReadOnlyList<Point2D> ControlPoints => _controlPoints;
+        public IReadOnlyList<Point2D.Double> ControlPoints => _controlPoints;
 
         public PolyBezierCommand(int ec, int eid, int l, CgmCommand command)
             : base(ec, eid, l)
@@ -27,7 +27,6 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             Args = command.Args;
             Debug.WriteLine($"[PolyBezierCommand] ArgsLength={Args?.Length ?? 0}");
            
-
             try
             {
                 var argReader = new ExtractedArgumentReader(this);
@@ -40,10 +39,8 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
                 // Lire les points de contrôle
                 for (int i = 0; i < pointCount; i++)
                 {
-                    Point2D point = argReader.MakePoint();
+                    Point2D.Double point = argReader.MakePoint();
                     _controlPoints.Add(point);
-                    //Debug.WriteLine($"[PolyBezierCommand] Control Point {i + 1}: ({point.X}, {point.Y})");
-
                 }
 
                 Debug.WriteLine($"[PolyBezierCommand] Total control points: {_controlPoints.Count}");

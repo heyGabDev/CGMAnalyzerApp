@@ -63,7 +63,7 @@ namespace CGMAnalyzerCore.Commands
             }
         }
 
-        // <summary>
+        /// <summary>
         /// Constructeur de copie pour les commandes dérivées
         /// </summary>
         protected CgmCommand(CgmCommand source, int ec, int eid, int l)
@@ -425,63 +425,63 @@ namespace CGMAnalyzerCore.Commands
 
             return element switch
             {
-                // 1
+                // 4, 1
                 GraphicalPrimitiveElement.Polyline => new PolylineCommand(ec, eid, l, command),
-                // 2
+                // 4, 2
                 GraphicalPrimitiveElement.DisjointPolyline => new DisjointPolylineCommand(ec, eid, l, command),
-                // 3
+                // 4, 3
                 GraphicalPrimitiveElement.PolyMarker => new PolyMarkerCommand(ec, eid, l, command),
-                // 4
+                // 4, 4
                 GraphicalPrimitiveElement.Text => new TextCommand(ec, eid, l, command),
-                // 5
+                // 4, 5
                 GraphicalPrimitiveElement.RestrictedText => new RestrictedTextCommand(ec, eid, l, command),
-                // 6
+                // 4, 6
                 GraphicalPrimitiveElement.AppendText => new AppendTextCommand(ec, eid, l, command),
-                // 7
+                // 4, 7
                 GraphicalPrimitiveElement.Polygon => new PolygonCommand(ec, eid, l, command),
-                // 8 
+                // 4, 8 
                 GraphicalPrimitiveElement.PolygonSet => new PolygonSetCommand(ec, eid, l, command),
-                // 9
+                // 4, 9
                 GraphicalPrimitiveElement.CellArray => new CellArrayCommand(ec, eid, l, command),
-                // 10
+                // 4, 10
                 GraphicalPrimitiveElement.GeneralizedDrawingPrimitive => new GeneralizedDrawingPrimitiveCommand(ec, eid, l, command),
-                // 11
+                // 4, 11
                 GraphicalPrimitiveElement.Rectangle => new RectangleCommand(ec, eid, l, command),
-                // 12
+                // 4, 12
                 GraphicalPrimitiveElement.Circle => new CircleCommand(ec, eid, l, command),
-                // 13
+                // 4, 13
                 GraphicalPrimitiveElement.CircularArc3Point => new CircularArc3PointCommand(ec, eid, l, command),
-                // 14
+                // 4, 14
                 GraphicalPrimitiveElement.CircularArc3PointClose => new CircularArc3PointCloseCommand(ec, eid, l, command),
-                // 15
+                // 4, 15
                 GraphicalPrimitiveElement.CircularArcCentre => new CircularArcCentreCommand(ec, eid, l, command),
-                // 16
+                // 4, 16
                 GraphicalPrimitiveElement.CircularArcCentreClose => new CircularArcCentreCloseCommand(ec, eid, l, command),
-                // 17
+                // 4, 17
                 GraphicalPrimitiveElement.Ellipse => new EllipseCommand(ec, eid, l, command),
-                // 18
+                // 4, 18
                 GraphicalPrimitiveElement.EllipticalArc => new EllipticalArcCommand(ec, eid, l, command),
-                // 19
+                // 4, 19
                 GraphicalPrimitiveElement.EllipticalArcClose => new EllipticalArcCloseCommand(ec, eid, l, command),
-                // 20 
+                // 4, 20 
                 GraphicalPrimitiveElement.CircularArcCentreReversed or
-                // 21 
+                // 4, 21 
                 GraphicalPrimitiveElement.ConnectingEdge or
-                // 22 
+                // 4, 22 
                 GraphicalPrimitiveElement.HyperbolicArc or
-                // 23
+                // 4, 23
                 GraphicalPrimitiveElement.ParabolicArc or
-                // 24
+                // 4, 24
                 GraphicalPrimitiveElement.NonUniformBSpline or
-                // 25
+                // 4, 25
                 GraphicalPrimitiveElement.NonUniformRationalBSpline => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
-                // 26
+                // 4, 26
                 GraphicalPrimitiveElement.PolyBezier => new PolyBezierCommand(ec, eid, l, command),
-                // 27
+                // 4, 27
                 GraphicalPrimitiveElement.PolySymbol => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
-                // 28
+                // 4, 28
                 GraphicalPrimitiveElement.BitonalTile => new BitonalTileCommand(ec, eid, l, command),
-                // 29
+                // 4, 29
                 GraphicalPrimitiveElement.Tile => new TileCommand(ec, eid, l, command),
                 _ => UnsupportedCommand.CreateUnsupported(ec, eid, l, command)
             };
@@ -495,23 +495,23 @@ namespace CGMAnalyzerCore.Commands
             return element switch
             {
                 // 1 - Bundle indices (pas d'implémentation spécifique)
-                AttributeElement.LineBundleIndex or // 1
-                AttributeElement.MarkerBundleIndex or // 5
-                AttributeElement.TextBundleIndex or // 9
-                AttributeElement.FillBundleIndex or // 21
-                AttributeElement.EdgeBundleIndex => UnsupportedCommand.CreateUnsupported(ec, eid, l, command), // 26
+                AttributeElement.LineBundleIndex or // 5, 1
+                AttributeElement.MarkerBundleIndex or // 5, 5
+                AttributeElement.TextBundleIndex or // 5, 9
+                AttributeElement.FillBundleIndex or // 5, 21
+                AttributeElement.EdgeBundleIndex => UnsupportedCommand.CreateUnsupported(ec, eid, l, command), // 5, 26
 
-                // 2-4 - Line attributes
+                // 5, 2  -4 - Line attributes
                 AttributeElement.LineType => new LineTypeCommand(ec, eid, l, command),
                 AttributeElement.LineWidth => new LineWidthCommand(ec, eid, l, command),
                 AttributeElement.LineColour => new LineColorCommand(ec, eid, l, command),
 
-                // 6-8 - Marker attributes
+                // 5, 6 - 8 - Marker attributes
                 AttributeElement.MarkerType => new MarkerTypeCommand(ec, eid, l, command),
                 AttributeElement.MarkerSize => new MarkerSizeCommand(ec, eid, l, command),
                 AttributeElement.MarkerColour => new MarkerColorCommand(ec, eid, l, command),
 
-                // 10-20 - Text attributes
+                // 5, 10 - 20 - Text attributes
                 AttributeElement.TextFontIndex => new TextFontIndexCommand(ec, eid, l, command),
                 AttributeElement.TextPrecision => new TextPrecisionCommand(ec, eid, l, command),
                 AttributeElement.CharacterExpansionFactor => new CharacterExpansionFactorCommand(ec, eid, l, command),
@@ -524,50 +524,50 @@ namespace CGMAnalyzerCore.Commands
                 AttributeElement.CharacterSetIndex => new CharacterSetIndexCommand(ec, eid, l, command),
                 AttributeElement.AlternateCharacterSetIndex => new AlternateCharacterSetIndexCommand(ec, eid, l, command),
 
-                // 22-25 - Fill attributes
+                // 5, 22 - 25 - Fill attributes
                 AttributeElement.InteriorStyle => new InteriorStyleCommand(ec, eid, l, command),
                 AttributeElement.FillColour => new FillColorCommand(ec, eid, l, command),
                 AttributeElement.HatchIndex => new HatchIndexCommand(ec, eid, l, command),
                 AttributeElement.PatternIndex => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
 
-                // 27-30 - Edge attributes
+                // 5, 27 - 30 - Edge attributes
                 AttributeElement.EdgeType => new EdgeTypeCommand(ec, eid, l, command),
                 AttributeElement.EdgeWidth => new EdgeWidthCommand(ec, eid, l, command),
                 AttributeElement.EdgeColour => new EdgeColorCommand(ec, eid, l, command),
                 AttributeElement.EdgeVisibility => new EdgeVisibilityCommand(ec, eid, l, command),
 
-                // 31-33 - Pattern attributes (non supportés)
+                // 5, 31 - 33 - Pattern attributes (non supportés)
                 AttributeElement.FillReferencePoint or
                 AttributeElement.PatternTable or
                 AttributeElement.PatternSize => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
 
-                // 34 - Colour table
+                // 5, 34 - Colour table
                 AttributeElement.ColorTable => new ColorTableCommand(ec, eid, l, command),
 
-                // 35-36 - Misc attributes (non supportés)
+                // 5, 35 - 36 - Misc attributes (non supportés)
                 AttributeElement.AspectSourceFlags or
                 AttributeElement.PickIdentifier => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
 
-                // 37-38 - Line caps and joins
+                // 5, 37 - 38 - Line caps and joins
                 AttributeElement.LineCap => new LineCapCommand(ec, eid, l, command),
                 AttributeElement.LineJoin => new LineJoinCommand(ec, eid, l, command),
 
-                // 39-41 - Line continuation (non supportés)
+                // 5, 39 - 41 - Line continuation (non supportés)
                 AttributeElement.LineTypeContinuation or
                 AttributeElement.LineTypeInitialOffset or
                 AttributeElement.TextScoreType => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
 
-                // 42 - Restricted text type
+                // 5, 42 - Restricted text type
                 AttributeElement.RestrictedTextType => new RestrictedTextTypeCommand(ec, eid, l, command),
 
-                // 43 - Interpolated interior (non supporté)
+                // 5, 43 - Interpolated interior (non supporté)
                 AttributeElement.InterpolatedInterior => UnsupportedCommand.CreateUnsupported(ec, eid, l, command),
 
-                // 44-45 - Edge caps and joins
+                // 5, 44 - 45 - Edge caps and joins
                 AttributeElement.EdgeCap => new EdgeCapCommand(ec, eid, l, command),
                 AttributeElement.EdgeJoin => new EdgeJoinCommand(ec, eid, l, command),
 
-                // 46-51 - Edge continuation et symbol attributes (non supportés)
+                // 5, 46 - 51 - Edge continuation et symbol attributes (non supportés)
                 AttributeElement.EdgeTypeContinuation or
                 AttributeElement.EdgeTypeInitialOffset or
                 AttributeElement.SymbolLibraryIndex or

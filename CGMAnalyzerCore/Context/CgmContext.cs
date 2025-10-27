@@ -21,8 +21,8 @@ namespace CGMAnalyzerCore.Context
         // --------------------------------------------------------------------
         // VDC / Précisions (pilotés par VDCType, IntegerPrecision, RealPrecision)
         // --------------------------------------------------------------------
-        public static VDCTypeEnum VdcType { get; set; } = VDCTypeEnum.INTEGER;
-        public static int VdcIntegerPrecision { get; set; } = 16;
+        public static VDCTypeEnum VdcType { get; set; } = VDCTypeEnum.REAL;
+        public static int VdcIntegerPrecision { get; set; } = 32;
         public static VDCRealPrecisionEnum VdcRealPrecision { get; set; } = VDCRealPrecisionEnum.FixedPoint32;
 
         public static int IntegerPrecision { get; set; } = 16;
@@ -225,8 +225,8 @@ namespace CGMAnalyzerCore.Context
         #region ===== Reset : appelé en début de parsing / nouveau fichier  =====
         public static void Reset()
         {
-            VdcType = VDCTypeEnum.INTEGER;
-            VdcIntegerPrecision = 16;
+            VdcType = VDCTypeEnum.REAL;
+            VdcIntegerPrecision = 32;
             VdcRealPrecision = VDCRealPrecisionEnum.FixedPoint32;
 
             CurrentLayerId = 0;

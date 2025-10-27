@@ -128,11 +128,24 @@ namespace CGMViewerWPF.ViewModels
 
             try
             {
-                var stream = File.OpenRead(value.FullPath);
-                var reader = new BinaryReader(stream);
+                //DEBUG
+                Debug.WriteLine($"[OnSelectedFileChanged] Loading file: {value.FullPath}");
 
+                using var stream = File.OpenRead(value.FullPath);
                 var parser = new CgmParser();
-                parser.Read(reader);
+                parser.Load(stream, value.FileName);
+
+                Debug.WriteLine($"[OnSelectedFileChanged] Parsed {parser.Commands.Count} commands");
+                Debug.WriteLine($"[OnSelectedFileChanged] Messages: {string.Join(", ", parser.Messages)}");
+
+                // Vérifier s'il y a des commandes graphiques
+                var graphicalCommands = parser.Commands.Where(c => c.ElementClass == 4).ToList();
+                Debug.WriteLine($"[OnSelectedFileChanged] Graphical commands: {graphicalCommands.Count}");
+
+                foreach (var cmd in graphicalCommands.Take(5))
+                {
+                    Debug.WriteLine($"[OnSelectedFileChanged] - {cmd.GetType().Name} (EC={cmd.ElementClass}, EID={cmd.ElementId})");
+                }
 
                 // Aperçu CGM généré à partir du parser
                 CgmPreviewImage = ShowCgmPreviewImage(parser);
