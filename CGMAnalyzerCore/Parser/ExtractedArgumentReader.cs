@@ -299,7 +299,7 @@ namespace CGMAnalyzerCore.Parser
                 return new Point2D.Double(0, 0);
             }
 
-            if(CgmContext.VdcType == VDCTypeEnum.INTEGER)
+            if (CgmContext.VdcType == VDCTypeEnum.INTEGER)
             {
                 if(CgmContext.VdcIntegerPrecision == 16)
                 {
@@ -347,8 +347,6 @@ namespace CGMAnalyzerCore.Parser
         /// <returns></returns>
         public double MakeVdc()
         {
-            Debug.WriteLine($"[MakeVdc] VdcType={CgmContext.VdcType}, VdcIntegerPrecision={CgmContext.VdcIntegerPrecision}");
-
             if (CgmContext.VdcType == VDCTypeEnum.REAL)
             {
                 var precision = CgmContext.VdcRealPrecision;
@@ -395,18 +393,15 @@ namespace CGMAnalyzerCore.Parser
         public double MakeReal()
         {
             var precision = CgmContext.RealPrecision;
-            Debug.WriteLine($"[MakeReal] RealPrecision={precision}");
 
             double value = precision switch
             {
-                0 => MakeFixedPoint32(),      // Fixed32
-                1 => MakeFixedPoint64(),      // Fixed64
-                2 => MakeFloatingPoint32(),   // Floating32
-                3 => MakeFloatingPoint64(),   // Floating64
-                _ => MakeFixedPoint32()       // Default
+                0 => MakeFixedPoint32(),      // PrecisionType.FixedPoint32Bit
+                1 => MakeFixedPoint64(),      // PrecisionType.FixedPoint64Bit
+                2 => MakeFloatingPoint32(),   // PrecisionType.FloatingPoint32Bit
+                3 => MakeFloatingPoint64(),   // PrecisionType.FloatingPoint64Bit
+                _ => MakeFloatingPoint32()    // Default
             };
-
-            Debug.WriteLine($"[MakeReal] Read value={value}");
             return value;
         }
 
@@ -452,18 +447,22 @@ namespace CGMAnalyzerCore.Parser
         
         public double MakeFloatingPoint32()
         {
-            if(!_command.ValidateRemainingArgs(4, "MakeFloatingPoint32"))
+            if (!_command.ValidateRemainingArgs(4, "MakeFloatingPoint32"))
             {
                 return 0.0;
             }
 
-            SkipBits();
-            int bits = 0;
+            // Lire 4  bytes en Big Endian depuis le fichier CGM
+            byte[] bytes = new byte[4];
+
             for (int i = 0; i < 4; i++)
             {
-                bits = (bits << 8) | NextArg();
+                bytes[i] = (byte)NextArg();
             }
-            return BitConverter.Int32BitsToSingle(bits);
+
+            // Inverser pour Little Endian (Windows)
+            Array.Reverse(bytes);
+            return BitConverter.ToSingle(bytes, 0);
         }
         
         public double MakeFloatingPoint64()
@@ -473,7 +472,6 @@ namespace CGMAnalyzerCore.Parser
                 return 0.0;
             }
 
-            SkipBits();
             long bits = 0;
             for (int i = 0; i < 8; i++)
             {

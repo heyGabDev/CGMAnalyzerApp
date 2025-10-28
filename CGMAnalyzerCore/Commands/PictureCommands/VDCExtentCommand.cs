@@ -4,6 +4,7 @@ using CGMAnalyzerCore.Parser;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,13 +24,36 @@ namespace CGMAnalyzerCore.Commands.PictureCommands
 
             try
             {
+                // VDC Extent utilise TOUJOURS VDC INTEGER, PAS VDC REAL !
+                // VdcType=REAL pour les formes, VDC Extent est en INTEGER
                 var argReader = new ExtractedArgumentReader(this);
-                LowerLeftCorner = argReader.MakePoint();
-                UpperRightCorner = argReader.MakePoint();
+                int x1, y1, x2, y2;
+
+                // Forcer VDC Extent utilise TOUJOURS 16 - bit, peu importe VdcIntegerPrecision!
+                x1 = argReader.MakeSignedInt16();
+                y1 = argReader.MakeSignedInt16();
+                x2 = argReader.MakeSignedInt16();
+                y2 = argReader.MakeSignedInt16();
+
+                LowerLeftCorner = new Point2D.Double(x1, y1);
+                UpperRightCorner = new Point2D.Double(x2, y2);
+
+                Debug.WriteLine($"[VDCExtentCommand] LowerLeft=({x1}, {y1}), UpperRight=({x2}, {y2})");
+
+                // Pour les CGM Version 4 (16 bytes) : 4 points ou 2 points en 32-bit
+                // Lire les 8 bytes restants (probablement Device Viewport ou padding)
+                if (command.RemainingArgs() >= 8)
+                {
+                    int x3 = argReader.MakeSignedInt16();
+                    int y3 = argReader.MakeSignedInt16();
+                    int x4 = argReader.MakeSignedInt16();
+                    int y4 = argReader.MakeSignedInt16();
+
+                    Debug.WriteLine($"[VDCExtentCommand] Extra values: ({x3}, {y3}), ({x4}, {y4}) - ignorés");
+                }
 
                 CgmContext.SetVdcExtent(LowerLeftCorner, UpperRightCorner);
-                Debug.WriteLine($"[VDCExtentCommand] LowerLeftCorner={LowerLeftCorner}, " +
-                                $"UpperRightCorner={UpperRightCorner}");
+
                 ValidateArgumentsRead("VDCExtentCommand");
             }
             catch (Exception ex)

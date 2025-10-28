@@ -9,10 +9,13 @@ namespace CGMAnalyzerCore.Commands
 {
     public abstract class BaseCgmCommand
     {
-        // Propriété de base pour toutes les commandes CGM
+        /// <summary>
+        /// Propriété de base pour toutes les commandes CGM
+        /// </summary>
         public int ElementClass { get; }
         public int ElementId { get; }
         public int Length { get; }
+
         /// <summary>Tous les arguments bruts (OCTETS, pas des mots 16 bits)</summary>
         protected internal int[] Args;
         /// <summary>Position actuelle dans le tableau Args pour la lecture séquentielle</summary>

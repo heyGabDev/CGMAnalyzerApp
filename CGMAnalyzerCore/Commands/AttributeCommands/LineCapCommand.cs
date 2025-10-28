@@ -46,6 +46,7 @@ namespace CGMAnalyzerCore.Commands.AttributeCommands
                     5 => LineCapType.Triangle,
                     _ => LineCapType.Unspecified
                 };
+                //DEBUG
                 Debug.WriteLine($"[LineCapCommand] LineCapType={capValue} : {LineCap}");
 
                 ValidateArgumentsRead("LineCapCommand");

@@ -1,11 +1,12 @@
-﻿using CGMAnalyzerCore.Geometry;
+﻿using CGMAnalyzerCore.Context;
+using CGMAnalyzerCore.Geometry;
 using CGMAnalyzerCore.Helper;
 using CGMAnalyzerCore.Parser;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,6 +31,8 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
             try
             {
                 var argReader = new ExtractedArgumentReader(this);
+                Debug.WriteLine($"[PolyBezierCommand] VdcType={CgmContext.VdcType}, " +
+                                $"VdcIntegerPrecision={CgmContext.VdcIntegerPrecision}");
 
                 // Controle du nombre points
                 int pointSize = argReader.SizeOfPoint();
@@ -40,6 +43,13 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
                 for (int i = 0; i < pointCount; i++)
                 {
                     Point2D.Double point = argReader.MakePoint();
+
+                    // DEBUG - Seulement les 3 premiers points
+                    if (i < 3)
+                    {
+                        Debug.WriteLine($"[PolyBezierCommand] Point {i}: ({point.X}, {point.Y})");
+                    }
+
                     _controlPoints.Add(point);
                 }
 
@@ -72,23 +82,45 @@ namespace CGMAnalyzerCore.Commands.GraphicCommands
 
             try
             {
-                // Dessiner des courbes de Bézier par groupes de 4 points
-                // Une courbe de Bézier cubique nécessite 4 points : P0 (start), P1 (control1), P2 (control2), P3 (end)
-                // Les courbes se chaînent : le dernier point d'une courbe est le premier point de la suivante
-                for (int i = 0; i <= _controlPoints.Count - 4; i += 3)
+                // Controle validation
+                foreach (var point in _controlPoints)
                 {
-                    if (i + 3 < _controlPoints.Count)
+                    if (double.IsNaN(point.X) || double.IsNaN(point.Y) ||
+                        double.IsInfinity(point.X) || double.IsInfinity(point.Y))
                     {
-                        var points = _controlPoints.Skip(i).Take(4).Select(p => p.ToPointF()).ToArray();
-                        g.DrawBezier(pen, points[0], points[1], points[2], points[3]);
-                        //Debug.WriteLine($"[PolyBezierCommand] Courbe {i / 3 + 1}: points [{i}, {i + 1}, {i + 2}, {i + 3}]");
+                        Debug.WriteLine($"[PolyBezierCommand] Point invalide: ({point.X}, {point.Y})");
+                        return;
+                    }
+
+                    if (Math.Abs(point.X) > 1000000 || Math.Abs(point.Y) > 1000000)
+                    {
+                        Debug.WriteLine($"[PolyBezierCommand] Point hors limites: ({point.X}, {point.Y})");
+                        return;
                     }
                 }
+
+                // Convertir en PointF avec protection
+                var pointsArray = _controlPoints
+                    .Select(p => new PointF((float)p.X, (float)p.Y))
+                    .ToArray();
+
+                Debug.WriteLine($"[PolyBezierCommand] Points convertis: {pointsArray.Length}");
+
+                // Dessiner les courbes de Bézier
+                if (pointsArray.Length >= 4)
+                {
+                    g.DrawBeziers(pen, pointsArray);
+                    Debug.WriteLine("[PolyBezierCommand] Dessin réussi");
+                }
+            }
+            catch (OverflowException ex)
+            {
+                Debug.WriteLine($"[PolyBezierCommand Draw ERROR] Overflow: {ex.Message}");
+                Debug.WriteLine($"[PolyBezierCommand] Points: {string.Join(", ", _controlPoints.Take(5).Select(p => $"({p.X},{p.Y})"))}");
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"[PolyBezierCommand Draw ERROR] {ex.Message}");
-                HasReadErrors = true;
             }
         }
 

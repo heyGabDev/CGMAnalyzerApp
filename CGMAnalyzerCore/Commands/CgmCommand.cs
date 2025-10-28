@@ -420,9 +420,6 @@ namespace CGMAnalyzerCore.Commands
         {
             var element = (GraphicalPrimitiveElement)eid;
 
-            // DEBUG
-            Debug.WriteLine($"[GRAPHICAL DETECTED]  Element={element}, EC={ec}, EID={eid},");
-
             return element switch
             {
                 // 4, 1

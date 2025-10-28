@@ -9,6 +9,7 @@ using CGMAnalyzerCore.Geometry;
 using CGMAnalyzerCore.Rendering;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -47,27 +48,79 @@ namespace CGMAnalyzerCore.Render
             if (_disposed)
                 throw new ObjectDisposedException(nameof(CgmRenderer));
 
+            // Récupérer les limites VDC
+            double vdcMinX = 0;
+            double vdcMinY = 0;
+            double vdcMaxX = 300;
+            double vdcMaxY = 300;
+
+            double vdcWidth = vdcMaxX - vdcMinX;
+            double vdcHeight = vdcMaxY - vdcMinY;
+
+            // DEBUG
+            Debug.WriteLine($"[CgmRenderer] Using FIXED VDC: (0, 0) to (300, 300)");
+
+            // Taille de l'image de sortie
+            int outputWidth = Options.Width;
+            int outputHeight = Options.Height;
+
+            // Calculer le scale pour remplir la fenêtre
+            double scaleX = outputWidth / vdcWidth;
+            double scaleY = outputHeight / vdcHeight;
+            double scale = Math.Min(scaleX, scaleY);  // Garde les proportions
+
+            // DEBUG
+            Debug.WriteLine($"[CgmRenderer] Scale: {scale:F4}");
+
             _context = new RenderContext(Options.Width, Options.Height);
             var bitmap = new Bitmap(Options.Width, Options.Height, PixelFormat.Format32bppArgb);
 
             try
             {
-                using var graphics = Graphics.FromImage(bitmap);
-                ConfigureGraphics(graphics);
+                using (var graphics = Graphics.FromImage(bitmap))
+                { 
+                    ConfigureGraphics(graphics);
 
-                // Initialiser le contexte de rendu
-                _context.Reset(graphics, Options);
+                    // Initialiser le contexte de rendu
+                    _context.Reset(graphics, Options);
 
-                // Pré-traitement : analyser les commandes pour optimisations
-                PreprocessCommands();
+                    // Pré-traitement : analyser les commandes pour optimisations
+                    PreprocessCommands();
 
-                // Rendu des commandes
-                RenderCommands(graphics);
+                    // Appliquer les transformations de manière SAFE
+                    try
+                    {
+                        // Repart d'un état propre
+                        graphics.ResetTransform();
+
+                        // Centrer
+                        float offsetX = (float)((outputWidth - vdcWidth * scale) / 2);
+                        float offsetY = (float)((outputHeight - vdcHeight * scale) / 2);
+
+                        // Scale
+                        graphics.TranslateTransform(offsetX, offsetY);
+
+                        //Flip !! Pas le pt Y
+                        graphics.ScaleTransform((float)scale, (float)scale);  // ← Pas de flip Y !
+
+                        //DEBUG
+                        Debug.WriteLine($"[Transform] offset=({offsetX:F2}, {offsetY:F2}), scale={scale:F4}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"[CgmRenderer ERROR] Echec de la transformation: {ex.Message}");
+                        graphics.ResetTransform();  // Retour à l'identité
+                    }
+
+                    // Rendu des commandes
+                    RenderCommands(graphics);
+                };
 
                 return bitmap;
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.WriteLine($"[CgmRenderer ERROR] {ex.Message}");
                 bitmap?.Dispose();
                 throw;
             }
@@ -114,7 +167,7 @@ namespace CGMAnalyzerCore.Render
 
                     case MetafileVersionCommand versionCommand:
                         var version = ExtractVersion(versionCommand);
-                        System.Diagnostics.Debug.WriteLine($"CGM Metafile Version: {version}");
+                        Debug.WriteLine($"CGM Metafile Version: {version}");
                         break;
                 }
             }
@@ -150,11 +203,11 @@ namespace CGMAnalyzerCore.Render
                 catch (Exception ex)
                 {
                     renderStats.ErrorCommands++;
-                    System.Diagnostics.Debug.WriteLine($"[Render Error] {command.GetType().Name}: {ex.Message}");
+                    Debug.WriteLine($"[Render Error] {command.GetType().Name}: {ex.Message}");
                 }
             }
 
-            System.Diagnostics.Debug.WriteLine($"[Render Stats] Total: {renderStats.TotalCommands}, " +
+                Debug.WriteLine($"[Render Stats] Total: {renderStats.TotalCommands}, " +
                 $"Rendered: {renderStats.RenderedCommands}, " +
                 $"Skipped: {renderStats.SkippedCommands}, " +
                 $"Errors: {renderStats.ErrorCommands}");
@@ -223,6 +276,9 @@ namespace CGMAnalyzerCore.Render
 
         private bool Draw(Graphics g, BaseCgmCommand c)
         {
+            // DEBUG
+            Debug.WriteLine($"[Render Drawing] {c.GetType().Name} (EC={c.ElementClass}, EID={c.ElementId})");
+
             using var pen = _context.CreatePen();
             c.Draw(g, pen);     // chaque commande gère sa propre transformation/traitement
             return true;
