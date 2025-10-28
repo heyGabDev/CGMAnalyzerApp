@@ -11,6 +11,7 @@
         WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <!-- Styles -->
         <Style x:Key="ModernButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#FF0078D4"/>
@@ -54,13 +55,6 @@
         <!-- Toolbar -->
         <Border Grid.Row="0" Background="#FFF6F6F6" BorderBrush="#FFE0E0E0" BorderThickness="0,0,0,1">
             <StackPanel Orientation="Horizontal" Margin="12,8">
-                <Button x:Name="btnCreateTestFile"
-                        Content="🧪 TEST"
-                        Click="BtnCreateTestFile_Click"
-                        Background="#4CAF50"
-                        Style="{StaticResource ModernButtonStyle}"
-                        Margin="0,0,8,0"/>
-
                 <Button Content="📁 Importer CGM" 
                         Command="{Binding ImportFilesCommand}"
                         Style="{StaticResource ModernButtonStyle}"
@@ -77,37 +71,6 @@
                         Background="#FF6C757D" 
                         Style="{StaticResource ModernButtonStyle}"
                         Margin="0,0,16,0"/>
-
-                <TextBlock Text="{Binding ImportedFiles.Count, StringFormat='Fichiers: {0}'}" 
-                           Style="{StaticResource StatusTextStyle}"
-                           Margin="8,0"/>
-                
-                <TextBlock Text="{Binding StatusMessage}" 
-                           Style="{StaticResource StatusTextStyle}"
-                           Margin="8,0,0,0"/>   
-            </StackPanel>
-        </Border>
-
-        <!-- Progress & Status - CORRIGÉ -->
-        <Border Grid.Row="1" Background="#FFFAFAFA" BorderBrush="#FFE0E0E0" BorderThickness="0,0,0,1">
-            <Border.Style>
-                <Style TargetType="Border">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsLoading}" Value="True">
-                            <Setter Property="Visibility" Value="Visible"/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Border.Style>
-            <StackPanel Margin="12,8">
-                <TextBlock Text="{Binding StatusMessage}" 
-                           Style="{StaticResource StatusTextStyle}"
-                           Margin="0,0,0,4"/>
-                <ProgressBar Value="{Binding ProcessingProgress}" 
-                             Maximum="100" Height="4"
-                             Background="#FFE0E0E0"
-                             Foreground="#FF0078D4"/>
             </StackPanel>
         </Border>
 
@@ -121,14 +84,14 @@
                 <ColumnDefinition Width="300" MinWidth="200"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Left Panel - File List -->
+            <!-- Left Panel - File List -Progress Bar -->
             <Border Grid.Column="0" Background="White" BorderBrush="#FFE0E0E0" BorderThickness="1" 
                     CornerRadius="4">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>   <!-- Header -->
+                        <RowDefinition Height="*"/>      <!-- File list -->
+                        <RowDefinition Height="Auto"/>   <!-- ProgressBar /  Summary-->
                     </Grid.RowDefinitions>
 
                     <!-- Header -->
@@ -158,12 +121,35 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-
-                    <!-- Summary -->
+                    
+                    <!-- Summary / ProgressBar -->
                     <Border Grid.Row="2" Background="#FFF8F9FA" BorderBrush="#FFE0E0E0" BorderThickness="0,1,0,0">
-                        <TextBlock Text="{Binding ImportedFiles.Count, StringFormat='Total: {0} fichier(s)'}" 
-                                   Style="{StaticResource StatusTextStyle}"
-                                   Margin="12,6"/>
+                        <Grid Margin="12,6">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <!-- Total -->
+                                <RowDefinition Height="Auto"/>
+                                <!-- Progress area -->
+                            </Grid.RowDefinitions>
+
+                            <!-- Total -->
+                            <TextBlock Grid.Row="0"
+                                       Text="{Binding ImportedFiles.Count, StringFormat='Total: {0} fichier(s)'}"
+                                       Style="{StaticResource StatusTextStyle}"/>
+
+                            <!-- Progress (visible seulement pendant le chargement) -->
+                            <StackPanel Grid.Row="1" Margin="0,6,0,0"
+                                        Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Text="{Binding ProgressText}" 
+                                           Style="{StaticResource StatusTextStyle}" 
+                                           Margin="0,0,0,4"/>
+                                <ProgressBar Minimum="0" Maximum="100" Height="8" 
+                                             Value="{Binding ProgressValue}"/>
+                                <TextBlock Text="{Binding ProgressValue, StringFormat={}{0}%}"
+                                           Style="{StaticResource StatusTextStyle}"
+                                           HorizontalAlignment="Right" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Grid>
                     </Border>
                 </Grid>
             </Border>
@@ -313,32 +299,6 @@
                                x:Name="ClockTextBlock"/>
                 </StackPanel>
             </Grid>
-        </Border>
-
-        <!-- Loading Overlay - CORRIGÉ -->
-        <Border Grid.RowSpan="4" 
-                Background="#80000000">
-            <Border.Style>
-                <Style TargetType="Border">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsLoading}" Value="True">
-                            <Setter Property="Visibility" Value="Visible"/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Border.Style>
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                <ProgressBar IsIndeterminate="True" 
-                             Width="200" Height="4"
-                             Background="#FFE0E0E0"
-                             Foreground="#FF0078D4"/>
-                <TextBlock Text="{Binding StatusMessage}" 
-                           Foreground="White"
-                           HorizontalAlignment="Center"
-                           Margin="0,8,0,0"
-                           FontWeight="Medium"/>
-            </StackPanel>
         </Border>
     </Grid>
 </Window>

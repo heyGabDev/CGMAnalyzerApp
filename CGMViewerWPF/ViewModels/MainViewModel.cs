@@ -46,6 +46,16 @@ namespace CGMViewerWPF.ViewModels
         [ObservableProperty]
         private ObservableCollection<LayerCheckbox> selectedFileLayers = new();
 
+        // ProgressBar
+        [ObservableProperty]
+        private bool isLoading;
+
+        [ObservableProperty]
+        private int progressValue;
+
+        [ObservableProperty]
+        private string progressText = "";
+
         [RelayCommand]
         public async Task ImportFilesAsync()
         {
@@ -57,6 +67,8 @@ namespace CGMViewerWPF.ViewModels
 
             if (dlg.ShowDialog() == true)
             {
+                IsLoading = true; ProgressValue = 0; ProgressText = "Import des fichiers…";
+
                 foreach (var filePath in dlg.FileNames)
                 {
                     using var content = new MultipartFormDataContent();
@@ -73,8 +85,7 @@ namespace CGMViewerWPF.ViewModels
                             foreach(var result in results)
                             {
                                 var bmpUrl = new Uri(_httpClient.BaseAddress, result.BmpPath).ToString();
-                                LoadImage(bmpUrl);
-                                // ImageSource = new BitmapImage(new Uri(bmpUrl));
+                                LoadImage(bmpUrl); // afficher l’aperçu BMP dans l’UI
 
                                 var imported = new ImportedFile
                                 {
@@ -83,10 +94,13 @@ namespace CGMViewerWPF.ViewModels
                                     Layers = result.Layers
                                 };
                                 //imported.FullPath = Path.Combine(@"C:\VSOnline\2_Pro Project\LGM Project\DemoCGMViewerApp\CGMAnalyzer.API\wwwroot\images", Path.GetFileName(result.BmpPath));
-                                imported.FullPath = imported.GetFullPath();
+                                imported.FullPath = filePath;
 
                                 ImportedFiles.Add(imported);
                                 Errors = result.Errors;
+
+                                // Déclenche l’aperçu + la barre
+                                SelectedFile = imported;
                             }                                                  
                         }
                     }
@@ -96,6 +110,24 @@ namespace CGMViewerWPF.ViewModels
                     }
                 }
             }
+        }
+
+        [RelayCommand]
+        private void ClearImportedFiles()
+        {
+            ImportedFiles.Clear();
+            SelectedFile = null;
+            ImageSource = null;
+            Errors = null;
+        }
+
+        [RelayCommand]
+        private void RemoveSelectedFile()
+        {
+            if (SelectedFile is null) return;
+            ImportedFiles.Remove(SelectedFile);
+            SelectedFile = null;
+            ImageSource = null;
         }
 
         private void LoadImage(string imageUrl)
@@ -118,7 +150,7 @@ namespace CGMViewerWPF.ViewModels
             }
         }
 
-        partial void OnSelectedFileChanged(ImportedFile value)
+        partial void OnSelectedFileChanged(ImportedFile? value)
         {
             if (value == null || !File.Exists(value.FullPath))
             {
@@ -126,47 +158,114 @@ namespace CGMViewerWPF.ViewModels
                 return;
             }
 
+            _ = LoadCgmFileAsync(value);
+
+            //try
+            //{
+            //    //DEBUG
+            //    //Debug.WriteLine($"[OnSelectedFileChanged] Loading file: {value.FullPath}");
+
+            //    using var stream = File.OpenRead(value.FullPath);
+            //    var parser = new CgmParser();
+            //    parser.Load(stream, value.FileName);
+
+            //    // DEBUG
+            //    //Debug.WriteLine($"[OnSelectedFileChanged] Parsed {parser.Commands.Count} commands");
+            //    //Debug.WriteLine($"[OnSelectedFileChanged] Messages: {string.Join(", ", parser.Messages)}");
+
+            //    // Vérifier s'il y a des commandes graphiques
+            //    //var graphicalCommands = parser.Commands.Where(c => c.ElementClass == 4).ToList();
+            //    //Debug.WriteLine($"[OnSelectedFileChanged] Graphical commands: {graphicalCommands.Count}");
+
+            //    //foreach (var cmd in graphicalCommands.Take(5))
+            //    //{
+            //    //    Debug.WriteLine($"[OnSelectedFileChanged] - {cmd.GetType().Name} (EC={cmd.ElementClass}, EID={cmd.ElementId})");
+            //    //}
+
+            //    // Aperçu CGM généré à partir du parser
+            //    CgmPreviewImage = ShowCgmPreviewImage(parser);
+
+            //    // Mise à jour des couches
+            //    SelectedFileLayers.Clear();
+            //    foreach (var layer in value.Layers)
+            //    {
+            //        SelectedFileLayers.Add(new LayerCheckbox
+            //        {
+            //            Name = layer,
+            //            IsChecked = true
+            //        });
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    MessageBox.Show($"Erreur lors du traitement du fichier CGM : {ex.Message}");
+            //}
+        }
+
+        private async Task LoadCgmFileAsync(ImportedFile file)
+        {
+            IsLoading = true;
+            ProgressValue = 0;
+            ProgressText = "Chargement du fichier...";
+
             try
             {
-                //DEBUG
-                Debug.WriteLine($"[OnSelectedFileChanged] Loading file: {value.FullPath}");
-
-                using var stream = File.OpenRead(value.FullPath);
-                var parser = new CgmParser();
-                parser.Load(stream, value.FileName);
-
-                Debug.WriteLine($"[OnSelectedFileChanged] Parsed {parser.Commands.Count} commands");
-                Debug.WriteLine($"[OnSelectedFileChanged] Messages: {string.Join(", ", parser.Messages)}");
-
-                // Vérifier s'il y a des commandes graphiques
-                var graphicalCommands = parser.Commands.Where(c => c.ElementClass == 4).ToList();
-                Debug.WriteLine($"[OnSelectedFileChanged] Graphical commands: {graphicalCommands.Count}");
-
-                foreach (var cmd in graphicalCommands.Take(5))
+                await Task.Run(() =>
                 {
-                    Debug.WriteLine($"[OnSelectedFileChanged] - {cmd.GetType().Name} (EC={cmd.ElementClass}, EID={cmd.ElementId})");
-                }
+                    // 1. Parsing
+                    UpdateProgress(10, "Parsing du CGM...");
 
-                // Aperçu CGM généré à partir du parser
-                CgmPreviewImage = ShowCgmPreviewImage(parser);
+                    using var stream = File.OpenRead(file.FullPath);
+                    var parser = new CgmParser();
+                    parser.Load(stream, file.FileName);
 
-                // Mise à jour des couches
-                SelectedFileLayers.Clear();
-                foreach (var layer in value.Layers)
-                {
-                    SelectedFileLayers.Add(new LayerCheckbox
+                    UpdateProgress(50, $"Parsed {parser.Commands.Count} commandes");
+
+                    // 2. Rendu
+                    UpdateProgress(60, "Génération de l'image...");
+
+                    CgmPreviewImage = ShowCgmPreviewImage(parser);
+
+                    UpdateProgress(90, "Finalisation...");
+
+                    // 3. Layers
+                    Application.Current.Dispatcher.Invoke(() =>
                     {
-                        Name = layer,
-                        IsChecked = true
+                        SelectedFileLayers.Clear();
+                        foreach (var layer in file.Layers)
+                        {
+                            SelectedFileLayers.Add(new LayerCheckbox
+                            {
+                                Name = layer,
+                                IsChecked = true
+                            });
+                        }
                     });
-                }
+
+                    UpdateProgress(100, "Terminé !");
+                });
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lors du traitement du fichier CGM : {ex.Message}");
+                MessageBox.Show($"Erreur : {ex.Message}");
+                ProgressText = $"Erreur : {ex.Message}";
+            }
+            finally
+            {
+                // Masquer après 500ms
+                await Task.Delay(500);
+                IsLoading = false;
             }
         }
 
+        private void UpdateProgress(int value, string text)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                ProgressValue = value;
+                ProgressText = text;
+            });
+        }
         private ImageSource ShowCgmPreviewImage(CgmParser parser)
         {
             var renderer = new CgmRenderer(parser.Commands);
