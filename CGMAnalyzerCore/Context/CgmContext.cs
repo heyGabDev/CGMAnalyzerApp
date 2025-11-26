@@ -176,7 +176,7 @@ namespace CGMAnalyzerCore.Context
         public static int CurrentLayerId { get; set; } = 0;
         public static ColorSelectionModeCommand.ColorSelectionType ColorSelectionMode { get; set; }
         public static SpecificationMode EdgeWidthSpecificationMode { get; set; }
-        public static SpecificationMode LineWidthSpecificationMode { get; set; }
+        public static SpecificationMode LineWidthSpecificationMode { get; set; } = SpecificationMode.ABSOLUTE;
         public static SpecificationMode MarkerSizeSpecificationMode { get; set; }
         public static DeviceViewportSpecificationModeCommand.DeviceViewportMode DeviceViewportSpecificationMode { get; set; }
 
@@ -217,7 +217,9 @@ namespace CGMAnalyzerCore.Context
         /// </summary>
         public static Pen CreatePen()
         {
-            var width = LineWidth <= 0 ? 1f : LineWidth;
+            // Limiter le LineWidth pour éviter traits trop épais
+            float width = Math.Clamp(LineWidth, 0.1f, 5.0f);
+
             return new Pen(StrokeColor, width);
         }
         #endregion

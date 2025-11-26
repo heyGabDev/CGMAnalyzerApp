@@ -35,13 +35,17 @@ namespace CGMAnalyzerCore.Commands.AttributeCommands
                 if (mode == SpecificationMode.ABSOLUTE)
                 {
                     LineWidth = argReader.MakeVdc();
-                    Debug.WriteLine($"[LineWidthCommand] LineWidth (absolute): {LineWidth:F2}");
+                    //Debug.WriteLine($"[LineWidthCommand] LineWidth (absolute): {LineWidth} VDC");
+                    //Debug.WriteLine($"[LineWidthCommand] LineWidth (absolute): {LineWidth:F2}");
                 }
                 else // SCALED
                 {
                     LineWidth = argReader.MakeReal();
-                    Debug.WriteLine($"[LineWidthCommand] LineWidth (scaled): {LineWidth:F4}");
+                    //Debug.WriteLine($"[LineWidthCommand] LineWidth (scaled): {LineWidth} factor");
+                    //Debug.WriteLine($"[LineWidthCommand] LineWidth (scaled): {LineWidth:F4}");
                 }
+                CgmContext.LineWidth = (float)LineWidth;
+                //Debug.WriteLine($"[LineWidthCommand] Mode={CgmContext.LineWidthSpecificationMode}, Value={LineWidth:F4}");
                 ValidateArgumentsRead("LineWidth");
 
             }

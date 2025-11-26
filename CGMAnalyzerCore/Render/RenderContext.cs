@@ -4,6 +4,7 @@ using CGMAnalyzerCore.Render;
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using static CGMAnalyzerCore.Commands.SpecificationModeExtensions;
 
 namespace CGMAnalyzerCore.Rendering
 {
@@ -138,7 +139,25 @@ namespace CGMAnalyzerCore.Rendering
         /// </summary>
         public Pen CreatePen()
         {
-            return CgmContext.CreatePen();
+            // Calcul largeur en fonction du mode
+            float width;
+
+            if (CgmContext.LineWidthSpecificationMode == SpecificationMode.ABSOLUTE)
+            {
+                // Mode ABSOLUTE : LineWidth est en unités VDC, pas en pixels
+                // On garde la valeur telle quelle car le scale Graphics s'appliquera
+                width = CgmContext.LineWidth <= 0 ? 1f : CgmContext.LineWidth;
+            }
+            else // SCALED
+            {
+                // Mode SCALED : LineWidth est un facteur (ex: 0.01 = 1% de la largeur de ligne par défaut)
+                width = CgmContext.LineWidth <= 0 ? 1f : CgmContext.LineWidth;
+            }
+
+            // Limiter pour éviter traits trop fins ou trop épais
+            width = Math.Clamp(width, 0.1f, 5.0f);
+
+            return new Pen(CgmContext.StrokeColor, width);
         }
 
         /// <summary>
